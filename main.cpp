@@ -64,8 +64,18 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 	return gpuMaxNumberOfEdgesPerCoarseBucketAfterTrimmingRound;
 }();
 
-// GPU coarse bucket item size
-#define GPU_COARSE_BUCKET_ITEM_SIZE sizeof(uint32_t)
+// Check if using more RAM for GPU trimming
+#if GPU_TRIMMING_USE_MORE_RAM
+
+	// GPU coarse bucket item size
+	#define GPU_COARSE_BUCKET_ITEM_SIZE (sizeof(uint32_t) + sizeof(uint32_t))
+	
+// Otherwise
+#else
+
+	// GPU coarse bucket item size
+	#define GPU_COARSE_BUCKET_ITEM_SIZE sizeof(uint32_t)
+#endif
 
 // GPU max number of edges per coarse bucket
 #define GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET static_cast<uint32_t>((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[0] + (hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1))
@@ -3240,6 +3250,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Solution size value
 					MTLSTR(TO_STRING(SOLUTION_SIZE)),
 					
+					// GPU trimming use more RAM value
+					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MORE_RAM)),
+					
 					// GPU number of most significant bits used for coarse bucket sorting value
 					MTLSTR(TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING)),
 					
@@ -3320,6 +3333,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Solution size key
 					MTLSTR("SOLUTION_SIZE"),
 					
+					// GPU trimming use more RAM key
+					MTLSTR("GPU_TRIMMING_USE_MORE_RAM"),
+					
 					// GPU number of most significant bits used for coarse bucket sorting key
 					MTLSTR("GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING"),
 					
@@ -3368,7 +3384,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of recovering edges key
 					MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES")
 					
-				}, 18), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
+				}, 19), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
 				
 					// Free preprocessor macros
 					__builtin_assume_dereferenceable(preprocessorMacros, sizeof(*preprocessorMacros));
@@ -4255,6 +4271,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Solution size
 					"-D SOLUTION_SIZE=" TO_STRING(SOLUTION_SIZE) " "
 					
+					// GPU trimming use more RAM
+					"-D GPU_TRIMMING_USE_MORE_RAM=" TO_STRING(GPU_TRIMMING_USE_MORE_RAM) " "
+					
 					// GPU number of most significant bits used for coarse bucket sorting
 					"-D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=" TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING) " "
 					
@@ -4385,14 +4404,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 1, sizeof(numberOfEdgesPerFineBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerFineBucketBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 2, sizeof(coarseBucketsBuffer.get()), &static_cast<const cl_mem &>(coarseBucketsBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 3, sizeof(numberOfEdgesPerCoarseBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerCoarseBucketBuffer.get())) != CL_SUCCESS ||
-				clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 4, sizeof(trimEdgesParametersBuffer.get()), &static_cast<const cl_mem &>(trimEdgesParametersBuffer.get())) != CL_SUCCESS ||
-				clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 5, sizeof(largestCoarseBucketSizeBuffer.get()), &static_cast<const cl_mem &>(largestCoarseBucketSizeBuffer.get())) != CL_SUCCESS ||
+				clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 4, sizeof(largestCoarseBucketSizeBuffer.get()), &static_cast<const cl_mem &>(largestCoarseBucketSizeBuffer.get())) != CL_SUCCESS ||
+				#if !GPU_TRIMMING_USE_MORE_RAM
+					clSetKernelArg(fineBucketSortInitialEdgesKernel.get(), 5, sizeof(trimEdgesParametersBuffer.get()), &static_cast<const cl_mem &>(trimEdgesParametersBuffer.get())) != CL_SUCCESS ||
+				#endif
 				
 				clSetKernelArg(trimInitialEdgesKernel.get(), 0, sizeof(coarseBucketsBuffer.get()), &static_cast<const cl_mem &>(coarseBucketsBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(trimInitialEdgesKernel.get(), 1, sizeof(numberOfEdgesPerCoarseBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerCoarseBucketBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(trimInitialEdgesKernel.get(), 2, sizeof(fineBucketsBuffer.get()), &static_cast<const cl_mem &>(fineBucketsBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(trimInitialEdgesKernel.get(), 3, sizeof(numberOfEdgesPerFineBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerFineBucketBuffer.get())) != CL_SUCCESS ||
-				clSetKernelArg(trimInitialEdgesKernel.get(), 4, sizeof(trimEdgesParametersBuffer.get()), &static_cast<const cl_mem &>(trimEdgesParametersBuffer.get())) != CL_SUCCESS ||
+				#if !GPU_TRIMMING_USE_MORE_RAM
+					clSetKernelArg(trimInitialEdgesKernel.get(), 4, sizeof(trimEdgesParametersBuffer.get()), &static_cast<const cl_mem &>(trimEdgesParametersBuffer.get())) != CL_SUCCESS ||
+				#endif
 				
 				clSetKernelArg(updateLargestIntermediateCoarseBucketSizeKernel.get(), 0, sizeof(largestCoarseBucketSizeBuffer.get()), &static_cast<const cl_mem &>(largestCoarseBucketSizeBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(updateLargestIntermediateCoarseBucketSizeKernel.get(), 1, sizeof(numberOfEdgesPerCoarseBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerCoarseBucketBuffer.get())) != CL_SUCCESS ||
@@ -5312,35 +5335,72 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
 				
-				// Encode running update largest intermediate coarse bucket size pipeline
-				commandEncoder->setComputePipelineState(updateLargestIntermediateCoarseBucketSizePipeline.get());
-				commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestIntermediateCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+				// Check if using more RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MORE_RAM
 				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					// Encode running update largest final coarse bucket size pipeline
+					commandEncoder->setComputePipelineState(updateLargestFinalCoarseBucketSizePipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestFinalCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per fine bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running fine bucket sort final edges pipeline
+					commandEncoder->setComputePipelineState(fineBucketSortFinalEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per coarse bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running trim final edges pipeline
+					commandEncoder->setComputePipelineState(trimFinalEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					
+				// Otherwise
+				#else
 				
-				// Encode clearing number of edges per fine bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
-				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
-				
-				// Encode running fine bucket sort intermediate edges pipeline
-				commandEncoder->setComputePipelineState(fineBucketSortIntermediateEdgesPipeline.get());
-				commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
-				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
-				
-				// Encode clearing number of edges per coarse bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
-				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
-				
-				// Encode running trim intermediate edges pipeline
-				commandEncoder->setComputePipelineState(trimIntermediateEdgesPipeline.get());
-				commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					// Encode running update largest intermediate coarse bucket size pipeline
+					commandEncoder->setComputePipelineState(updateLargestIntermediateCoarseBucketSizePipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestIntermediateCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per fine bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running fine bucket sort intermediate edges pipeline
+					commandEncoder->setComputePipelineState(fineBucketSortIntermediateEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per coarse bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running trim intermediate edges pipeline
+					commandEncoder->setComputePipelineState(trimIntermediateEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+				#endif
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5685,20 +5745,42 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Enqueue running trim initial edges kernel
 					clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
 					
-					// Enqueue running update largest intermediate coarse bucket size kernel
-					clEnqueueNDRangeKernel(commandQueue.get(), updateLargestIntermediateCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+					// Check if using more RAM for GPU trimming
+					#if GPU_TRIMMING_USE_MORE_RAM
 					
-					// Enqueue clearing number of edges per fine bucket buffer
-					clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+						// Enqueue running update largest final coarse bucket size kernel
+						clEnqueueNDRangeKernel(commandQueue.get(), updateLargestFinalCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue clearing number of edges per fine bucket buffer
+						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue running fine bucket sort final edges kernel
+						clEnqueueNDRangeKernel(commandQueue.get(), fineBucketSortFinalEdgesKernel.get(), 2, nullptr, (const size_t[]){static_cast<size_t>(((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[1] + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION}, (const size_t[]){GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue clearing number of edges per coarse bucket buffer
+						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue running trim final edges kernel
+						clEnqueueNDRangeKernel(commandQueue.get(), trimFinalEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+					// Otherwise
+					#else
 					
-					// Enqueue running fine bucket sort intermediate edges kernel
-					clEnqueueNDRangeKernel(commandQueue.get(), fineBucketSortIntermediateEdgesKernel.get(), 2, nullptr, (const size_t[]){static_cast<size_t>(((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[1] + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION}, (const size_t[]){GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1}, 0, nullptr, nullptr) != CL_SUCCESS ||
-					
-					// Enqueue clearing number of edges per coarse bucket buffer
-					clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
-					
-					// Enqueue running trim intermediate edges kernel
-					clEnqueueNDRangeKernel(commandQueue.get(), trimIntermediateEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						// Enqueue running update largest intermediate coarse bucket size kernel
+						clEnqueueNDRangeKernel(commandQueue.get(), updateLargestIntermediateCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue clearing number of edges per fine bucket buffer
+						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue running fine bucket sort intermediate edges kernel
+						clEnqueueNDRangeKernel(commandQueue.get(), fineBucketSortIntermediateEdgesKernel.get(), 2, nullptr, (const size_t[]){static_cast<size_t>(((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[1] + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION}, (const size_t[]){GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue clearing number of edges per coarse bucket buffer
+						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+						
+						// Enqueue running trim intermediate edges kernel
+						clEnqueueNDRangeKernel(commandQueue.get(), trimIntermediateEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+					#endif
 					
 					// Enqueue running update largest final coarse bucket size kernel
 					clEnqueueNDRangeKernel(commandQueue.get(), updateLargestFinalCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -5958,35 +6040,72 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
 				
-				// Encode running update largest intermediate coarse bucket size pipeline
-				commandEncoder->setComputePipelineState(updateLargestIntermediateCoarseBucketSizePipeline.get());
-				commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestIntermediateCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+				// Check if using more RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MORE_RAM
 				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					// Encode running update largest final coarse bucket size pipeline
+					commandEncoder->setComputePipelineState(updateLargestFinalCoarseBucketSizePipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestFinalCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per fine bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running fine bucket sort final edges pipeline
+					commandEncoder->setComputePipelineState(fineBucketSortFinalEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per coarse bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running trim final edges pipeline
+					commandEncoder->setComputePipelineState(trimFinalEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					
+				// Otherwise
+				#else
 				
-				// Encode clearing number of edges per fine bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
-				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
-				
-				// Encode running fine bucket sort intermediate edges pipeline
-				commandEncoder->setComputePipelineState(fineBucketSortIntermediateEdgesPipeline.get());
-				commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
-				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
-				
-				// Encode clearing number of edges per coarse bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
-				
-				// Encode a barrier
-				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
-				
-				// Encode running trim intermediate edges pipeline
-				commandEncoder->setComputePipelineState(trimIntermediateEdgesPipeline.get());
-				commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					// Encode running update largest intermediate coarse bucket size pipeline
+					commandEncoder->setComputePipelineState(updateLargestIntermediateCoarseBucketSizePipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestIntermediateCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per fine bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running fine bucket sort intermediate edges pipeline
+					commandEncoder->setComputePipelineState(fineBucketSortIntermediateEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+					
+					// Encode clearing number of edges per coarse bucket buffer
+					commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
+					
+					// Encode a barrier
+					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+					
+					// Encode running trim intermediate edges pipeline
+					commandEncoder->setComputePipelineState(trimIntermediateEdgesPipeline.get());
+					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+				#endif
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6189,20 +6308,42 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Enqueue running trim initial edges kernel
 						clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
 						
-						// Enqueue running update largest intermediate coarse bucket size kernel
-						clEnqueueNDRangeKernel(commandQueue.get(), updateLargestIntermediateCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						// Check if using more RAM for GPU trimming
+						#if GPU_TRIMMING_USE_MORE_RAM
 						
-						// Enqueue clearing number of edges per fine bucket buffer
-						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+							// Enqueue running update largest final coarse bucket size kernel
+							clEnqueueNDRangeKernel(commandQueue.get(), updateLargestFinalCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue clearing number of edges per fine bucket buffer
+							clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue running fine bucket sort final edges kernel
+							clEnqueueNDRangeKernel(commandQueue.get(), fineBucketSortFinalEdgesKernel.get(), 2, nullptr, (const size_t[]){static_cast<size_t>(((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[1] + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION}, (const size_t[]){GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue clearing number of edges per coarse bucket buffer
+							clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue running trim final edges kernel
+							clEnqueueNDRangeKernel(commandQueue.get(), trimFinalEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+						// Otherwise
+						#else
 						
-						// Enqueue running fine bucket sort intermediate edges kernel
-						clEnqueueNDRangeKernel(commandQueue.get(), fineBucketSortIntermediateEdgesKernel.get(), 2, nullptr, (const size_t[]){static_cast<size_t>(((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[1] + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION}, (const size_t[]){GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1}, 0, nullptr, nullptr) != CL_SUCCESS ||
-						
-						// Enqueue clearing number of edges per coarse bucket buffer
-						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
-						
-						// Enqueue running trim intermediate edges kernel
-						clEnqueueNDRangeKernel(commandQueue.get(), trimIntermediateEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+							// Enqueue running update largest intermediate coarse bucket size kernel
+							clEnqueueNDRangeKernel(commandQueue.get(), updateLargestIntermediateCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue clearing number of edges per fine bucket buffer
+							clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue running fine bucket sort intermediate edges kernel
+							clEnqueueNDRangeKernel(commandQueue.get(), fineBucketSortIntermediateEdgesKernel.get(), 2, nullptr, (const size_t[]){static_cast<size_t>(((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[1] + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION}, (const size_t[]){GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1}, 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue clearing number of edges per coarse bucket buffer
+							clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+							
+							// Enqueue running trim intermediate edges kernel
+							clEnqueueNDRangeKernel(commandQueue.get(), trimIntermediateEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						#endif
 						
 						// Enqueue running update largest final coarse bucket size kernel
 						clEnqueueNDRangeKernel(commandQueue.get(), updateLargestFinalCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -7108,35 +7249,72 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
 					
-					// Encode running update largest intermediate coarse bucket size pipeline
-					commandEncoder->setComputePipelineState(updateLargestIntermediateCoarseBucketSizePipeline.get());
-					commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestIntermediateCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+					// Check if using more RAM for GPU trimming
+					#if GPU_TRIMMING_USE_MORE_RAM
 					
-					// Encode a barrier
-					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+						// Encode running update largest final coarse bucket size pipeline
+						commandEncoder->setComputePipelineState(updateLargestFinalCoarseBucketSizePipeline.get());
+						commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestFinalCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+						
+						// Encode clearing number of edges per fine bucket buffer
+						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+						
+						// Encode running fine bucket sort final edges pipeline
+						commandEncoder->setComputePipelineState(fineBucketSortFinalEdgesPipeline.get());
+						commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+						
+						// Encode clearing number of edges per coarse bucket buffer
+						commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+						
+						// Encode running trim final edges pipeline
+						commandEncoder->setComputePipelineState(trimFinalEdgesPipeline.get());
+						commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+						
+					// Otherwise
+					#else
 					
-					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
-					
-					// Encode a barrier
-					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
-					
-					// Encode running fine bucket sort intermediate edges pipeline
-					commandEncoder->setComputePipelineState(fineBucketSortIntermediateEdgesPipeline.get());
-					commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
-					
-					// Encode a barrier
-					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
-					
-					// Encode clearing number of edges per coarse bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
-					
-					// Encode a barrier
-					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
-					
-					// Encode running trim intermediate edges pipeline
-					commandEncoder->setComputePipelineState(trimIntermediateEdgesPipeline.get());
-					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+						// Encode running update largest intermediate coarse bucket size pipeline
+						commandEncoder->setComputePipelineState(updateLargestIntermediateCoarseBucketSizePipeline.get());
+						commandEncoder->dispatchThreadgroups(MTL::Size(1, 1, 1), MTL::Size(min(updateLargestIntermediateCoarseBucketSizePipeline->threadExecutionWidth(), static_cast<NS::UInteger>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)), 1, 1));
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+						
+						// Encode clearing number of edges per fine bucket buffer
+						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+						
+						// Encode running fine bucket sort intermediate edges pipeline
+						commandEncoder->setComputePipelineState(fineBucketSortIntermediateEdgesPipeline.get());
+						commandEncoder->dispatchThreadgroups(largestCoarseBucketSizeBuffer->gpuAddress(), MTL::Size(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
+						
+						// Encode clearing number of edges per coarse bucket buffer
+						commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
+						
+						// Encode a barrier
+						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
+						
+						// Encode running trim intermediate edges pipeline
+						commandEncoder->setComputePipelineState(trimIntermediateEdgesPipeline.get());
+						commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					#endif
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
