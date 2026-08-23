@@ -3203,7 +3203,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 										if(errno == EPERM) [[likely]] {
 										
 											// Display message
-											cout << "Run this program as root so that it can set the GPU's memory size by running the following command in a terminal: sudo \"" << (__builtin_expect(argv != nullptr, true) ? argv[0] : "") << '"' << endl;
+											cout << "If this program fails to run then run this program as root so that it can set the GPU's memory size by running the following command in a terminal: sudo \"" << (__builtin_expect(argv != nullptr, true) ? argv[0] : "") << '"' << endl;
 										}
 									}
 								}
