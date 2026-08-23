@@ -80,6 +80,11 @@ make HEADER_SIZE_EXCLUDING_NONCE=238
 make GPU_TRIMMING_USE_MORE_RAM=false
 ```
 
+* A `GPU_TRIMMING_USE_LESS_RAM` setting can be used to enable using a slower version of GPU trimming that uses less VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.
+```
+make GPU_TRIMMING_USE_LESS_RAM=false
+```
+
 * A `GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING` setting can be used to set the number of most significant bits used for coarse bucket sorting by the GPU. This settings affects the GPU trimming speed. The default value for this setting is `8`.
 ```
 make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=8

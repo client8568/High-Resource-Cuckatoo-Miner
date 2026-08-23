@@ -83,8 +83,18 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 // GPU number of fine buckets per dimension
 #define GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION (1 << GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
 
-// GPU fine bucket item size
-#define GPU_FINE_BUCKET_ITEM_SIZE (sizeof(uint32_t) + sizeof(uint32_t))
+// Check if using less RAM for GPU trimming
+#if GPU_TRIMMING_USE_LESS_RAM
+
+	// GPU fine bucket item size
+	#define GPU_FINE_BUCKET_ITEM_SIZE sizeof(uint32_t)
+	
+// Otherwise
+#else
+
+	// GPU fine bucket item size
+	#define GPU_FINE_BUCKET_ITEM_SIZE (sizeof(uint32_t) + sizeof(uint32_t))
+#endif
 
 // GPU max number of edges per fine bucket
 #define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
@@ -369,6 +379,13 @@ static_assert(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES > 0 && STRATUM_SERVER
 
 // Throw error if stratum server send keep alive request interval seconds is invalid
 static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS <= chrono::seconds::max().count(), "Stratum server send keep alive request interval seconds is invalid");
+
+// Check if using more and less RAM for GPU trimming
+#if GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_LESS_RAM
+
+	// Throw error
+	#error GPU trimming use more RAM and GPU trimming use less RAM are mutually exclusive
+#endif
 
 // Check if displaying tuning times and mining to a stratum server
 #if DISPLAY_TUNING_TIMES && MINE_TO_A_STRATUM_SERVER
@@ -3253,6 +3270,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use more RAM value
 					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MORE_RAM)),
 					
+					// GPU trimming use less RAM value
+					MTLSTR(TO_STRING(GPU_TRIMMING_USE_LESS_RAM)),
+					
 					// GPU number of most significant bits used for coarse bucket sorting value
 					MTLSTR(TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING)),
 					
@@ -3336,6 +3356,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use more RAM key
 					MTLSTR("GPU_TRIMMING_USE_MORE_RAM"),
 					
+					// GPU trimming use less RAM key
+					MTLSTR("GPU_TRIMMING_USE_LESS_RAM"),
+					
 					// GPU number of most significant bits used for coarse bucket sorting key
 					MTLSTR("GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING"),
 					
@@ -3384,7 +3407,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of recovering edges key
 					MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES")
 					
-				}, 19), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
+				}, 20), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
 				
 					// Free preprocessor macros
 					__builtin_assume_dereferenceable(preprocessorMacros, sizeof(*preprocessorMacros));
@@ -4274,6 +4297,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use more RAM
 					"-D GPU_TRIMMING_USE_MORE_RAM=" TO_STRING(GPU_TRIMMING_USE_MORE_RAM) " "
 					
+					// GPU trimming use less RAM
+					"-D GPU_TRIMMING_USE_LESS_RAM=" TO_STRING(GPU_TRIMMING_USE_LESS_RAM) " "
+					
 					// GPU number of most significant bits used for coarse bucket sorting
 					"-D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=" TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING) " "
 					
@@ -4480,7 +4506,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), trimEdgesParametersBuffer.get(), (const uint64_t[]){0}, sizeof(uint64_t), 0, sizeof(TrimEdgesParameters), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), largestCoarseBucketSizeBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
-				clEnqueueFillBuffer(commandQueue.get(), fineBucketsBuffer.get(), (const uint64_t[]){0}, sizeof(uint64_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET, 0, nullptr, nullptr) != CL_SUCCESS ||
+				clEnqueueFillBuffer(commandQueue.get(), fineBucketsBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET, 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), cpuBucketsBuffer.get(), (const uint64_t[]){0}, sizeof(uint64_t), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET, 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCpuBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
