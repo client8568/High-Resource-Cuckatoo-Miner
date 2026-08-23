@@ -14,7 +14,16 @@ This program utilizes a system's CPU and GPU together during the mining process 
 | Graph Started | 1    |          | 2    |          | 3    |          |                           | 4    |          | 5    |          | 6    |          |
 | Graph Ended   |      |          |      |          | 1    |          |                           | 2    |          | 3    |          | 4    |          |
 
-This program requires approximately 0.28 GB of RAM and 27 GB of VRAM to perform cuckatoo31 mining, and this program requires approximately 0.38 GB of RAM and 52 GB of VRAM to perform cuckatoo32 mining. As such, this program can perform cuckatoo32 mining on any Apple silicon device that has at least 64 GB of unified memory.
+This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 mining. Several settings are available when building this program that can adjust how much VRAM it requires, and the following table shows how those settings affect this program's VRAM requirement and speed of its GPU trimming stage.
+
+| Cuckatoo Variation | Settings                         | VRAM Required | GPU Trimming Speed |
+| ------------------ | -------------------------------- | ------------- | ------------------ |
+| Cuckatoo31         | Default Settings                 | ≈26.207 GB    | 100%               |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈34.453 GB    | ≈106.997%          |
+| Cuckatoo31         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈17.965 GB    | ≈63.643%           |
+| Cuckatoo32         | Default Settings                 | ≈51.958 GB    | 100%               |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈68.322 GB    | ≈106.997%          |
+| Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈35.591 GB    | ≈63.643%           |
 
 ### Building
 It's recommended that you build this program on the same system that you'll be running it on since it uses the `-mtune=native` and `-march=native` compiler flags to optimize itself for the current system's available features.
@@ -48,7 +57,7 @@ A stratum server address, port, and username can be provided when running this p
 ```
 
 ### Tuning
-All of this programs tuning settings are provided at build time and they are hard coded into the program. The values for all the tuning settings are verified at build time, so this program will fail to build if you attempt to use a setting that is invalid or outside of its expected range. Here are all the tuning settings available:
+All of this programs tuning related settings are provided at build time and they are hard coded into the program. The values for all the settings are verified at build time, so this program will fail to build if you attempt to use a setting that is invalid or outside of its expected range. Here are all the settings available:
 
 * An `EDGE_BITS` setting can be used to set the cuckatoo variation to perform. Set this to work with the cryptocurrency that you want to mine, such as `32` for cuckatoo32. The default value for this setting is `32`.
 ```
@@ -260,7 +269,7 @@ make USE_SIGNAL_HANDLER=true
 make CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS=true
 ```
 
-This program's default tuning settings are set for cuckatoo32 and should be fine tuned by you on the system that you'll be running it on in order to maximize its performance. If you want to perform cuckatoo31 with it, then building this program with the following tuning settings will give you a good starting point which you'll need to further fine tune on your system to maximize its performance:
+This program's default settings are set for cuckatoo32 and should be fine tuned by you on the system that you'll be running it on in order to maximize its performance. If you want to perform cuckatoo31 with it, then building this program with the following settings will give you a good starting point which you'll need to further fine tune on your system to maximize its performance:
 ```
 make EDGE_BITS=31 CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=15
 ```
