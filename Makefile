@@ -260,11 +260,13 @@ linuxDependencies:
 appleDependencies:
 	
 	# Metal-cpp
-	rm -rf "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./metal.h"
+	rm -rf "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./metal"
 	curl -LO "https://github.com/apple/metal-cpp/archive/refs/tags/release/metal-cpp_macOS27_iOS27.zip"
 	unzip "./metal-cpp_macOS27_iOS27.zip"
 	rm "./metal-cpp_macOS27_iOS27.zip"
-	cd "./metal-cpp-release-metal-cpp_macOS27_iOS27" && "./SingleHeader/MakeSingleHeader.py" -o "../metal.h" "./Metal/Metal.hpp"
+	mkdir "./metal"
+	cd "./metal-cpp-release-metal-cpp_macOS27_iOS27" && "./SingleHeader/MakeSingleHeader.py" -o "../metal/metal.h" "./Metal/Metal.hpp"
+	mv "./metal-cpp-release-metal-cpp_macOS27_iOS27/LICENSE.txt" "./metal/LICENSE"
 	rm -r "./metal-cpp-release-metal-cpp_macOS27_iOS27"
 	
 # Make Windows dependencies (This command works when using Windows: mingw32-make windowsDependencies)
