@@ -836,8 +836,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Create start and end time
-					chrono::high_resolution_clock::time_point endTime;
-					chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
+					chrono::steady_clock::time_point endTime;
+					chrono::steady_clock::time_point startTime = chrono::steady_clock::now();
 				#endif
 				
 				// Go through all rows of this thread's coarse buckets
@@ -939,7 +939,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if DISPLAY_TUNING_TIMES
 				
 					// Get end time
-					endTime = chrono::high_resolution_clock::now();
+					endTime = chrono::steady_clock::now();
 					
 					// Check if this is the first CPU trimming thread
 					if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -959,7 +959,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Get start time
-					startTime = chrono::high_resolution_clock::now();
+					startTime = chrono::steady_clock::now();
 				#endif
 				
 				// Go through all columns of this thread's coarse buckets
@@ -1061,7 +1061,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if DISPLAY_TUNING_TIMES
 				
 					// Get end time
-					endTime = chrono::high_resolution_clock::now();
+					endTime = chrono::steady_clock::now();
 					
 					// Check if this is the first CPU trimming thread
 					if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1088,7 +1088,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get start time
-						startTime = chrono::high_resolution_clock::now();
+						startTime = chrono::steady_clock::now();
 					#endif
 					
 					// Go through all rows of this thread's coarse buckets
@@ -1164,7 +1164,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get end time
-						endTime = chrono::high_resolution_clock::now();
+						endTime = chrono::steady_clock::now();
 						
 						// Check if this is the first CPU trimming thread
 						if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1184,7 +1184,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						}
 						
 						// Get start time
-						startTime = chrono::high_resolution_clock::now();
+						startTime = chrono::steady_clock::now();
 					#endif
 					
 					// Go through all columns of this thread's coarse buckets
@@ -1260,7 +1260,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get end time
-						endTime = chrono::high_resolution_clock::now();
+						endTime = chrono::steady_clock::now();
 						
 						// Check if this is the first CPU trimming thread
 						if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1288,7 +1288,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get start time
-						startTime = chrono::high_resolution_clock::now();
+						startTime = chrono::steady_clock::now();
 					#endif
 					
 					// Go through all rows of this thread's coarse buckets
@@ -1364,7 +1364,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get end time
-						endTime = chrono::high_resolution_clock::now();
+						endTime = chrono::steady_clock::now();
 						
 						// Check if this is the first CPU trimming thread
 						if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1389,7 +1389,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if DISPLAY_TUNING_TIMES
 				
 					// Get start time
-					startTime = chrono::high_resolution_clock::now();
+					startTime = chrono::steady_clock::now();
 				#endif
 				
 				// Go through all rows of this thread's coarse buckets
@@ -1532,7 +1532,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if DISPLAY_TUNING_TIMES
 				
 					// Get end time
-					endTime = chrono::high_resolution_clock::now();
+					endTime = chrono::steady_clock::now();
 					
 					// Check if this is the first CPU trimming thread
 					if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1562,7 +1562,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Get start time
-					startTime = chrono::high_resolution_clock::now();
+					startTime = chrono::steady_clock::now();
 				#endif
 				
 				// Go through all groups of coarse buckets
@@ -1723,7 +1723,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if DISPLAY_TUNING_TIMES
 				
 					// Get end time
-					endTime = chrono::high_resolution_clock::now();
+					endTime = chrono::steady_clock::now();
 					
 					// Check if this is the first CPU trimming thread
 					if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1770,7 +1770,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get start time
-						startTime = chrono::high_resolution_clock::now();
+						startTime = chrono::steady_clock::now();
 					#endif
 					
 					// Save previous largest coarse bucket size
@@ -1868,7 +1868,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get end time
-						endTime = chrono::high_resolution_clock::now();
+						endTime = chrono::steady_clock::now();
 						
 						// Check if this is the first CPU trimming thread
 						if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -1910,7 +1910,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						}
 						
 						// Get start time
-						startTime = chrono::high_resolution_clock::now();
+						startTime = chrono::steady_clock::now();
 					#endif
 					
 					// Save previous largest coarse bucket size
@@ -2008,7 +2008,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get end time
-						endTime = chrono::high_resolution_clock::now();
+						endTime = chrono::steady_clock::now();
 						
 						// Check if this is the first CPU trimming thread
 						if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -2058,7 +2058,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get start time
-						startTime = chrono::high_resolution_clock::now();
+						startTime = chrono::steady_clock::now();
 					#endif
 					
 					// Save previous largest coarse bucket size
@@ -2156,7 +2156,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if DISPLAY_TUNING_TIMES
 					
 						// Get end time
-						endTime = chrono::high_resolution_clock::now();
+						endTime = chrono::steady_clock::now();
 						
 						// Check if this is the first CPU trimming thread
 						if(!cpuTrimmingThreadIndex) [[unlikely]] {
@@ -2609,7 +2609,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if DISPLAY_TUNING_TIMES
 				
 					// Get time
-					const chrono::high_resolution_clock::time_point time = chrono::high_resolution_clock::now();
+					const chrono::steady_clock::time_point time = chrono::steady_clock::now();
 					
 					// Lock CPU searching threads lock
 					cpuSearchingThreadsLock.lock();
@@ -5236,7 +5236,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				}
 				
 				// Update last keep alive time
-				chrono::high_resolution_clock::time_point lastKeepAliveTime = chrono::high_resolution_clock::now();
+				chrono::steady_clock::time_point lastKeepAliveTime = chrono::steady_clock::now();
 			#endif
 			
 			// Display message
@@ -6261,13 +6261,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			cout << "Mining started" << endl << endl;
 			
 			// Get mining start time
-			const chrono::high_resolution_clock::time_point miningStartTime = chrono::high_resolution_clock::now();
+			const chrono::steady_clock::time_point miningStartTime = chrono::steady_clock::now();
 			
 			// Get graph start time
-			chrono::high_resolution_clock::time_point graphStartTime = miningStartTime;
+			chrono::steady_clock::time_point graphStartTime = miningStartTime;
 			
 			// Get CPU start time
-			chrono::high_resolution_clock::time_point cpuStartTime = miningStartTime;
+			chrono::steady_clock::time_point cpuStartTime = miningStartTime;
 			
 			// Loop forever
 			while(true) {
@@ -6485,7 +6485,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					});
 					
 					// Get CPU end time
-					chrono::high_resolution_clock::time_point cpuEndTime = chrono::high_resolution_clock::now();
+					chrono::steady_clock::time_point cpuEndTime = chrono::steady_clock::now();
 					
 					// Display message
 					cout << "CPU trimming and searching finished in " << static_cast<chrono::duration<double, milli>>(cpuEndTime - cpuStartTime) << endl;
@@ -6494,7 +6494,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#else
 				
 					// Get CPU end time
-					chrono::high_resolution_clock::time_point cpuEndTime = chrono::high_resolution_clock::now();
+					chrono::steady_clock::time_point cpuEndTime = chrono::steady_clock::now();
 					
 					// Display message
 					cout << "CPU trimming finished in " << static_cast<chrono::duration<double, milli>>(cpuEndTime - cpuStartTime) << endl;
@@ -6543,7 +6543,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#endif
 				
 				// Get CPU start time
-				cpuStartTime = chrono::high_resolution_clock::now();
+				cpuStartTime = chrono::steady_clock::now();
 				
 				// Check if using an Apple device
 				#ifdef __APPLE__
@@ -6861,7 +6861,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#if MINE_TO_A_STRATUM_SERVER
 				
 					// Check if its time to send a keep alive request
-					if(chrono::high_resolution_clock::now() - lastKeepAliveTime >= static_cast<chrono::seconds>(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS)) [[unlikely]] {
+					if(chrono::steady_clock::now() - lastKeepAliveTime >= static_cast<chrono::seconds>(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS)) [[unlikely]] {
 					
 						// Create keep alive request
 						const char keepAliveRequest[] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"keepalive\",\"params\":null}\n";
@@ -6961,7 +6961,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						#endif
 						
 						// Update last keep alive time
-						lastKeepAliveTime = chrono::high_resolution_clock::now();
+						lastKeepAliveTime = chrono::steady_clock::now();
 					}
 					
 					// Update next job height and job ID
@@ -7550,7 +7550,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					});
 					
 					// Get CPU end time
-					cpuEndTime = chrono::high_resolution_clock::now();
+					cpuEndTime = chrono::steady_clock::now();
 					
 					// Display message
 					cout << "CPU searching and additional tasks finished in " << static_cast<chrono::duration<double, milli>>(cpuEndTime - cpuStartTime) << endl;
@@ -7559,7 +7559,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#else
 				
 					// Get CPU end time
-					cpuEndTime = chrono::high_resolution_clock::now();
+					cpuEndTime = chrono::steady_clock::now();
 					
 					// Display message
 					cout << "CPU additional tasks finished in " << static_cast<chrono::duration<double, milli>>(cpuEndTime - cpuStartTime) << endl;
@@ -7606,7 +7606,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#endif
 				
 				// Get CPU start time
-				cpuStartTime = chrono::high_resolution_clock::now();
+				cpuStartTime = chrono::steady_clock::now();
 				
 				// Check if not recovering edges for every graph
 				#if !RECOVER_EDGES_FOR_EVERY_GRAPH
@@ -7688,7 +7688,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					});
 					
 					// Get CPU end time
-					cpuEndTime = chrono::high_resolution_clock::now();
+					cpuEndTime = chrono::steady_clock::now();
 					
 					// Display message
 					cout << "CPU recovering finished in " << static_cast<chrono::duration<double, milli>>(cpuEndTime - cpuStartTime) << endl;
@@ -7841,13 +7841,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								#endif
 								
 								// Update last keep alive time
-								lastKeepAliveTime = chrono::high_resolution_clock::now();
+								lastKeepAliveTime = chrono::steady_clock::now();
 							#endif
 						}
 					}
 					
 					// Get CPU start time
-					cpuStartTime = chrono::high_resolution_clock::now();
+					cpuStartTime = chrono::steady_clock::now();
 					
 				// Check if not recovering edges for every graph
 				#if !RECOVER_EDGES_FOR_EVERY_GRAPH
@@ -7856,7 +7856,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#endif
 				
 				// Get graph end time
-				const chrono::high_resolution_clock::time_point graphEndTime = chrono::high_resolution_clock::now();
+				const chrono::steady_clock::time_point graphEndTime = chrono::steady_clock::now();
 				
 				// Display message
 				cout << "Current mining rate is " << (1 / static_cast<chrono::duration<double>>(graphEndTime - graphStartTime).count()) << " g/s, overall mining rate is " << (graphsProcessed / static_cast<chrono::duration<double>>(graphEndTime - miningStartTime).count()) << " g/s, and solutions found to graphs processed ration is " << solutionsFound << '/' << graphsProcessed << endl << endl;
