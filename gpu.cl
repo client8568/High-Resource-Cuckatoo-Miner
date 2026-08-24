@@ -68,8 +68,8 @@ struct RecoverEdgesParameters {
 
 // Function prototypes
 
-// Check if using more RAM for GPU trimming
-#if GPU_TRIMMING_USE_MORE_RAM
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
 
 	// Coarse bucket sort edges
 	__kernel void coarseBucketSortEdges(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
@@ -84,14 +84,14 @@ struct RecoverEdgesParameters {
 // Update largest initial coarse bucket size
 __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict largestCoarseBucketSize, __global const uint *restrict numberOfEdgesPerCoarseBucket);
 
-// Check if using more RAM for GPU trimming
-#if GPU_TRIMMING_USE_MORE_RAM
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
 
 	// Fine bucket sort initial edges
 	__kernel void fineBucketSortInitialEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
 	
-// Otherwise check if using less RAM for GPU trimming
-#elif GPU_TRIMMING_USE_LESS_RAM
+// Otherwise check if using min RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM
 
 	// Fine bucket sort initial edges
 	__kernel void fineBucketSortInitialEdges(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
@@ -103,14 +103,14 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	__kernel void fineBucketSortInitialEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
 #endif
 
-// Check if using more RAM for GPU trimming
-#if GPU_TRIMMING_USE_MORE_RAM
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
 
 	// Trim initial edges
 	__kernel void trimInitialEdges(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket);
 	
-// Otherwise check if using less RAM for GPU trimming
-#elif GPU_TRIMMING_USE_LESS_RAM
+// Otherwise check if using min RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM
 
 	// Trim initial edges
 	__kernel void trimInitialEdges(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
@@ -125,8 +125,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 // Update largest intermediate coarse bucket size
 __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict largestCoarseBucketSize, __global const uint *restrict numberOfEdgesPerCoarseBucket);
 
-// Check if using less RAM for GPU trimming
-#if GPU_TRIMMING_USE_LESS_RAM
+// Check if using min RAM for GPU trimming
+#if GPU_TRIMMING_USE_MIN_RAM
 
 	// Fine bucket sort intermediate edges
 	__kernel void fineBucketSortIntermediateEdges(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters, __global const uint *restrict largestCoarseBucketSize);
@@ -138,8 +138,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	__kernel void fineBucketSortIntermediateEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters, __global const uint *restrict largestCoarseBucketSize);
 #endif
 
-// Check if using less RAM for GPU trimming
-#if GPU_TRIMMING_USE_LESS_RAM
+// Check if using min RAM for GPU trimming
+#if GPU_TRIMMING_USE_MIN_RAM
 
 	// Trim intermediate edges
 	__kernel void trimIntermediateEdges(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
@@ -181,8 +181,8 @@ static inline bool isBitSetInBitmap(__local const uint *bitmap, const uint index
 
 // Supporting function implementation
 
-// Check if using more RAM for GPU trimming
-#if GPU_TRIMMING_USE_MORE_RAM
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
 
 	// Coarse bucket sort edges
 	__kernel void coarseBucketSortEdges(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
@@ -209,8 +209,8 @@ static inline bool isBitSetInBitmap(__local const uint *bitmap, const uint index
 	// Get this work item's edges
 	const uint edge = get_global_id(0);
 	
-	// Check if using more RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MORE_RAM
+	// Check if using max RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MAX_RAM
 	
 		// Get edge's nodes
 		__builtin_assume(edge < NUMBER_OF_EDGES / 2);
@@ -267,8 +267,8 @@ static inline bool isBitSetInBitmap(__local const uint *bitmap, const uint index
 	// Check if the edge index is valid
 	if(__builtin_expect(edgeIndex < GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET, true)) {
 	
-		// Check if using more RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MORE_RAM
+		// Check if using max RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MAX_RAM
 		
 			// Put this work item's edge's nodes in the coarse bucket
 			__builtin_assume(edge < NUMBER_OF_EDGES / 2);
@@ -288,8 +288,8 @@ static inline bool isBitSetInBitmap(__local const uint *bitmap, const uint index
 	// Check if the edge index is valid
 	if(__builtin_expect(edgeIndexOther < GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET, true)) {
 	
-		// Check if using more RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MORE_RAM
+		// Check if using max RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MAX_RAM
 		
 			// Put this work item's other edge's nodes in the coarse bucket
 			__builtin_assume(edge < NUMBER_OF_EDGES / 2);
@@ -320,8 +320,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	*largestCoarseBucketSize = ((min(currentLargestCoarseBucketSize, (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
 }
 
-// Check if using more RAM for GPU trimming
-#if GPU_TRIMMING_USE_MORE_RAM
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
 
 	// Fine bucket sort initial edges
 	__kernel void fineBucketSortInitialEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
@@ -445,8 +445,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 // Otherwise
 #else
 
-	// Check if using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_LESS_RAM
+	// Check if using min RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM
 	
 		// Fine bucket sort initial edges
 		__kernel void fineBucketSortInitialEdges(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
@@ -512,8 +512,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Synchronize work group
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
-		// Check if not using less RAM for GPU trimming
-		#if !GPU_TRIMMING_USE_LESS_RAM
+		// Check if not using min RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM
 			
 			// Check if this work item's edge exists
 			uint node;
@@ -528,15 +528,15 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Check if this work item's edge exists
 		ushort fineBucketIndex;
 		ushort localNextEdgeIndex;
-		#if !GPU_TRIMMING_USE_LESS_RAM
+		#if !GPU_TRIMMING_USE_MIN_RAM
 			uint nodeOther;
 		#endif
 		ushort fineBucketIndexOther;
 		ushort localNextEdgeIndexOther;
 		if(__builtin_expect(edgeExists, true)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Get the fine bucket index for the edge's node
 				__builtin_assume(edge < NUMBER_OF_EDGES);
@@ -555,8 +555,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 			// Check if this work item's other edge exists
 			if(__builtin_expect(edgeExistsOther, true)) {
 			
-				// Check if using less RAM for GPU trimming
-				#if GPU_TRIMMING_USE_LESS_RAM
+				// Check if using min RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM
 				
 					// Get the fine bucket index for the other edge's node
 					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
@@ -597,8 +597,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Check if the edge index is valid
 		if(__builtin_expect(edgeIndex < GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * edgeExists, true)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Put this work item's edge in the fine bucket
 				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + edgeIndex] = edge;
@@ -617,8 +617,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Check if the edge index is valid
 		if(__builtin_expect(edgeIndexOther < GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * edgeExistsOther, true)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Put this work item's other edge in the fine bucket
 				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = edgeOther;
@@ -633,8 +633,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	}
 #endif
 
-// Check if using more RAM for GPU trimming
-#if GPU_TRIMMING_USE_MORE_RAM
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
 
 	// Trim initial edges
 	__kernel void trimInitialEdges(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket) {
@@ -741,8 +741,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 // Otherwise
 #else
 
-	// Check if using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_LESS_RAM
+	// Check if using min RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM
 	
 		// Trim initial edges
 		__kernel void trimInitialEdges(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
@@ -769,8 +769,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
 		
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Get the edges in this work group's fine bucket
 			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
@@ -798,8 +798,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Go through all of this work group's edges as a work group
 		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Set edge's node in the bitmap
 				__builtin_assume(edges[i] < NUMBER_OF_EDGES);
@@ -826,8 +826,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Go through all of this work group's edges as a work group
 		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Get this work item's edge
 				const uint edge = edges[min(i + localId, numberOfEdges - 1)];
@@ -851,8 +851,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 			ushort localNextEdgeIndex;
 			if(__builtin_expect(edgeSurvives, true)) {
 			
-				// Check if using less RAM for GPU trimming
-				#if GPU_TRIMMING_USE_LESS_RAM
+				// Check if using min RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM
 				
 					// Get the coarse bucket index for the edge's other node
 					__builtin_assume(edge < NUMBER_OF_EDGES);
@@ -886,8 +886,8 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 			// Check if this work item's edge survives
 			if(__builtin_expect(edgeSurvives, true)) {
 			
-				// Check if using less RAM for GPU trimming
-				#if GPU_TRIMMING_USE_LESS_RAM
+				// Check if using min RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM
 				
 					// Put this work item's edge in the coarse bucket
 					coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edge;
@@ -918,8 +918,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	*largestCoarseBucketSize = ((currentLargestCoarseBucketSize + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
 }
 
-// Check if using less RAM for GPU trimming
-#if GPU_TRIMMING_USE_LESS_RAM
+// Check if using min RAM for GPU trimming
+#if GPU_TRIMMING_USE_MIN_RAM
 
 	// Fine bucket sort intermediate edges
 	__kernel void fineBucketSortIntermediateEdges(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters, __global const uint *restrict largestCoarseBucketSize) {
@@ -985,8 +985,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Synchronize work group
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
-	// Check if not using less RAM for GPU trimming
-	#if !GPU_TRIMMING_USE_LESS_RAM
+	// Check if not using min RAM for GPU trimming
+	#if !GPU_TRIMMING_USE_MIN_RAM
 	
 		// Check if this work item's edge exists
 		uint otherNode;
@@ -1001,15 +1001,15 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Check if this work item's edge exists
 	ushort fineBucketIndex;
 	ushort localNextEdgeIndex;
-	#if !GPU_TRIMMING_USE_LESS_RAM
+	#if !GPU_TRIMMING_USE_MIN_RAM
 		uint otherNodeOther;
 	#endif
 	ushort fineBucketIndexOther;
 	ushort localNextEdgeIndexOther;
 	if(__builtin_expect(edgeExists, true)) {
 	
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Get the fine bucket index for the edge's other node
 			__builtin_assume(edge < NUMBER_OF_EDGES);
@@ -1028,8 +1028,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 		// Check if this work item's other edge exists
 		if(__builtin_expect(edgeExistsOther, true)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Get the fine bucket index for the other edge's other node
 				__builtin_assume(edgeOther < NUMBER_OF_EDGES);
@@ -1067,8 +1067,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Check if this work item's edge exists
 	if(__builtin_expect(edgeExists, true)) {
 	
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Put this work item's edge in the fine bucket
 			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
@@ -1083,8 +1083,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 		// Check if this work item's other edge exists
 		if(__builtin_expect(edgeExistsOther, true)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Put this work item's other edge in the fine bucket
 				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
@@ -1099,8 +1099,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	}
 }
 
-// Check if using less RAM for GPU trimming
-#if GPU_TRIMMING_USE_LESS_RAM
+// Check if using min RAM for GPU trimming
+#if GPU_TRIMMING_USE_MIN_RAM
 
 	// Trim intermediate edges
 	__kernel void trimIntermediateEdges(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
@@ -1127,8 +1127,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Get this work group's fine bucket index
 	const ushort fineBucketIndex = get_group_id(0);
 	
-	// Check if using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_LESS_RAM
+	// Check if using min RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM
 	
 		// Get the edges in this work group's fine bucket
 		__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
@@ -1156,8 +1156,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Go through all of this work group's edges as a work group
 	for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 	
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Set edge's other node in the bitmap
 			__builtin_assume(edges[i] < NUMBER_OF_EDGES);
@@ -1184,8 +1184,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Go through all of this work group's edges as a work group
 	for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 	
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Get this work item's edge
 			const uint edge = edges[min(i + localId, numberOfEdges - 1)];
@@ -1211,8 +1211,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 		uint node;
 		if(__builtin_expect(edgeSurvives, false)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Get edge's node
 				__builtin_assume(edge < NUMBER_OF_EDGES);
@@ -1260,8 +1260,8 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 		// Check if this work item's edge survives
 		if(__builtin_expect(edgeSurvives, false)) {
 		
-			// Check if using less RAM for GPU trimming
-			#if GPU_TRIMMING_USE_LESS_RAM
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
 				// Put this work item's edge's nodes in the coarse bucket
 				coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = (uint2)(node, otherNode);
@@ -1348,8 +1348,8 @@ __kernel void fineBucketSortFinalEdges(__global uint2 *restrict fineBuckets, __g
 	ushort localNextEdgeIndexOther;
 	if(__builtin_expect(edgeExists, true)) {
 	
-		// Check if using more RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MORE_RAM
+		// Check if using max RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MAX_RAM
 		
 			// Get this work item's edge's nodes
 			nodes = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndex];
@@ -1370,8 +1370,8 @@ __kernel void fineBucketSortFinalEdges(__global uint2 *restrict fineBuckets, __g
 		// Check if this work item's other edge exists
 		if(__builtin_expect(edgeExistsOther, true)) {
 		
-			// Check if using more RAM for GPU trimming
-			#if GPU_TRIMMING_USE_MORE_RAM
+			// Check if using max RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MAX_RAM
 			
 				// Get this work item's other edge's nodes
 				nodesOther = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndexOther];
@@ -1412,8 +1412,8 @@ __kernel void fineBucketSortFinalEdges(__global uint2 *restrict fineBuckets, __g
 	// Check if this work item's edge exists
 	if(__builtin_expect(edgeExists, true)) {
 	
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Put this work item's edge's nodes in the fine bucket
 			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
@@ -1429,8 +1429,8 @@ __kernel void fineBucketSortFinalEdges(__global uint2 *restrict fineBuckets, __g
 	// Check if this work item's other edge exists
 	if(__builtin_expect(edgeExistsOther, true)) {
 	
-		// Check if using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_LESS_RAM
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
 			// Put this work item's edge's nodes in the fine bucket
 			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
@@ -1475,8 +1475,8 @@ __kernel void trimFinalEdges(__global uint2 *restrict coarseBuckets, __global ui
 	// Synchronize work group
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
-	// Check if using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_LESS_RAM
+	// Check if using min RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM
 	
 		// Get the edges in this work group's fine bucket
 		__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
@@ -1550,8 +1550,8 @@ __kernel void trimFinalEdges(__global uint2 *restrict coarseBuckets, __global ui
 		// Check if this work item's edge survives
 		if(__builtin_expect(edgeSurvives, true)) {
 		
-			// Check if using more RAM for GPU trimming
-			#if GPU_TRIMMING_USE_MORE_RAM
+			// Check if using max RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MAX_RAM
 			
 				// Put this work item's edge's nodes in the coarse bucket
 				coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = nodes.yx;
@@ -1600,8 +1600,8 @@ __kernel void trimFinalEdgesAndTransferEdges(__global uint2 *restrict cpuBuckets
 	// Synchronize work group
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
-	// Check if using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_LESS_RAM
+	// Check if using min RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM
 	
 		// Get the edges in this work group's fine bucket
 		__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
