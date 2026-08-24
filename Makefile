@@ -1,7 +1,7 @@
 # Settings
 
 # Edge bits
-EDGE_BITS = 28
+EDGE_BITS = 32
 
 # GPU trimming rounds
 GPU_TRIMMING_ROUNDS = 5
@@ -22,7 +22,7 @@ GPU_TRIMMING_USE_MAX_RAM = false
 GPU_TRIMMING_USE_MORE_RAM = false
 
 # GPU trimming use less RAM
-GPU_TRIMMING_USE_LESS_RAM = true
+GPU_TRIMMING_USE_LESS_RAM = false
 
 # GPU trimming use min RAM
 GPU_TRIMMING_USE_MIN_RAM = false
@@ -112,13 +112,13 @@ STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES = 10
 STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS = 10
 
 # Display tuning times
-DISPLAY_TUNING_TIMES = true
+DISPLAY_TUNING_TIMES = false
 
 # Recover edges for every graph
 RECOVER_EDGES_FOR_EVERY_GRAPH = false
 
 # Mine to a stratum server
-MINE_TO_A_STRATUM_SERVER = false
+MINE_TO_A_STRATUM_SERVER = true
 
 # Display stratum server messages
 DISPLAY_STRATUM_SERVER_MESSAGES = false
