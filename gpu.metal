@@ -96,8 +96,8 @@ struct RecoverEdgesParameters {
 	// Fine bucket sort initial edges
 	[[kernel]] void fineBucketSortInitialEdges(device uint2 *__restrict fineBuckets [[buffer(4)]], device atomic_uint *__restrict numberOfEdgesPerFineBucket [[buffer(5)]], constant const uint2 *__restrict coarseBuckets [[buffer(0)]], constant const uint *__restrict numberOfEdgesPerCoarseBucket [[buffer(1)]], const ushort2 localId [[thread_position_in_threadgroup]], const ushort2 groupId [[threadgroup_position_in_grid]]);
 	
-// Otherwise check if using min RAM for GPU trimming
-#elif GPU_TRIMMING_USE_MIN_RAM
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 
 	// Fine bucket sort initial edges
 	[[kernel]] void fineBucketSortInitialEdges(device uint *__restrict fineBuckets [[buffer(4)]], device atomic_uint *__restrict numberOfEdgesPerFineBucket [[buffer(5)]], constant const uint *__restrict coarseBuckets [[buffer(0)]], constant const uint *__restrict numberOfEdgesPerCoarseBucket [[buffer(1)]], constant const TrimEdgesParameters &__restrict trimEdgesParameters [[buffer(2)]], const ushort2 localId [[thread_position_in_threadgroup]], const ushort2 localSize [[threads_per_threadgroup]], const uint2 groupId [[threadgroup_position_in_grid]]);
@@ -115,8 +115,8 @@ struct RecoverEdgesParameters {
 	// Trim initial edges
 	[[kernel]] void trimInitialEdges(device uint2 *__restrict coarseBuckets [[buffer(0)]], device atomic_uint *__restrict numberOfEdgesPerCoarseBucket [[buffer(1)]], constant const uint2 *__restrict fineBuckets [[buffer(4)]], constant const uint *__restrict numberOfEdgesPerFineBucket [[buffer(5)]], const uint localId [[thread_position_in_threadgroup]], const ushort groupId [[threadgroup_position_in_grid]]);
 	
-// Otherwise check if using min RAM for GPU trimming
-#elif GPU_TRIMMING_USE_MIN_RAM
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 
 	// Trim initial edges
 	[[kernel]] void trimInitialEdges(device uint *__restrict coarseBuckets [[buffer(0)]], device atomic_uint *__restrict numberOfEdgesPerCoarseBucket [[buffer(1)]], constant const uint *__restrict fineBuckets [[buffer(4)]], constant const uint *__restrict numberOfEdgesPerFineBucket [[buffer(5)]], constant const TrimEdgesParameters &__restrict trimEdgesParameters [[buffer(2)]], const ushort localId [[thread_position_in_threadgroup]], const ushort groupId [[threadgroup_position_in_grid]]);
@@ -436,8 +436,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 // Otherwise
 #else
 
-	// Check if using min RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 	
 		// Fine bucket sort initial edges
 		[[kernel]] void fineBucketSortInitialEdges(device uint *__restrict fineBuckets [[buffer(4)]], device atomic_uint *__restrict numberOfEdgesPerFineBucket [[buffer(5)]], constant const uint *__restrict coarseBuckets [[buffer(0)]], constant const uint *__restrict numberOfEdgesPerCoarseBucket [[buffer(1)]], constant const TrimEdgesParameters &__restrict trimEdgesParameters [[buffer(2)]], const ushort2 localId [[thread_position_in_threadgroup]], const ushort2 localSize [[threads_per_threadgroup]], const uint2 groupId [[threadgroup_position_in_grid]]) {
@@ -487,8 +487,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		// Synchronize work group
 		threadgroup_barrier(mem_flags::mem_threadgroup);
 		
-		// Check if not using min RAM for GPU trimming
-		#if !GPU_TRIMMING_USE_MIN_RAM
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
 		
 			// Check if this work item's edge exists
 			uint node;
@@ -503,15 +503,15 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		// Check if this work item's edge exists
 		ushort fineBucketIndex;
 		ushort localNextEdgeIndex;
-		#if !GPU_TRIMMING_USE_MIN_RAM
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
 			uint nodeOther;
 		#endif
 		ushort fineBucketIndexOther;
 		ushort localNextEdgeIndexOther;
 		if(edgeExists) [[likely]] {
 		
-			// Check if using min RAM for GPU trimming
-			#if GPU_TRIMMING_USE_MIN_RAM
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 			
 				// Get the fine bucket index for the edge's node
 				__builtin_assume(edge < NUMBER_OF_EDGES);
@@ -530,8 +530,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 			// Check if this work item's other edge exists
 			if(edgeExistsOther) [[likely]] {
 			
-				// Check if using min RAM for GPU trimming
-				#if GPU_TRIMMING_USE_MIN_RAM
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 				
 					// Get the fine bucket index for the other edge's node
 					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
@@ -579,8 +579,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 				__builtin_assume(edge < NUMBER_OF_EDGES);
 				fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndex) + edgeIndex] = uint2(node, sipHash24(trimEdgesParameters.sipHashKeys, (static_cast<ulong>(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK);
 				
-			// Otherwise check if using min RAM for GPU trimming
-			#elif GPU_TRIMMING_USE_MIN_RAM
+			// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 			
 				// Put this work item's edge in the fine bucket
 				fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndex) + edgeIndex] = edge;
@@ -606,8 +606,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 				__builtin_assume(edgeOther < NUMBER_OF_EDGES);
 				fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = uint2(nodeOther, sipHash24(trimEdgesParameters.sipHashKeys, (static_cast<ulong>(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK);
 				
-			// Otherwise check if using min RAM for GPU trimming
-			#elif GPU_TRIMMING_USE_MIN_RAM
+			// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 			
 				// Put this work item's other edge in the fine bucket
 				fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = edgeOther;
@@ -734,8 +734,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 // Otherwise
 #else
 
-	// Check if using min RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 	
 		// Trim initial edges
 		[[kernel]] void trimInitialEdges(device uint *__restrict coarseBuckets [[buffer(0)]], device atomic_uint *__restrict numberOfEdgesPerCoarseBucket [[buffer(1)]], constant const uint *__restrict fineBuckets [[buffer(4)]], constant const uint *__restrict numberOfEdgesPerFineBucket [[buffer(5)]], constant const TrimEdgesParameters &__restrict trimEdgesParameters [[buffer(2)]], const ushort localId [[thread_position_in_threadgroup]], const ushort groupId [[threadgroup_position_in_grid]]) {
@@ -759,8 +759,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		// Get this work group's fine bucket index
 		thread const ushort &fineBucketIndex = groupId;
 		
-		// Check if using min RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 		
 			// Get the edges in this work group's fine bucket
 			constant const uint *edges = &fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * fineBucketIndex];
@@ -788,8 +788,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		// Go through all of this work group's edges as a work group
 		for(uint i = localId; i < numberOfEdges; i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
-			// Check if using min RAM for GPU trimming
-			#if GPU_TRIMMING_USE_MIN_RAM
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 			
 				// Set edge's node in the bitmap
 				__builtin_assume(edges[i] < NUMBER_OF_EDGES);
@@ -816,8 +816,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		// Go through all of this work group's edges as a work group
 		for(uint i = 0; i < numberOfEdges; i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
-			// Check if using min RAM for GPU trimming
-			#if GPU_TRIMMING_USE_MIN_RAM
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 			
 				// Get this work item's edge
 				const uint edge = edges[min(i + localId, numberOfEdges - 1)];
@@ -841,8 +841,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 			ushort localNextEdgeIndex;
 			if(edgeSurvives) [[likely]] {
 			
-				// Check if using min RAM for GPU trimming
-				#if GPU_TRIMMING_USE_MIN_RAM
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 				
 					// Get the coarse bucket index for the edge's other node
 					__builtin_assume(edge < NUMBER_OF_EDGES);
@@ -876,8 +876,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 			// Check if this work item's edge survives
 			if(edgeSurvives) [[likely]] {
 			
-				// Check if using min RAM for GPU trimming
-				#if GPU_TRIMMING_USE_MIN_RAM
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 				
 					// Put this work item's edge in the coarse bucket
 					coarseBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edge;
@@ -1051,6 +1051,12 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 			// Put this work item's edge in the fine bucket
 			fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
 			
+		// Otherwise check if using less RAM for GPU trimming
+		#elif GPU_TRIMMING_USE_LESS_RAM
+			
+			// Put this work item's edge and its other node in the fine bucket
+			fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = uint2(edge, otherNode);
+			
 		// Otherwise
 		#else
 		
@@ -1066,6 +1072,12 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 			
 				// Put this work item's other edge in the fine bucket
 				fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+				
+			// Otherwise check if using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's other edge and its other node in the fine bucket
+				fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = uint2(edgeOther, otherNodeOther);
 				
 			// Otherwise
 			#else
@@ -1107,6 +1119,12 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	
 		// Get the edges in this work group's fine bucket
 		constant const uint *edges = &fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) * fineBucketIndex];
+		
+	// Otherwise check if using less RAM for GPU trimming
+	#elif GPU_TRIMMING_USE_LESS_RAM
+	
+		// Get the edges in this work group's fine bucket
+		constant const uint2 *edges = &fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
 		
 	// Otherwise
 	#else
@@ -1378,8 +1396,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	// Check if this work item's edge exists
 	if(edgeExists) [[likely]] {
 	
-		// Check if using min RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 		
 			// Put this work item's edge's nodes in the fine bucket
 			fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
@@ -1395,8 +1413,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	// Check if this work item's other edge exists
 	if(edgeExistsOther) [[likely]] {
 	
-		// Check if using min RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 		
 			// Put this work item's edge's nodes in the fine bucket
 			fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * (static_cast<uint>(GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
@@ -1435,8 +1453,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	// Synchronize work group
 	threadgroup_barrier(mem_flags::mem_threadgroup);
 	
-	// Check if using min RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 	
 		// Get the edges in this work group's fine bucket
 		constant const uint2 *edges = &fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
@@ -1554,8 +1572,8 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	// Synchronize work group
 	threadgroup_barrier(mem_flags::mem_threadgroup);
 	
-	// Check if using min RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 	
 		// Get the edges in this work group's fine bucket
 		constant const uint2 *edges = &fineBuckets[static_cast<ulong>(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];

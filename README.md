@@ -94,6 +94,11 @@ make GPU_TRIMMING_USE_MAX_RAM=false
 make GPU_TRIMMING_USE_MORE_RAM=false
 ```
 
+* A `GPU_TRIMMING_USE_LESS_RAM` setting can be used to enable using a slower version of GPU trimming that uses less VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.
+```
+make GPU_TRIMMING_USE_LESS_RAM=false
+```
+
 * A `GPU_TRIMMING_USE_MIN_RAM` setting can be used to enable using the slowest version of GPU trimming that uses the least VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.
 ```
 make GPU_TRIMMING_USE_MIN_RAM=false

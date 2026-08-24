@@ -80,9 +80,6 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 // Check if using more RAM for GPU trimming
 #if GPU_TRIMMING_USE_MORE_RAM
 
-	// Number of edges remaining after one trimming round additional tolerance percent
-	#define NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT 0.1
-	
 	// GPU max number of edges per coarse bucket
 	#define GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET static_cast<uint32_t>((ceilAsUint32(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[0] * (PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND * (1 + NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT) * ((sizeof(uint32_t) + sizeof(uint32_t)) / GPU_COARSE_BUCKET_ITEM_SIZE))) + (hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1))
 	
@@ -96,8 +93,8 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 // GPU number of fine buckets per dimension
 #define GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION (1 << GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
 
-// Check if using min RAM for GPU trimming
-#if GPU_TRIMMING_USE_MIN_RAM
+// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
 
 	// GPU fine bucket item size
 	#define GPU_FINE_BUCKET_ITEM_SIZE sizeof(uint32_t)
@@ -109,8 +106,18 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 	#define GPU_FINE_BUCKET_ITEM_SIZE (sizeof(uint32_t) + sizeof(uint32_t))
 #endif
 
-// GPU max number of edges per fine bucket
-#define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
+// Check if using less RAM for GPU trimming
+#if GPU_TRIMMING_USE_LESS_RAM
+
+	// GPU max number of edges per fine bucket
+	#define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) * (PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND * (1 + NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT) * ((sizeof(uint32_t) + sizeof(uint32_t)) / GPU_FINE_BUCKET_ITEM_SIZE))) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
+	
+// Otherwise
+#else
+
+	// GPU max number of edges per fine bucket
+	#define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
+#endif
 
 // GPU number of least significant bits ignored during fine bucket sorting
 #define GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING (EDGE_BITS - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
@@ -393,11 +400,11 @@ static_assert(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES > 0 && STRATUM_SERVER
 // Throw error if stratum server send keep alive request interval seconds is invalid
 static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS <= chrono::seconds::max().count(), "Stratum server send keep alive request interval seconds is invalid");
 
-// Check if using max, more, or min RAM for GPU trimming together
-#if (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MORE_RAM) || (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MIN_RAM) || (GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_MIN_RAM)
+// Check if using max, more, less, or min RAM for GPU trimming together
+#if (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MORE_RAM) || (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_LESS_RAM) || (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MIN_RAM) || (GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_LESS_RAM) || (GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_MIN_RAM) || (GPU_TRIMMING_USE_LESS_RAM && GPU_TRIMMING_USE_MIN_RAM)
 
 	// Throw error
-	#error GPU trimming use max RAM, GPU trimming use more RAM, and GPU trimming use min RAM are mutually exclusive
+	#error GPU trimming use max RAM, GPU trimming use more RAM, GPU trimming use less RAM, and GPU trimming use min RAM are mutually exclusive
 #endif
 
 // Check if displaying tuning times and mining to a stratum server
@@ -3286,6 +3293,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use more RAM value
 					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MORE_RAM)),
 					
+					// GPU trimming use less RAM value
+					MTLSTR(TO_STRING(GPU_TRIMMING_USE_LESS_RAM)),
+					
 					// GPU trimming use min RAM value
 					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MIN_RAM)),
 					
@@ -3375,6 +3385,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use more RAM key
 					MTLSTR("GPU_TRIMMING_USE_MORE_RAM"),
 					
+					// GPU trimming use less RAM key
+					MTLSTR("GPU_TRIMMING_USE_LESS_RAM"),
+					
 					// GPU trimming use min RAM key
 					MTLSTR("GPU_TRIMMING_USE_MIN_RAM"),
 					
@@ -3426,7 +3439,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of recovering edges key
 					MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES")
 					
-				}, 21), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
+				}, 22), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
 				
 					// Free preprocessor macros
 					__builtin_assume_dereferenceable(preprocessorMacros, sizeof(*preprocessorMacros));
@@ -4318,6 +4331,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// GPU trimming use more RAM
 					"-D GPU_TRIMMING_USE_MORE_RAM=" TO_STRING(GPU_TRIMMING_USE_MORE_RAM) " "
+					
+					// GPU trimming use less RAM
+					"-D GPU_TRIMMING_USE_LESS_RAM=" TO_STRING(GPU_TRIMMING_USE_LESS_RAM) " "
 					
 					// GPU trimming use min RAM
 					"-D GPU_TRIMMING_USE_MIN_RAM=" TO_STRING(GPU_TRIMMING_USE_MIN_RAM) " "
