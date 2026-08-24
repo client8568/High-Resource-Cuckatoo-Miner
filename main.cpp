@@ -77,8 +77,21 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 	#define GPU_COARSE_BUCKET_ITEM_SIZE sizeof(uint32_t)
 #endif
 
-// GPU max number of edges per coarse bucket
-#define GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET static_cast<uint32_t>((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[0] + (hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1))
+// Check if using more RAM for GPU trimming
+#if GPU_TRIMMING_USE_MORE_RAM
+
+	// Number of edges remaining after one trimming round additional tolerance percent
+	#define NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT 0.1
+	
+	// GPU max number of edges per coarse bucket
+	#define GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET static_cast<uint32_t>((ceilAsUint32(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[0] * (PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND * (1 + NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT) * ((sizeof(uint32_t) + sizeof(uint32_t)) / GPU_COARSE_BUCKET_ITEM_SIZE))) + (hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1))
+	
+// Otherwise
+#else
+
+	// GPU max number of edges per coarse bucket
+	#define GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET static_cast<uint32_t>((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[0] + (hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1))
+#endif
 
 // GPU number of fine buckets per dimension
 #define GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION (1 << GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
@@ -380,11 +393,11 @@ static_assert(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES > 0 && STRATUM_SERVER
 // Throw error if stratum server send keep alive request interval seconds is invalid
 static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS <= chrono::seconds::max().count(), "Stratum server send keep alive request interval seconds is invalid");
 
-// Check if using max and min RAM for GPU trimming
-#if GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MIN_RAM
+// Check if using max, more, or min RAM for GPU trimming together
+#if (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MORE_RAM) || (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MIN_RAM) || (GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_MIN_RAM)
 
 	// Throw error
-	#error GPU trimming use max RAM and GPU trimming use min RAM are mutually exclusive
+	#error GPU trimming use max RAM, GPU trimming use more RAM, and GPU trimming use min RAM are mutually exclusive
 #endif
 
 // Check if displaying tuning times and mining to a stratum server
@@ -3270,6 +3283,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use max RAM value
 					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MAX_RAM)),
 					
+					// GPU trimming use more RAM value
+					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MORE_RAM)),
+					
 					// GPU trimming use min RAM value
 					MTLSTR(TO_STRING(GPU_TRIMMING_USE_MIN_RAM)),
 					
@@ -3356,6 +3372,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use max RAM key
 					MTLSTR("GPU_TRIMMING_USE_MAX_RAM"),
 					
+					// GPU trimming use more RAM key
+					MTLSTR("GPU_TRIMMING_USE_MORE_RAM"),
+					
 					// GPU trimming use min RAM key
 					MTLSTR("GPU_TRIMMING_USE_MIN_RAM"),
 					
@@ -3407,7 +3426,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of recovering edges key
 					MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES")
 					
-				}, 20), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
+				}, 21), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
 				
 					// Free preprocessor macros
 					__builtin_assume_dereferenceable(preprocessorMacros, sizeof(*preprocessorMacros));
@@ -4297,6 +4316,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU trimming use max RAM
 					"-D GPU_TRIMMING_USE_MAX_RAM=" TO_STRING(GPU_TRIMMING_USE_MAX_RAM) " "
 					
+					// GPU trimming use more RAM
+					"-D GPU_TRIMMING_USE_MORE_RAM=" TO_STRING(GPU_TRIMMING_USE_MORE_RAM) " "
+					
 					// GPU trimming use min RAM
 					"-D GPU_TRIMMING_USE_MIN_RAM=" TO_STRING(GPU_TRIMMING_USE_MIN_RAM) " "
 					
@@ -4439,7 +4461,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				clSetKernelArg(trimInitialEdgesKernel.get(), 1, sizeof(numberOfEdgesPerCoarseBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerCoarseBucketBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(trimInitialEdgesKernel.get(), 2, sizeof(fineBucketsBuffer.get()), &static_cast<const cl_mem &>(fineBucketsBuffer.get())) != CL_SUCCESS ||
 				clSetKernelArg(trimInitialEdgesKernel.get(), 3, sizeof(numberOfEdgesPerFineBucketBuffer.get()), &static_cast<const cl_mem &>(numberOfEdgesPerFineBucketBuffer.get())) != CL_SUCCESS ||
-				#if !GPU_TRIMMING_USE_MAX_RAM
+				#if !GPU_TRIMMING_USE_MAX_RAM && !GPU_TRIMMING_USE_MORE_RAM
 					clSetKernelArg(trimInitialEdgesKernel.get(), 4, sizeof(trimEdgesParametersBuffer.get()), &static_cast<const cl_mem &>(trimEdgesParametersBuffer.get())) != CL_SUCCESS ||
 				#endif
 				
@@ -5361,8 +5383,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
 				
-				// Check if using max RAM for GPU trimming
-				#if GPU_TRIMMING_USE_MAX_RAM
+				// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
 				
 					// Encode running update largest final coarse bucket size pipeline
 					commandEncoder->setComputePipelineState(updateLargestFinalCoarseBucketSizePipeline.get());
@@ -5771,8 +5793,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Enqueue running trim initial edges kernel
 					clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
 					
-					// Check if using max RAM for GPU trimming
-					#if GPU_TRIMMING_USE_MAX_RAM
+					// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
+					#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
 					
 						// Enqueue running update largest final coarse bucket size kernel
 						clEnqueueNDRangeKernel(commandQueue.get(), updateLargestFinalCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -6066,8 +6088,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
 				
-				// Check if using max RAM for GPU trimming
-				#if GPU_TRIMMING_USE_MAX_RAM
+				// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
 				
 					// Encode running update largest final coarse bucket size pipeline
 					commandEncoder->setComputePipelineState(updateLargestFinalCoarseBucketSizePipeline.get());
@@ -6334,8 +6356,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Enqueue running trim initial edges kernel
 						clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
 						
-						// Check if using max RAM for GPU trimming
-						#if GPU_TRIMMING_USE_MAX_RAM
+						// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
+						#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
 						
 							// Enqueue running update largest final coarse bucket size kernel
 							clEnqueueNDRangeKernel(commandQueue.get(), updateLargestFinalCoarseBucketSizeKernel.get(), 1, nullptr, (const size_t[]){1}, (const size_t[]){1}, 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -7275,8 +7297,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
 					
-					// Check if using max RAM for GPU trimming
-					#if GPU_TRIMMING_USE_MAX_RAM
+					// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
+					#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
 					
 						// Encode running update largest final coarse bucket size pipeline
 						commandEncoder->setComputePipelineState(updateLargestFinalCoarseBucketSizePipeline.get());

@@ -19,11 +19,11 @@ This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 min
 | Cuckatoo Variation | Settings                         | VRAM Required | GPU Trimming Speed |
 | ------------------ | -------------------------------- | ------------- | ------------------ |
 | Cuckatoo31         | Default Settings                 | ≈26.207 GB    | 100%               |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true` | ≈34.453 GB    | ≈106.997%          |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true` | ≈17.965 GB    | ≈63.643%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈34.453 GB    | ≈106.997%          |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈17.965 GB    | ≈63.643%           |
 | Cuckatoo32         | Default Settings                 | ≈51.958 GB    | 100%               |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true` | ≈68.322 GB    | ≈106.997%          |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true` | ≈35.591 GB    | ≈63.643%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈68.322 GB    | ≈106.997%          |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈35.591 GB    | ≈63.643%           |
 
 ### Building
 It's recommended that you build this program on the same system that you'll be running it on since it uses the `-mtune=native` and `-march=native` compiler flags to optimize itself for the current system's available features.
@@ -87,6 +87,11 @@ make HEADER_SIZE_EXCLUDING_NONCE=238
 * A `GPU_TRIMMING_USE_MAX_RAM` setting can be used to enable using the fastest version of GPU trimming that uses the most VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.
 ```
 make GPU_TRIMMING_USE_MAX_RAM=false
+```
+
+* A `GPU_TRIMMING_USE_MORE_RAM` setting can be used to enable using a faster version of GPU trimming that uses more VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.
+```
+make GPU_TRIMMING_USE_MORE_RAM=false
 ```
 
 * A `GPU_TRIMMING_USE_MIN_RAM` setting can be used to enable using the slowest version of GPU trimming that uses the least VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.

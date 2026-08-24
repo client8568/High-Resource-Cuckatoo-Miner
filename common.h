@@ -78,6 +78,9 @@ using namespace std;
 	#define ADDITIONAL_SPACE_TOLERANCE_SCALE_FACTOR 0.0145
 #endif
 
+// Percent of edges remaining after one trimming round
+#define PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND 0.632151
+
 // Number of edges
 #define NUMBER_OF_EDGES (static_cast<uint64_t>(1) << EDGE_BITS)
 
@@ -473,7 +476,7 @@ __attribute__((always_inline)) static inline constexpr uint64_t maxNumberOfEdges
 		1,
 		
 		// After 1 trimming round
-		0.632151,
+		PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND,
 		
 		// After 2 trimming rounds
 		0.296206,
