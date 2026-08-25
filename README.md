@@ -113,6 +113,11 @@ make GPU_TRIMMING_USE_MIN_RAM=false
 make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=8
 ```
 
+* A `GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING` setting can be used to set the number of most significant bits used for initial fine bucket sorting by the GPU. This settings affects the GPU trimming speed. The default value for this setting is `8`.
+```
+make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=8
+```
+
 * A `GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING` setting can be used to set the number of most significant bits used for fine bucket sorting by the GPU. This settings affects the GPU trimming speed. The default value for this setting is `7`.
 ```
 make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=7

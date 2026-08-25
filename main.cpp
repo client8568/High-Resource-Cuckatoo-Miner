@@ -90,6 +90,9 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 	#define GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET static_cast<uint32_t>((GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRIMMING_ROUND[0] + (hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_COARSE_BUCKET_ITEM_SIZE - 1))
 #endif
 
+// GPU number of initial fine buckets per dimension
+#define GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION (1 << GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING)
+
 // GPU number of fine buckets per dimension
 #define GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION (1 << GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
 
@@ -109,18 +112,24 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 // Check if using less RAM for GPU trimming
 #if GPU_TRIMMING_USE_LESS_RAM
 
+	// GPU max number of edges per initial fine bucket
+	#define GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION)) * (PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND * (1 + NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT) * ((sizeof(uint32_t) + sizeof(uint32_t)) / GPU_FINE_BUCKET_ITEM_SIZE))) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
+	
 	// GPU max number of edges per fine bucket
 	#define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) * (PERCENT_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND * (1 + NUMBER_OF_EDGES_REMAINING_AFTER_ONE_TRIMMING_ROUND_ADDITIONAL_TOLERANCE_PERCENT) * ((sizeof(uint32_t) + sizeof(uint32_t)) / GPU_FINE_BUCKET_ITEM_SIZE))) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
 	
 // Otherwise
 #else
 
+	// GPU max number of edges per initial fine bucket
+	#define GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
+	
 	// GPU max number of edges per fine bucket
 	#define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
 #endif
 
 // GPU number of least significant bits ignored during fine bucket sorting
-#define GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING (EDGE_BITS - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
+#define GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING (EDGE_BITS - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING - min(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING, GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING))
 
 // GPU bitmap size
 #define GPU_BITMAP_SIZE ((1 << GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING) / BITS_IN_A_BYTE)
@@ -303,6 +312,9 @@ static_assert(HEADER_SIZE_EXCLUDING_NONCE > BLAKE2B_BUFFER_SIZE - sizeof(uint64_
 // Throw error if GPU number of most significant bits used for coarse bucket sorting is invalid
 static_assert(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING > 0 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING < EDGE_BITS / 2, "GPU number of most significant bits used for coarse bucket sorting is invalid");
 
+// Throw error if GPU number of most significant bits used for initial fine bucket sorting is invalid
+static_assert(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING > 0 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING < EDGE_BITS / 2 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING + GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING <= sizeof(uint16_t) * BITS_IN_A_BYTE, "GPU number of most significant bits used for initial fine bucket sorting is invalid");
+
 // Throw error if GPU number of most significant bits used for fine bucket sorting is invalid
 static_assert(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING > 0 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING < EDGE_BITS / 2 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING + GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING <= sizeof(uint16_t) * BITS_IN_A_BYTE, "GPU number of most significant bits used for fine bucket sorting is invalid");
 
@@ -310,7 +322,7 @@ static_assert(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING >
 static_assert(GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >= GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION && GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP <= UINT_MAX && has_single_bit(static_cast<unsigned int>(GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)), "GPU coarse bucket sort edges kernel number of work items per work group is invalid");
 
 // Throw error if GPU fine bucket sort initial edges kernel number of work items per work group is invalid
-static_assert(GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >= GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION && GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP <= UINT_MAX && has_single_bit(static_cast<unsigned int>(GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)), "GPU fine bucket sort initial edges kernel number of work items per work group is invalid");
+static_assert(GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >= GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION && GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP <= UINT_MAX && has_single_bit(static_cast<unsigned int>(GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)), "GPU fine bucket sort initial edges kernel number of work items per work group is invalid");
 
 // Throw error if GPU trim initial edges kernel number of work items per work group is invalid
 static_assert(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >= GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION && GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP <= UINT_MAX && has_single_bit(static_cast<unsigned int>(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)), "GPU trim initial edges kernel number of work items per work group is invalid");
@@ -3127,10 +3139,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			{
 			
 				// Set total GPU memory allocated
-				const size_t totalGpuMemoryAllocated = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_COARSE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + sizeof(TrimEdgesParameters) + sizeof(MTL::DispatchThreadgroupsIndirectArguments) + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + SOLUTION_SIZE * sizeof(uint32_t) + recoverEdgesParametersUsedSize;
+				const size_t totalGpuMemoryAllocated = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_COARSE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + sizeof(TrimEdgesParameters) + sizeof(MTL::DispatchThreadgroupsIndirectArguments) + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + SOLUTION_SIZE * sizeof(uint32_t) + recoverEdgesParametersUsedSize;
 				
 				// Set max GPU work group memory size
-				const size_t maxGpuWorkGroupMemorySize = max(max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + GPU_BITMAP_SIZE, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t));
+				const size_t maxGpuWorkGroupMemorySize = max(max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + GPU_BITMAP_SIZE, max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t));
 				
 				// Display message
 				cout << "Allocating " << (static_cast<double>(totalGpuMemoryAllocated) / BYTES_IN_A_GIGABYTE) << " GB of GPU memory and using at most " << (static_cast<double>(maxGpuWorkGroupMemorySize) / BYTES_IN_A_KILOBYTE) << " KB of GPU local memory" << endl;
@@ -3302,6 +3314,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of most significant bits used for coarse bucket sorting value
 					MTLSTR(TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING)),
 					
+					// GPU number of most significant bits used for initial fine bucket sorting value
+					MTLSTR(TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING)),
+					
 					// GPU number of most significant bits used for fine bucket sorting value
 					MTLSTR(TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)),
 					
@@ -3341,6 +3356,15 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Free GPU max number of edges per coarse bucket value
 						__builtin_assume_dereferenceable(gpuMaxNumberOfEdgesPerCoarseBucketValue, sizeof(*gpuMaxNumberOfEdgesPerCoarseBucketValue));
 						gpuMaxNumberOfEdgesPerCoarseBucketValue->release();
+						
+					}).get(),
+					
+					// GPU max number of edges per initial fine bucket value
+					unique_ptr<NS::String, void(*)(NS::String *)>(NS::String::alloc()->init(toString<GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET>::cString, NS::UTF8StringEncoding), [](NS::String *gpuMaxNumberOfEdgesPerInitialFineBucketValue) __attribute__((always_inline)) noexcept {
+					
+						// Free GPU max number of edges per initial fine bucket value
+						__builtin_assume_dereferenceable(gpuMaxNumberOfEdgesPerInitialFineBucketValue, sizeof(*gpuMaxNumberOfEdgesPerInitialFineBucketValue));
+						gpuMaxNumberOfEdgesPerInitialFineBucketValue->release();
 						
 					}).get(),
 					
@@ -3394,6 +3418,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of most significant bits used for coarse bucket sorting key
 					MTLSTR("GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING"),
 					
+					// GPU number of most significant bits used for initial fine bucket sorting key
+					MTLSTR("GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING"),
+					
 					// GPU number of most significant bits used for fine bucket sorting key
 					MTLSTR("GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING"),
 					
@@ -3430,6 +3457,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU max number of edges per coarse bucket key
 					MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET"),
 					
+					// GPU max number of edges per initial fine bucket key
+					MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET"),
+					
 					// GPU max number of edges per fine bucket key
 					MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET"),
 					
@@ -3439,13 +3469,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of recovering edges key
 					MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES")
 					
-				}, 22), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
+				}, 24), [](NS::Dictionary *preprocessorMacros) __attribute__((always_inline)) noexcept {
 				
 					// Free preprocessor macros
 					__builtin_assume_dereferenceable(preprocessorMacros, sizeof(*preprocessorMacros));
 					preprocessorMacros->release();
 				});
-				if(!preprocessorMacros || !preprocessorMacros->object(MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET")) || !preprocessorMacros->object(MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET")) || !preprocessorMacros->object(MTLSTR("CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET")) || !preprocessorMacros->object(MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES"))) [[unlikely]] {
+				if(!preprocessorMacros || !preprocessorMacros->object(MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET")) || !preprocessorMacros->object(MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET")) || !preprocessorMacros->object(MTLSTR("GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET")) || !preprocessorMacros->object(MTLSTR("CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET")) || !preprocessorMacros->object(MTLSTR("GPU_NUMBER_OF_RECOVERING_EDGES"))) [[unlikely]] {
 				
 					// Display message
 					cout << "Creating preprocessor macros for the kernels failed" << endl;
@@ -3759,13 +3789,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				__builtin_assume_dereferenceable(largestCoarseBucketSizeBuffer, sizeof(*largestCoarseBucketSizeBuffer));
 				largestCoarseBucketSizeBuffer->release();
 			});
-			const unique_ptr<MTL::Buffer, void(*)(MTL::Buffer *)> fineBucketsBuffer(gpu->newBuffer(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET, MTL::ResourceStorageModePrivate), [](MTL::Buffer *fineBucketsBuffer) __attribute__((always_inline)) noexcept {
+			const unique_ptr<MTL::Buffer, void(*)(MTL::Buffer *)> fineBucketsBuffer(gpu->newBuffer(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET), MTL::ResourceStorageModePrivate), [](MTL::Buffer *fineBucketsBuffer) __attribute__((always_inline)) noexcept {
 			
 				// Free fine bucket buffer
 				__builtin_assume_dereferenceable(fineBucketsBuffer, sizeof(*fineBucketsBuffer));
 				fineBucketsBuffer->release();
 			});
-			const unique_ptr<MTL::Buffer, void(*)(MTL::Buffer *)> numberOfEdgesPerFineBucketBuffer(gpu->newBuffer(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), MTL::ResourceStorageModePrivate), [](MTL::Buffer *numberOfEdgesPerFineBucketBuffer) __attribute__((always_inline)) noexcept {
+			const unique_ptr<MTL::Buffer, void(*)(MTL::Buffer *)> numberOfEdgesPerFineBucketBuffer(gpu->newBuffer(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t), MTL::ResourceStorageModePrivate), [](MTL::Buffer *numberOfEdgesPerFineBucketBuffer) __attribute__((always_inline)) noexcept {
 			
 				// Free number of edges per fine bucket buffer
 				__builtin_assume_dereferenceable(numberOfEdgesPerFineBucketBuffer, sizeof(*numberOfEdgesPerFineBucketBuffer));
@@ -4136,10 +4166,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			{
 			
 				// Set total GPU memory allocated
-				const size_t totalGpuMemoryAllocated = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_COARSE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + sizeof(TrimEdgesParameters) + sizeof(uint32_t) + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + SOLUTION_SIZE * sizeof(uint32_t) + recoverEdgesParametersUsedSize;
+				const size_t totalGpuMemoryAllocated = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_COARSE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + sizeof(TrimEdgesParameters) + sizeof(uint32_t) + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET) + GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + SOLUTION_SIZE * sizeof(uint32_t) + recoverEdgesParametersUsedSize;
 				
 				// Set max GPU work group memory size
-				const size_t maxGpuWorkGroupMemorySize = max(max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + GPU_BITMAP_SIZE, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t));
+				const size_t maxGpuWorkGroupMemorySize = max(max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + GPU_BITMAP_SIZE, max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t));
 				
 				// Display message
 				cout << "Allocating " << (static_cast<double>(totalGpuMemoryAllocated) / BYTES_IN_A_GIGABYTE) << " GB of GPU memory and using at most " << (static_cast<double>(maxGpuWorkGroupMemorySize) / BYTES_IN_A_KILOBYTE) << " KB of GPU local memory" << endl;
@@ -4341,6 +4371,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// GPU number of most significant bits used for coarse bucket sorting
 					"-D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=" TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING) " "
 					
+					// GPU number of most significant bits used for initial fine bucket sorting
+					"-D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=" TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING) " "
+					
 					// GPU number of most significant bits used for fine bucket sorting
 					"-D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=" TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING) " "
 					
@@ -4376,6 +4409,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// GPU max number of edges per coarse bucket
 					"-D GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET=", toString<GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET>::value, " "
+					
+					// GPU max number of edges per initial fine bucket
+					"-D GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET=", toString<GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET>::value, " "
 					
 					// GPU max number of edges per fine bucket
 					"-D GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET=", toString<GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET>::value, " "
@@ -4440,8 +4476,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> numberOfEdgesPerCoarseBucketBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), nullptr, nullptr), clReleaseMemObject);
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> trimEdgesParametersBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, sizeof(TrimEdgesParameters), nullptr, nullptr), clReleaseMemObject);
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> largestCoarseBucketSizeBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, sizeof(uint32_t), nullptr, nullptr), clReleaseMemObject);
-			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> fineBucketsBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET, nullptr, nullptr), clReleaseMemObject);
-			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> numberOfEdgesPerFineBucketBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), nullptr, nullptr), clReleaseMemObject);
+			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> fineBucketsBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET), nullptr, nullptr), clReleaseMemObject);
+			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> numberOfEdgesPerFineBucketBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t), nullptr, nullptr), clReleaseMemObject);
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> cpuBucketsBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY | CL_MEM_ALLOC_HOST_PTR, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET, nullptr, nullptr), clReleaseMemObject);
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> numberOfEdgesPerCpuBucketBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY | CL_MEM_ALLOC_HOST_PTR, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), nullptr, nullptr), clReleaseMemObject);
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> solutionEdgesBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY | CL_MEM_ALLOC_HOST_PTR, SOLUTION_SIZE * sizeof(uint32_t), nullptr, nullptr), clReleaseMemObject);
@@ -4544,8 +4580,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), trimEdgesParametersBuffer.get(), (const uint64_t[]){0}, sizeof(uint64_t), 0, sizeof(TrimEdgesParameters), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), largestCoarseBucketSizeBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
-				clEnqueueFillBuffer(commandQueue.get(), fineBucketsBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET, 0, nullptr, nullptr) != CL_SUCCESS ||
-				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+				clEnqueueFillBuffer(commandQueue.get(), fineBucketsBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * GPU_FINE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET), 0, nullptr, nullptr) != CL_SUCCESS ||
+				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), cpuBucketsBuffer.get(), (const uint64_t[]){0}, sizeof(uint64_t), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET, 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCpuBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 				clEnqueueFillBuffer(commandQueue.get(), solutionEdgesBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, SOLUTION_SIZE * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -5360,7 +5396,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
 				
 				// Encode clearing number of edges per fine bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5394,7 +5430,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				
 				// Encode running trim initial edges pipeline
 				commandEncoder->setComputePipelineState(trimInitialEdgesPipeline.get());
-				commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+				commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5410,7 +5446,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5443,7 +5479,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5477,7 +5513,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 				
 				// Encode clearing number of edges per fine bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5513,7 +5549,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -5792,7 +5828,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 					
 					// Enqueue clearing number of edges per fine bucket buffer
-					clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+					clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 					
 					// Enqueue running coarse bucket sort edges kernel
 					clEnqueueNDRangeKernel(commandQueue.get(), coarseBucketSortEdgesKernel.get(), 1, nullptr, (const size_t[]){NUMBER_OF_EDGES / 2}, (const size_t[]){GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -5807,7 +5843,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 					
 					// Enqueue running trim initial edges kernel
-					clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+					clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
 					
 					// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
 					#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
@@ -6065,7 +6101,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
 				
 				// Encode clearing number of edges per fine bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6099,7 +6135,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				
 				// Encode running trim initial edges pipeline
 				commandEncoder->setComputePipelineState(trimInitialEdgesPipeline.get());
-				commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+				commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6115,7 +6151,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6148,7 +6184,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6182,7 +6218,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 				
 				// Encode clearing number of edges per fine bucket buffer
-				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+				commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 				
 				// Encode a barrier
 				commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6218,7 +6254,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -6355,7 +6391,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 						
 						// Enqueue clearing number of edges per fine bucket buffer
-						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
+						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerFineBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 						
 						// Enqueue running coarse bucket sort edges kernel
 						clEnqueueNDRangeKernel(commandQueue.get(), coarseBucketSortEdgesKernel.get(), 1, nullptr, (const size_t[]){NUMBER_OF_EDGES / 2}, (const size_t[]){GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
@@ -6370,7 +6406,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						clEnqueueFillBuffer(commandQueue.get(), numberOfEdgesPerCoarseBucketBuffer.get(), (const uint32_t[]){0}, sizeof(uint32_t), 0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t), 0, nullptr, nullptr) != CL_SUCCESS ||
 						
 						// Enqueue running trim initial edges kernel
-						clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
+						clEnqueueNDRangeKernel(commandQueue.get(), trimInitialEdgesKernel.get(), 1, nullptr, (const size_t[]){static_cast<size_t>(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION) * GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, (const size_t[]){GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP}, 0, nullptr, nullptr) != CL_SUCCESS ||
 						
 						// Check if using max RAM for GPU trimming or using more RAM for GPU trimming
 						#if GPU_TRIMMING_USE_MAX_RAM || GPU_TRIMMING_USE_MORE_RAM
@@ -7274,7 +7310,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->fillBuffer(numberOfEdgesPerCoarseBucketBuffer.get(), NS::Range(0, numberOfEdgesPerCoarseBucketBuffer->length()), 0);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -7308,7 +7344,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// Encode running trim initial edges pipeline
 					commandEncoder->setComputePipelineState(trimInitialEdgesPipeline.get());
-					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
+					commandEncoder->dispatchThreadgroups(MTL::Size(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, 1, 1), MTL::Size(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP, 1, 1));
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -7324,7 +7360,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 						
 						// Encode clearing number of edges per fine bucket buffer
-						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 						
 						// Encode a barrier
 						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -7357,7 +7393,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 						
 						// Encode clearing number of edges per fine bucket buffer
-						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 						
 						// Encode a barrier
 						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -7391,7 +7427,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 					
 					// Encode clearing number of edges per fine bucket buffer
-					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+					commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 					
 					// Encode a barrier
 					commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
@@ -7427,7 +7463,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						commandEncoder->barrierAfterEncoderStages(MTL::StageDispatch, MTL::StageBlit, MTL4::VisibilityOptionDevice);
 						
 						// Encode clearing number of edges per fine bucket buffer
-						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, numberOfEdgesPerFineBucketBuffer->length()), 0);
+						commandEncoder->fillBuffer(numberOfEdgesPerFineBucketBuffer.get(), NS::Range(0, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t)), 0);
 						
 						// Encode a barrier
 						commandEncoder->barrierAfterEncoderStages(MTL::StageBlit, MTL::StageDispatch, MTL4::VisibilityOptionDevice);
