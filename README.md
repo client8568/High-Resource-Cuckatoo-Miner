@@ -18,16 +18,16 @@ This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 min
 
 | Cuckatoo Variation | Settings                         | VRAM Required | GPU Trimming Speed |
 | ------------------ | -------------------------------- | ------------- | ------------------ |
-| Cuckatoo31         | Default Settings                 | ≈26.207 GB    | 100%               |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈34.453 GB    | ≈107.818%          |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈29.429 GB    | ≈101.411%          |
-| Cuckatoo31         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈21.184 GB    | ≈76.539%           |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈17.965 GB    | ≈63.961%           |
+| Cuckatoo31         | Default Settings                 | ≈26.215 GB    | 100%               |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈34.461 GB    | ≈104.334%          |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈29.437 GB    | ≈102.811%          |
+| Cuckatoo31         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈21.184 GB    | ≈76.783%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈17.965 GB    | ≈64.189%           |
 | Cuckatoo32         | Default Settings                 | ≈51.958 GB    | 100%               |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈68.322 GB    | ≈107.818%          |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈58.352 GB    | ≈101.411%          |
-| Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈41.989 GB    | ≈76.539%           |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈35.591 GB    | ≈63.961%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈68.322 GB    | ≈104.334%          |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈58.352 GB    | ≈102.811%          |
+| Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈41.990 GB    | ≈76.783%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈35.599 GB    | ≈64.189%           |
 
 ### Building
 It's recommended that you build this program on the same system that you'll be running it on since it uses the `-mtune=native` and `-march=native` compiler flags to optimize itself for the current system's available features.
