@@ -29,6 +29,17 @@ This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 min
 | Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈41.990 GB    | ≈76.783%           |
 | Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈35.599 GB    | ≈64.189%           |
 
+This program also requires some RAM when running. Several settings are available when building this program that can adjust how much RAM it requires, and the following table shows how those settings affect this program's RAM requirement and speed of its CPU trimming stage.
+
+| Cuckatoo Variation | Settings                         | RAM Required | CPU Trimming Speed |
+| ------------------ | -------------------------------- | ------------ | ------------------ |
+| Cuckatoo31         | Default Settings                 | ≈0.230 GB    | 100%               |
+| Cuckatoo31         | `CPU_TRIMMING_USE_MAX_RAM=true`  | ≈1.246 GB    | ≈106.278%          |
+| Cuckatoo31         | `CPU_TRIMMING_USE_MORE_RAM=true` | ≈1.058 GB    | ≈105.455%          |
+| Cuckatoo32         | Default Settings                 | ≈0.392 GB    | 100%               |
+| Cuckatoo32         | `CPU_TRIMMING_USE_MAX_RAM=true`  | ≈2.423 GB    | ≈106.278%          |
+| Cuckatoo32         | `CPU_TRIMMING_USE_MORE_RAM=true` | ≈2.001 GB    | ≈105.455%          |
+
 ### Building
 It's recommended that you build this program on the same system that you'll be running it on since it uses the `-mtune=native` and `-march=native` compiler flags to optimize itself for the current system's available features.
 
