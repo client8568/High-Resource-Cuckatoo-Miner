@@ -8261,10 +8261,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Check if displaying stratum server messages
 						#if DISPLAY_STRATUM_SERVER_MESSAGES
 						
-							// Display message
-							cpuSearchingThreadsLock.lock();
-							cout << "Sent: " << keepAliveRequest;
-							cpuSearchingThreadsLock.unlock();
+							// Check if performing CPU searching during GPU trimming
+							#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+							
+								// Display message
+								cout << "Sent: " << keepAliveRequest;
+								
+							// Otherwise
+							#else
+							
+								// Display message
+								cpuSearchingThreadsLock.lock();
+								cout << "Sent: " << keepAliveRequest;
+								cpuSearchingThreadsLock.unlock();
+							#endif
 						#endif
 						
 						// Update last keep alive time
@@ -8362,10 +8372,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									// Check if reading the job message failed
 									if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[1 - currentJobIndex], jobId[1 - currentJobIndex])) [[unlikely]] {
 									
-										// Display message
-										cpuSearchingThreadsLock.lock();
-										cout << "Received invalid job from the stratum server" << endl;
-										cpuSearchingThreadsLock.unlock();
+										// Check if performing CPU searching during GPU trimming
+										#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+										
+											// Display message
+											cout << "Received invalid job from the stratum server" << endl;
+											
+										// Otherwise
+										#else
+										
+											// Display message
+											cpuSearchingThreadsLock.lock();
+											cout << "Received invalid job from the stratum server" << endl;
+											cpuSearchingThreadsLock.unlock();
+										#endif
 									}
 									
 									// Otherwise
