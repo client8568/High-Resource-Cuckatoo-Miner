@@ -8362,8 +8362,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								// Check if displaying stratum server messages
 								#if DISPLAY_STRATUM_SERVER_MESSAGES
 								
-									// Display message
-									cout << "Received: " << currentMessageStart << endl;
+									// Check if performing CPU searching during GPU trimming
+									#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+									
+										// Display message
+										cout << "Received: " << currentMessageStart << endl;
+										
+									// Otherwise
+									#else
+									
+										// Display message
+										cpuSearchingThreadsLock.lock();
+										cout << "Received: " << currentMessageStart << endl;
+										cpuSearchingThreadsLock.unlock();
+									#endif
 								#endif
 								
 								// Check if current message is a job
