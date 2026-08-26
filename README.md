@@ -168,6 +168,11 @@ make GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WOR
 make CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=6
 ```
 
+* A `CPU_TRIMMING_USE_MAX_RAM` setting can be used to enable using the fastest version of CPU trimming that uses the most RAM. This settings affects the CPU trimming speed. The default value for this setting is `false`.
+```
+make CPU_TRIMMING_USE_MAX_RAM=false
+```
+
 * A `CPU_TRIMMING_USE_MORE_RAM` setting can be used to enable using a faster version of CPU trimming that uses more RAM. This settings affects the CPU trimming speed. The default value for this setting is `false`.
 ```
 make CPU_TRIMMING_USE_MORE_RAM=false
