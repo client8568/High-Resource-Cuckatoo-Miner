@@ -1677,6 +1677,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// Go through all fine buckets
 					int numberOfCompressedItems = 0;
+					uint16_t numberOfEdges[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION] = {};
 					for(int j = 0; j < CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 					
 						// Clear bitmap
@@ -1706,7 +1707,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							#if CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS
 							
 								// Get bitmap value for the node pair if the lookup table isn't full and the coarse bucket at the index isn't full
-								const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair * ((numberOfCompressedItems < static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION) - 1) & (reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[coarseBucketIndex][i] < currentLargestCoarseBucketSize - 1));
+								const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair * ((numberOfCompressedItems < static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION) - 1) & (numberOfEdges[coarseBucketIndex] < currentLargestCoarseBucketSize - 1));
 								
 							// Otherwise
 							#else
@@ -1715,7 +1716,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair;
 								
 								// Check if the node has a pair and they haven't been compressed and the lookup table is full or the coarse bucket at the index is full
-								if((bitmapCurrentPairValue == 0x0101) & ((numberOfCompressedItems >= static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION)) | (reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[coarseBucketIndex][i] >= currentLargestCoarseBucketSize))) [[unlikely]] {
+								if((bitmapCurrentPairValue == 0x0101) & ((numberOfCompressedItems >= static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION)) | (numberOfEdges[coarseBucketIndex] >= currentLargestCoarseBucketSize))) [[unlikely]] {
 								
 									// Display message
 									cpuTrimmingThreadsLock.lock();
@@ -1740,10 +1741,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							const uint16_t compressedValue = ((*bitmapCurrentPair - (0x0101 + 1)) << 1) | (nodes & 1);
 							
 							// Put edge's nodes in the coarse bucket at the index
-							*reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] = (static_cast<uint32_t>(compressedValue) << CPU_COMPRESSED_ITEM_SIZE) | ((nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) & CPU_COMPRESSED_ITEM_MASK);
+							reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex][numberOfEdges[coarseBucketIndex]] = (static_cast<uint32_t>(compressedValue) << CPU_COMPRESSED_ITEM_SIZE) | ((nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) & CPU_COMPRESSED_ITEM_MASK);
 							
-							// Increment the coarse bucket's next edge index if the edge's node in the second partition has a pair in the bitmap
-							reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] += bitmapCurrentPairValue >= 0x0101;
+							// Increment the number of edges in the coarse bucket if the edge's node in the second partition has a pair in the bitmap
+							numberOfEdges[coarseBucketIndex] += bitmapCurrentPairValue >= 0x0101;
 						}
 					}
 					
@@ -1753,14 +1754,14 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Check if CPU trimming rounds before compressing is odd
 						#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							// Set coarse bucket's number of edges based on its number of edges
+							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = numberOfEdges[j];
 							
 						// Otherwise
 						#else
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							// Set coarse bucket's number of edges based on its number of edges
+							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = numberOfEdges[j];
 						#endif
 					}
 				}
