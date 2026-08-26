@@ -217,7 +217,7 @@ static constexpr const double CPU_SEARCHING_THREADS_FIRST_EDGE_PERCENT[][MAX_NUM
 		0,
 		
 		// Second thread
-		0.9189
+		0.9188
 	},
 	
 	// Three searching threads
@@ -240,13 +240,13 @@ static constexpr const double CPU_SEARCHING_THREADS_FIRST_EDGE_PERCENT[][MAX_NUM
 		0,
 		
 		// Second thread
-		0.8224,
+		0.8217,
 		
 		// Third thread
-		0.9205,
+		0.9204,
 		
 		// Fourth thread
-		0.969
+		0.9692
 	}
 };
 
