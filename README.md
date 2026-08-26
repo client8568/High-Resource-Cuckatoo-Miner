@@ -31,14 +31,14 @@ This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 min
 
 This program also requires some RAM when running. Several settings are available when building this program that can adjust how much RAM it requires, and the following table shows how those settings affect this program's RAM requirement and speed of its CPU trimming stage.
 
-| Cuckatoo Variation | Settings                         | RAM Required | CPU Trimming Speed |
-| ------------------ | -------------------------------- | ------------ | ------------------ |
-| Cuckatoo31         | Default Settings                 | ≈0.230 GB    | 100%               |
-| Cuckatoo31         | `CPU_TRIMMING_USE_MAX_RAM=true`  | ≈1.246 GB    | ≈106.278%          |
-| Cuckatoo31         | `CPU_TRIMMING_USE_MORE_RAM=true` | ≈1.058 GB    | ≈105.455%          |
-| Cuckatoo32         | Default Settings                 | ≈0.392 GB    | 100%               |
-| Cuckatoo32         | `CPU_TRIMMING_USE_MAX_RAM=true`  | ≈2.423 GB    | ≈106.278%          |
-| Cuckatoo32         | `CPU_TRIMMING_USE_MORE_RAM=true` | ≈2.001 GB    | ≈105.455%          |
+| Cuckatoo Variation | Settings                          | RAM Required | CPU Trimming Speed |
+| ------------------ | --------------------------------- | ------------ | ------------------ |
+| Cuckatoo31         | Default Settings                  | ≈1.058 GB    | ≈105.455%          |
+| Cuckatoo31         | `CPU_TRIMMING_USE_MAX_RAM=true`   | ≈1.246 GB    | ≈106.278%          |
+| Cuckatoo31         | `CPU_TRIMMING_USE_MORE_RAM=false` | ≈0.230 GB    | 100%               |
+| Cuckatoo32         | Default Settings                  | ≈2.001 GB    | ≈105.455%          |
+| Cuckatoo32         | `CPU_TRIMMING_USE_MAX_RAM=true`   | ≈2.423 GB    | ≈106.278%          |
+| Cuckatoo32         | `CPU_TRIMMING_USE_MORE_RAM=false` | ≈0.392 GB    | 100%               |
 
 ### Building
 It's recommended that you build this program on the same system that you'll be running it on since it uses the `-mtune=native` and `-march=native` compiler flags to optimize itself for the current system's available features.
@@ -184,9 +184,9 @@ make CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=6
 make CPU_TRIMMING_USE_MAX_RAM=false
 ```
 
-* A `CPU_TRIMMING_USE_MORE_RAM` setting can be used to enable using a faster version of CPU trimming that uses more RAM. This settings affects the CPU trimming speed. The default value for this setting is `false`.
+* A `CPU_TRIMMING_USE_MORE_RAM` setting can be used to enable using a faster version of CPU trimming that uses more RAM. This settings affects the CPU trimming speed. The default value for this setting is `true`.
 ```
-make CPU_TRIMMING_USE_MORE_RAM=false
+make CPU_TRIMMING_USE_MORE_RAM=true
 ```
 
 * A `CPU_TRIMMING_VECTOR_SCALE_FACTOR` setting can be used to set the trimming vector scale factor used by the CPU. This settings affects the CPU trimming speed. The default value for this setting is `4`.
