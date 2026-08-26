@@ -3871,7 +3871,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					cpuSearchingThreadsLock.lock();
 					
 					// Display message
-					cout << "CPU searching thread " << (cpuSearchingThreadIndex + 1) << " done at " << static_cast<chrono::duration<double, milli>>(time.time_since_epoch()) << endl;
+					cout << "CPU searching thread " << (cpuSearchingThreadIndex + 1) << " done at " << fixed << static_cast<chrono::duration<double, milli>>(time.time_since_epoch()) << defaultfloat << endl;
 					
 				// Otherwise
 				#else
