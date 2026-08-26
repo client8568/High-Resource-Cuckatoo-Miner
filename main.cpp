@@ -183,7 +183,7 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 #define CPU_MAX_COMPRESSED_LOOKUP_TABLE_KEY ((UINT16_MAX - (0x0101 + 1)) >> 1)
 
 // CPU compressed item size
-#define CPU_COMPRESSED_ITEM_SIZE (sizeof(uint16_t) * BITS_IN_A_BYTE)
+#define CPU_COMPRESSED_ITEM_SIZE sizeof(uint16_t)
 
 // CPU compressed item mask
 #define CPU_COMPRESSED_ITEM_MASK UINT16_MAX
@@ -191,8 +191,27 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 // CPU number of items per compressed bitmap
 #define CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_BITMAP ((CPU_MAX_COMPRESSED_LOOKUP_TABLE_KEY + 1) << 1)
 
-// CPU max number of edges per coarse bucket after compressing
-#define CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(TRIMMING_ROUNDS_BEFORE_COMPRESSING + 2, false)) / (CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / (CPU_COMPRESSED_ITEM_SIZE * 2) - 1)) & ~(hardware_destructive_interference_size / (CPU_COMPRESSED_ITEM_SIZE * 2) - 1))
+// Check if using more RAM for CPU trimming
+#if CPU_TRIMMING_USE_MORE_RAM
+
+	// CPU number of trimming rounds before shrinking coarse buckets
+	#define CPU_NUMBER_OF_TRIMMING_ROUNDS_BEFORE_SHRINKING_COARSE_BUCKETS (GPU_TRIMMING_ROUNDS + 2)
+	
+	// CPU shrunk coarse bucket item size
+	#define CPU_SHRUNK_COARSE_BUCKET_ITEM_SIZE CPU_COARSE_BUCKET_ITEM_SIZE
+	
+// Otherwise
+#else
+
+	// CPU number of trimming rounds before shrinking coarse buckets
+	#define CPU_NUMBER_OF_TRIMMING_ROUNDS_BEFORE_SHRINKING_COARSE_BUCKETS (TRIMMING_ROUNDS_BEFORE_COMPRESSING + 2)
+	
+	// CPU shrunk coarse bucket item size
+	#define CPU_SHRUNK_COARSE_BUCKET_ITEM_SIZE (CPU_COMPRESSED_ITEM_SIZE * 2)
+#endif
+
+// CPU max number of edges per coarse bucket before shrinking coarse buckets
+#define CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(CPU_NUMBER_OF_TRIMMING_ROUNDS_BEFORE_SHRINKING_COARSE_BUCKETS, false)) / (CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / CPU_SHRUNK_COARSE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / CPU_SHRUNK_COARSE_BUCKET_ITEM_SIZE - 1))
 
 // GPU number of recovering edges
 #define GPU_NUMBER_OF_RECOVERING_EDGES ((NUMBER_OF_EDGES - static_cast<uint64_t>(NUMBER_OF_EDGES * CPU_RECOVERING_PERCENT) + GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM * GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / (GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM * GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) * GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM * GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)
@@ -684,7 +703,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	{
 	
 		// Set total CPU memory allocated
-		const size_t totalCpuMemoryAllocated = MAX_NUMBER_OF_EDGES_AFTER_TRIMMING * NUMBER_OF_EDGE_COMPONENTS * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_FIRST_PARTITION + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION + (CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint64_t) * CPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET + max(CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) * sizeof(uint32_t) + max(CPU_TRIMMING_NUMBER_OF_ITEMS_PER_BITMAP, CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_BITMAP)) * numberOfCpuTrimmingThreads + (MAX_NUMBER_OF_EDGES_AFTER_TRIMMING * CUCKATOO_NODE_CONNECTIONS_PER_EDGE * sizeof(CuckatooNodeConnection) + HashTable<MAX_NUMBER_OF_EDGES_AFTER_TRIMMING>::ALLOCATED_MEMORY_SIZE * 2 + HashTable<SOLUTION_SIZE / 2, true>::ALLOCATED_MEMORY_SIZE * 2) * numberOfCpuSearchingThreads + Bitmap<CPU_NUMBER_OF_ITEMS_PER_RECOVERING_BITMAP>::ALLOCATED_MEMORY_SIZE;
+		const size_t totalCpuMemoryAllocated = MAX_NUMBER_OF_EDGES_AFTER_TRIMMING * NUMBER_OF_EDGE_COMPONENTS * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_SHRUNK_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_FIRST_PARTITION + CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION + (CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint64_t) * CPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET + max(CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) * sizeof(uint32_t) + max(CPU_TRIMMING_NUMBER_OF_ITEMS_PER_BITMAP, CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_BITMAP)) * numberOfCpuTrimmingThreads + (MAX_NUMBER_OF_EDGES_AFTER_TRIMMING * CUCKATOO_NODE_CONNECTIONS_PER_EDGE * sizeof(CuckatooNodeConnection) + HashTable<MAX_NUMBER_OF_EDGES_AFTER_TRIMMING>::ALLOCATED_MEMORY_SIZE * 2 + HashTable<SOLUTION_SIZE / 2, true>::ALLOCATED_MEMORY_SIZE * 2) * numberOfCpuSearchingThreads + Bitmap<CPU_NUMBER_OF_ITEMS_PER_RECOVERING_BITMAP>::ALLOCATED_MEMORY_SIZE;
 		
 		// Display message
 		cout << "Allocating " << (static_cast<double>(totalCpuMemoryAllocated) / BYTES_IN_A_GIGABYTE) << " GB of CPU memory" << endl;
@@ -730,12 +749,26 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	// Create CPU trimming threads finished conditional variable
 	alignas(hardware_destructive_interference_size) condition_variable cpuTrimmingThreadsFinishedConditionalVariable;
 	
-	// Create CPU trimming threads coarse buckets two
-	alignas(hardware_destructive_interference_size) const unique_ptr<uint32_t[][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING], void(*)(uint32_t [][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING])> cpuTrimmingThreadsCoarseBucketsTwo(new(static_cast<align_val_t>(hardware_destructive_interference_size), nothrow) uint32_t[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING], [](uint32_t cpuTrimmingThreadsCoarseBucketsTwo[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING]) __attribute__((always_inline)) noexcept {
+	// Check if using more RAM for CPU trimming
+	#if CPU_TRIMMING_USE_MORE_RAM
 	
-		// Free CPU trimming threads coarse buckets two
-		operator delete[](cpuTrimmingThreadsCoarseBucketsTwo, static_cast<align_val_t>(hardware_destructive_interference_size), nothrow);
-	});
+		// Create CPU trimming threads coarse buckets two
+		alignas(hardware_destructive_interference_size) const unique_ptr<uint64_t[][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS], void(*)(uint64_t [][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS])> cpuTrimmingThreadsCoarseBucketsTwo(new(static_cast<align_val_t>(hardware_destructive_interference_size), nothrow) uint64_t[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS], [](uint64_t cpuTrimmingThreadsCoarseBucketsTwo[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS]) __attribute__((always_inline)) noexcept {
+		
+			// Free CPU trimming threads coarse buckets two
+			operator delete[](cpuTrimmingThreadsCoarseBucketsTwo, static_cast<align_val_t>(hardware_destructive_interference_size), nothrow);
+		});
+		
+	// Otherwise
+	#else
+	
+		// Create CPU trimming threads coarse buckets two
+		alignas(hardware_destructive_interference_size) const unique_ptr<uint32_t[][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS], void(*)(uint32_t [][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS])> cpuTrimmingThreadsCoarseBucketsTwo(new(static_cast<align_val_t>(hardware_destructive_interference_size), nothrow) uint32_t[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS], [](uint32_t cpuTrimmingThreadsCoarseBucketsTwo[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS]) __attribute__((always_inline)) noexcept {
+		
+			// Free CPU trimming threads coarse buckets two
+			operator delete[](cpuTrimmingThreadsCoarseBucketsTwo, static_cast<align_val_t>(hardware_destructive_interference_size), nothrow);
+		});
+	#endif
 	
 	// Create CPU trimming threads number of edges per coarse bucket two
 	alignas(hardware_destructive_interference_size) const unique_ptr<uint32_t[][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION], void(*)(uint32_t [][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION])> cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo(new(static_cast<align_val_t>(alignof(uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))))), nothrow) uint32_t[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION], [](uint32_t cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]) __attribute__((always_inline)) noexcept {
@@ -1011,6 +1044,21 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					startTime = chrono::steady_clock::now();
 				#endif
 				
+				// Check if using more RAM for CPU trimming
+				#if CPU_TRIMMING_USE_MORE_RAM
+				
+					// Go through all groups of coarse buckets
+					uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR))) largestCoarseBucketSizes;
+					for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
+					
+						// Get the largest coarse bucket size from the group's buckets
+						largestCoarseBucketSizes[i] = __builtin_reduce_max(*reinterpret_cast<const uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))) *>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[i * CPU_TRIMMING_VECTOR_SCALE_FACTOR]));
+					}
+					
+					// Get the current largest coarse bucket size from all the coarse buckets
+					uint32_t currentLargestCoarseBucketSize = min(__builtin_reduce_max(largestCoarseBucketSizes), CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS);
+				#endif
+				
 				// Go through all columns of this thread's coarse buckets
 				__builtin_assume(bucketEnd > bucketStart && bucketEnd <= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION);
 				for(int i = bucketStart; i < bucketEnd; ++i) [[likely]] {
@@ -1021,8 +1069,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Go through all coarse buckets in the column's row
 					for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 					
-						// Set next edge index to the beginning of the coarse bucket
-						nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[i][j];
+						// Check if using more RAM for CPU trimming
+						#if CPU_TRIMMING_USE_MORE_RAM
+						
+							// Set next edge index to the beginning of the coarse bucket
+							nextEdgeIndex[j] = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							
+						// Otherwise
+						#else
+						
+							// Set next edge index to the beginning of the coarse bucket
+							nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[i][j];
+						#endif
 						
 						// Go through all edges in the coarse bucket
 						for(uint32_t k = 0, l = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[i][j]; k < l; ++k) [[likely]] {
@@ -1065,6 +1123,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Go through all fine buckets
+					#if CPU_TRIMMING_USE_MORE_RAM
+						uint32_t numberOfEdges[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION] = {};
+					#endif
 					for(int j = 0; j < CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 					
 						// Clear bitmap
@@ -1087,19 +1148,68 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Get coarse bucket's index from the edge's node in the first partition
 							const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
 							
-							// Put edge's nodes in the coarse bucket at the index
-							*nextEdgeIndex[coarseBucketIndex] = __builtin_rotateleft64(nodes, sizeof(uint32_t) * BITS_IN_A_BYTE);
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
 							
-							// Increment the coarse bucket's next edge index if the edge's node in the second partition has a pair in the bitmap
-							nextEdgeIndex[coarseBucketIndex] += bitmap[(nodes ^ 1) & CPU_TRIMMING_BITMAP_ITEM_MASK];
+								// Check if CPU trimming bounds checking is set to avoid conditional statements
+								#if CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS
+								
+									// Put edge's nodes in the coarse bucket at the index
+									nextEdgeIndex[coarseBucketIndex][numberOfEdges[coarseBucketIndex]] = __builtin_rotateleft64(nodes, sizeof(uint32_t) * BITS_IN_A_BYTE);
+									
+									// Increment the number of edges in the coarse bucket if the edge's node in the second partition has a pair in the bitmap and the coarse bucket isn't full
+									numberOfEdges[coarseBucketIndex] += bitmap[(nodes ^ 1) & CPU_TRIMMING_BITMAP_ITEM_MASK] & (numberOfEdges[coarseBucketIndex] < currentLargestCoarseBucketSize - 1);
+									
+								// Otherwise
+								#else
+								
+									// Check if coarse bucket at the index isn't full
+									if(numberOfEdges[coarseBucketIndex] < currentLargestCoarseBucketSize) [[likely]] {
+									
+										// Put edge's nodes in the coarse bucket at the index
+										nextEdgeIndex[coarseBucketIndex][numberOfEdges[coarseBucketIndex]] = __builtin_rotateleft64(nodes, sizeof(uint32_t) * BITS_IN_A_BYTE);
+										
+										// Increment the number of edges in the coarse bucket if the edge's node in the second partition has a pair in the bitmap
+										numberOfEdges[coarseBucketIndex] += bitmap[(nodes ^ 1) & CPU_TRIMMING_BITMAP_ITEM_MASK];
+									}
+									
+									// Otherwise
+									else [[unlikely]] {
+									
+										// Display message
+										cpuTrimmingThreadsLock.lock();
+										cout << "Lost edge at first partition coarse bucket sort" << endl;
+										cpuTrimmingThreadsLock.unlock();
+									}
+								#endif
+								
+							// Otherwise
+							#else
+							
+								// Put edge's nodes in the coarse bucket at the index
+								*nextEdgeIndex[coarseBucketIndex] = __builtin_rotateleft64(nodes, sizeof(uint32_t) * BITS_IN_A_BYTE);
+								
+								// Increment the coarse bucket's next edge index if the edge's node in the second partition has a pair in the bitmap
+								nextEdgeIndex[coarseBucketIndex] += bitmap[(nodes ^ 1) & CPU_TRIMMING_BITMAP_ITEM_MASK];
+							#endif
 						}
 					}
 					
 					// Go through all coarse buckets in the column's row
 					for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 					
-						// Set coarse bucket's number of edges based on its next edge index
-						cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[i][j];
+						// Check if using more RAM for CPU trimming
+						#if CPU_TRIMMING_USE_MORE_RAM
+						
+							// Set coarse bucket's number of edges based on its next edge index
+							cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[j][i] = numberOfEdges[j];
+							
+						// Otherwise
+						#else
+						
+							// Set coarse bucket's number of edges based on its next edge index
+							cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[i][j];
+						#endif
 					}
 				}
 				
@@ -1140,6 +1250,23 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						startTime = chrono::steady_clock::now();
 					#endif
 					
+					// Check if using more RAM for CPU trimming
+					#if CPU_TRIMMING_USE_MORE_RAM
+					
+						// Save previous largest coarse bucket size
+						uint32_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+						
+						// Go through all groups of coarse buckets
+						for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
+						
+							// Get the largest coarse bucket size from the group's buckets
+							largestCoarseBucketSizes[i] = __builtin_reduce_max(*reinterpret_cast<const uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))) *>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[i * CPU_TRIMMING_VECTOR_SCALE_FACTOR]));
+						}
+						
+						// Get the current largest coarse bucket size from all the coarse buckets
+						currentLargestCoarseBucketSize = __builtin_reduce_max(largestCoarseBucketSizes);
+					#endif
+					
 					// Go through all rows of this thread's coarse buckets
 					__builtin_assume(bucketEnd > bucketStart && bucketEnd <= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION);
 					for(int i = bucketStart; i < bucketEnd; ++i) [[likely]] {
@@ -1150,14 +1277,34 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Go through all coarse buckets in the row's column
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set next edge index to the beginning of the coarse bucket
-							nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint32_t k = 0, l = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								#endif
 								
 								// Get fine bucket's index from the edge's node in the first partition
 								const int fineBucketIndex = (nodes >> CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING) & CPU_FINE_BUCKET_INDEX_MASK;
@@ -1201,8 +1348,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Go through all coarse buckets in the row's column
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[j][i] = nextEdgeIndex[j] - reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							#endif
 						}
 					}
 					
@@ -1236,6 +1393,23 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						startTime = chrono::steady_clock::now();
 					#endif
 					
+					// Check if using more RAM for CPU trimming
+					#if CPU_TRIMMING_USE_MORE_RAM
+					
+						// Save previous largest coarse bucket size
+						previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+						
+						// Go through all groups of coarse buckets
+						for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
+						
+							// Get the largest coarse bucket size from the group's buckets
+							largestCoarseBucketSizes[i] = __builtin_reduce_max(*reinterpret_cast<const uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))) *>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[i * CPU_TRIMMING_VECTOR_SCALE_FACTOR]));
+						}
+						
+						// Get the current largest coarse bucket size from all the coarse buckets
+						currentLargestCoarseBucketSize = __builtin_reduce_max(largestCoarseBucketSizes);
+					#endif
+					
 					// Go through all columns of this thread's coarse buckets
 					__builtin_assume(bucketEnd > bucketStart && bucketEnd <= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION);
 					for(int i = bucketStart; i < bucketEnd; ++i) [[likely]] {
@@ -1246,14 +1420,34 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Go through all coarse buckets in the column's row
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set next edge index to the beginning of the coarse bucket
-							nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint32_t k = 0, l = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[i][j][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[i][j][k];
+								#endif
 								
 								// Get fine bucket's index from the edge's node in the second partition
 								const int fineBucketIndex = (nodes >> CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING) & CPU_FINE_BUCKET_INDEX_MASK;
@@ -1297,8 +1491,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Go through all coarse buckets in the column's row
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[j][i] = nextEdgeIndex[j] - reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							#endif
 						}
 					}
 					
@@ -1340,6 +1544,23 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						startTime = chrono::steady_clock::now();
 					#endif
 					
+					// Check if using more RAM for CPU trimming
+					#if CPU_TRIMMING_USE_MORE_RAM
+					
+						// Save previous largest coarse bucket size
+						uint32_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+						
+						// Go through all groups of coarse buckets
+						for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
+						
+							// Get the largest coarse bucket size from the group's buckets
+							largestCoarseBucketSizes[i] = __builtin_reduce_max(*reinterpret_cast<const uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))) *>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[i * CPU_TRIMMING_VECTOR_SCALE_FACTOR]));
+						}
+						
+						// Get the current largest coarse bucket size from all the coarse buckets
+						currentLargestCoarseBucketSize = __builtin_reduce_max(largestCoarseBucketSizes);
+					#endif
+					
 					// Go through all rows of this thread's coarse buckets
 					__builtin_assume(bucketEnd > bucketStart && bucketEnd <= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION);
 					for(int i = bucketStart; i < bucketEnd; ++i) [[likely]] {
@@ -1350,14 +1571,34 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Go through all coarse buckets in the row's column
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set next edge index to the beginning of the coarse bucket
-							nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint32_t k = 0, l = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								#endif
 								
 								// Get fine bucket's index from the edge's node in the first partition
 								const int fineBucketIndex = (nodes >> CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING) & CPU_FINE_BUCKET_INDEX_MASK;
@@ -1401,8 +1642,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Go through all coarse buckets in the row's column
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[j][i] = nextEdgeIndex[j] - reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							#endif
 						}
 					}
 					
@@ -1441,6 +1692,43 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					startTime = chrono::steady_clock::now();
 				#endif
 				
+				// Check if using more RAM for CPU trimming
+				#if CPU_TRIMMING_USE_MORE_RAM
+				
+					// Check if CPU trimming rounds before compressing is odd
+					#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
+					
+						// Save previous largest coarse bucket size
+						previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+						
+					// Otherwise
+					#else
+					
+						// Save previous largest coarse bucket size
+						uint32_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+					#endif
+					
+					// Go through all groups of coarse buckets
+					for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
+					
+						// Check if CPU trimming rounds before compressing is odd
+						#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
+						
+							// Get the largest coarse bucket size from the group's buckets
+							largestCoarseBucketSizes[i] = __builtin_reduce_max(*reinterpret_cast<const uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))) *>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[i * CPU_TRIMMING_VECTOR_SCALE_FACTOR]));
+							
+						// Otherwise
+						#else
+						
+							// Get the largest coarse bucket size from the group's buckets
+							largestCoarseBucketSizes[i] = __builtin_reduce_max(*reinterpret_cast<const uint32_t __attribute__((vector_size(sizeof(uint32_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_TRIMMING_VECTOR_SCALE_FACTOR))) *>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[i * CPU_TRIMMING_VECTOR_SCALE_FACTOR]));
+						#endif
+					}
+					
+					// Get the current largest coarse bucket size from all the coarse buckets
+					currentLargestCoarseBucketSize = __builtin_reduce_max(largestCoarseBucketSizes);
+				#endif
+				
 				// Go through all rows of this thread's coarse buckets
 				__builtin_assume(bucketEnd > bucketStart && bucketEnd <= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION);
 				for(int i = bucketStart; i < bucketEnd; ++i) [[likely]] {
@@ -1454,26 +1742,66 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Check if CPU trimming rounds before compressing is odd
 						#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 						
-							// Set next edge index to the beginning of the coarse bucket
-							nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint32_t k = 0, l = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[i][j][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[i][j][k];
+								#endif
 								
 						// Otherwise
 						#else
 						
-							// Set next edge index to the beginning of the coarse bucket
-							nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set next edge index to the beginning of the coarse bucket
+								nextEdgeIndex[j] = cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint32_t k = 0, l = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								#endif
 						#endif
 							
 							// Get fine bucket's index from the edge's node in the first partition
@@ -1562,14 +1890,34 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Check if CPU trimming rounds before compressing is odd
 						#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = nextEdgeIndex[j] - reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[i][j];
+							#endif
 							
 						// Otherwise
 						#else
 						
-							// Set coarse bucket's number of edges based on its next edge index
-							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = nextEdgeIndex[j] - reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = nextEdgeIndex[j] - cpuTrimmingThreadsCoarseBucketsOne[j][i];
+							#endif
 						#endif
 					}
 				}
@@ -1614,8 +1962,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					startTime = chrono::steady_clock::now();
 				#endif
 				
+				// Check if using more RAM for CPU trimming
+				#if CPU_TRIMMING_USE_MORE_RAM
+				
+					// Save previous largest coarse bucket size
+					previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+					
+				// Otherwise
+				#else
+				
+					// Create largest coarse bucket sizes 
+					uint16_t __attribute__((vector_size(sizeof(uint16_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR))) largestCoarseBucketSizes;
+				#endif
+				
 				// Go through all groups of coarse buckets
-				uint16_t __attribute__((vector_size(sizeof(uint16_t) * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR))) largestCoarseBucketSizes;
 				for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
 				
 					// Check if CPU trimming rounds before compressing is odd
@@ -1632,8 +1992,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#endif
 				}
 				
-				// Get the current largest coarse bucket size from all the coarse buckets
-				uint16_t currentLargestCoarseBucketSize = min(__builtin_reduce_max(largestCoarseBucketSizes), static_cast<uint16_t>(CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING));
+				// Check if using more RAM for CPU trimming
+				#if CPU_TRIMMING_USE_MORE_RAM
+				
+					// Get the current largest coarse bucket size from all the coarse buckets
+					currentLargestCoarseBucketSize = __builtin_reduce_max(largestCoarseBucketSizes);
+					
+				// Otherwise
+				#else
+				
+					// Get the current largest coarse bucket size from all the coarse buckets
+					uint16_t currentLargestCoarseBucketSize = min(__builtin_reduce_max(largestCoarseBucketSizes), static_cast<uint16_t>(CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS));
+				#endif
 				
 				// Go through all columns of this thread's coarse buckets
 				__builtin_assume(bucketEnd > bucketStart && bucketEnd <= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION);
@@ -1645,26 +2015,59 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Go through all coarse buckets in the column's row
 					for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 					
-						// Set next edge index to the beginning of the coarse bucket
-						reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
-						
 						// Check if CPU trimming rounds before compressing is odd
 						#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 						
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set next edge index to the beginning of the coarse bucket
+								reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set next edge index to the beginning of the coarse bucket
+								reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							#endif
+							
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[j][i][k];
+								#endif
 								
 						// Otherwise
 						#else
 						
+							// Set next edge index to the beginning of the coarse bucket
+							reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[i][j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[i][j][k];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint64_t &nodes = reinterpret_cast<const uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint64_t &nodes = cpuTrimmingThreadsCoarseBucketsOne[i][j][k];
+								#endif
 						#endif
 						
 							// Get fine bucket's index from the edge's node in the second partition
@@ -1677,7 +2080,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// Go through all fine buckets
 					int numberOfCompressedItems = 0;
-					uint16_t numberOfEdges[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION] = {};
+					#if !CPU_TRIMMING_USE_MORE_RAM
+						uint16_t numberOfEdges[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION] = {};
+					#endif
 					for(int j = 0; j < CPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 					
 						// Clear bitmap
@@ -1697,8 +2102,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Get edge's nodes
 							const uint64_t &nodes = fineBuckets[j][k];
 							
-							// Get coarse bucket's index from the edge's node in the first partition
-							const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
+							// Check if not using more RAM for CPU trimming
+							#if !CPU_TRIMMING_USE_MORE_RAM
+							
+								// Get coarse bucket's index from the edge's node in the first partition
+								const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
+							#endif
 							
 							// Get location of the bitmap value for the edge's node in the second partition and its pair
 							uint16_t *bitmapCurrentPair = &reinterpret_cast<uint16_t *>(bitmap.get())[(nodes & CPU_TRIMMING_BITMAP_ITEM_MASK) / sizeof(uint16_t)];
@@ -1706,8 +2115,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if CPU trimming bounds checking is set to avoid conditional statements
 							#if CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS
 							
-								// Get bitmap value for the node pair if the lookup table isn't full and the coarse bucket at the index isn't full
-								const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair * ((numberOfCompressedItems < static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION) - 1) & (numberOfEdges[coarseBucketIndex] < currentLargestCoarseBucketSize - 1));
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get bitmap value for the node pair if the lookup table isn't full
+									const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair * (numberOfCompressedItems < static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION) - 1);
+									
+								// Otherwise
+								#else
+								
+									// Get bitmap value for the node pair if the lookup table isn't full and the coarse bucket at the index isn't full
+									const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair * ((numberOfCompressedItems < static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION) - 1) & (numberOfEdges[coarseBucketIndex] < currentLargestCoarseBucketSize - 1));
+								#endif
 								
 							// Otherwise
 							#else
@@ -1715,8 +2134,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								// Get bitmap value for the node pair
 								const uint16_t bitmapCurrentPairValue = *bitmapCurrentPair;
 								
-								// Check if the node has a pair and they haven't been compressed and the lookup table is full or the coarse bucket at the index is full
-								if((bitmapCurrentPairValue == 0x0101) & ((numberOfCompressedItems >= static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION)) | (numberOfEdges[coarseBucketIndex] >= currentLargestCoarseBucketSize))) [[unlikely]] {
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Check if the node has a pair and they haven't been compressed and the lookup table is full
+									if((bitmapCurrentPairValue == 0x0101) & (numberOfCompressedItems >= static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION))) [[unlikely]] {
+									
+								// Otherwise
+								#else
+								
+									// Check if the node has a pair and they haven't been compressed and the lookup table is full or the coarse bucket at the index is full
+									if((bitmapCurrentPairValue == 0x0101) & ((numberOfCompressedItems >= static_cast<int>(CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION)) | (numberOfEdges[coarseBucketIndex] >= currentLargestCoarseBucketSize))) [[unlikely]] {
+								#endif
 								
 									// Display message
 									cpuTrimmingThreadsLock.lock();
@@ -1740,11 +2169,27 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Get compressed value for the edge's node in the second partition
 							const uint16_t compressedValue = ((*bitmapCurrentPair - (0x0101 + 1)) << 1) | (nodes & 1);
 							
-							// Put edge's nodes in the coarse bucket at the index
-							reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex][numberOfEdges[coarseBucketIndex]] = (static_cast<uint32_t>(compressedValue) << CPU_COMPRESSED_ITEM_SIZE) | ((nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) & CPU_COMPRESSED_ITEM_MASK);
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
 							
-							// Increment the number of edges in the coarse bucket if the edge's node in the second partition has a pair in the bitmap
-							numberOfEdges[coarseBucketIndex] += bitmapCurrentPairValue >= 0x0101;
+								// Get coarse bucket's index from the edge's node in the first partition
+								const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
+								
+								// Put edge's nodes in the coarse bucket at the index
+								*reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] = (static_cast<uint32_t>(compressedValue) << (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) | ((nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) & CPU_COMPRESSED_ITEM_MASK);
+								
+								// Increment the coarse bucket's next edge index if the edge's node in the second partition has a pair in the bitmap
+								reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] += bitmapCurrentPairValue >= 0x0101;
+								
+							// Otherwise
+							#else
+							
+								// Put edge's nodes in the coarse bucket at the index
+								reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex][numberOfEdges[coarseBucketIndex]] = (static_cast<uint32_t>(compressedValue) << (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) | ((nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) & CPU_COMPRESSED_ITEM_MASK);
+								
+								// Increment the number of edges in the coarse bucket if the edge's node in the second partition has a pair in the bitmap
+								numberOfEdges[coarseBucketIndex] += bitmapCurrentPairValue >= 0x0101;
+							#endif
 						}
 					}
 					
@@ -1754,14 +2199,34 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Check if CPU trimming rounds before compressing is odd
 						#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 						
-							// Set coarse bucket's number of edges based on its number of edges
-							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = numberOfEdges[j];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its number of edges
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = numberOfEdges[j];
+							#endif
 							
 						// Otherwise
 						#else
 						
-							// Set coarse bucket's number of edges based on its number of edges
-							reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = numberOfEdges[j];
+							// Check if using more RAM for CPU trimming
+							#if CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set coarse bucket's number of edges based on its next edge index
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = reinterpret_cast<uint32_t **>(nextEdgeIndex)[j] - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set coarse bucket's number of edges based on its number of edges
+								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = numberOfEdges[j];
+							#endif
 						#endif
 					}
 				}
@@ -1823,8 +2288,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						startTime = chrono::steady_clock::now();
 					#endif
 					
-					// Save previous largest coarse bucket size
-					uint16_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+					// Check if using more RAM for CPU trimming
+					#if CPU_TRIMMING_USE_MORE_RAM
+					
+						// Save previous largest coarse bucket size
+						previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+						
+					// Otherwise
+					#else
+					
+						// Save previous largest coarse bucket size
+						uint16_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+					#endif
 					
 					// Go through all groups of coarse buckets
 					for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
@@ -1872,25 +2347,55 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t *>(numberOfEdgesPerFineBucket.get())[j]; k < l; ++k) [[likely]] {
 							
-								// Enable edge's node in the first partition in the bitmap
-								bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+								// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+								
+									// Enable edge's node in the first partition in the bitmap
+									bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+									
+								// Otherwise
+								#else
+								
+									// Enable edge's node in the first partition in the bitmap
+									bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+								#endif
 							}
 						}
 						
 						// Go through all coarse buckets in the row's column
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set current next edge index to the beginning of the coarse bucket
-							uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+							// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+							#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set current next edge index to the beginning of the coarse bucket
+								uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set current next edge index to the beginning of the coarse bucket
+								uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t *>(numberOfEdgesPerFineBucket.get())[j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+								// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+								#endif
 								
 								// Put edge's nodes in the coarse bucket
-								*currentNextEdgeIndex = __builtin_rotateleft32(nodes, CPU_COMPRESSED_ITEM_SIZE);
+								*currentNextEdgeIndex = __builtin_rotateleft32(nodes, CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE);
 								
 								// Increment the current next edge index if the edge's node in the first partition has a pair in the bitmap
 								currentNextEdgeIndex += bitmap[(nodes ^ 1) & CPU_COMPRESSED_ITEM_MASK];
@@ -1899,8 +2404,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if CPU trimming rounds before compressing is odd
 							#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 							
-								// Set coarse bucket's number of edges based on the current next edge index
-								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Set coarse bucket's number of edges based on the current next edge index
+									reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+									
+								// Otherwise
+								#else
+								
+									// Set coarse bucket's number of edges based on the current next edge index
+									reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								#endif
 								
 							// Otherwise
 							#else
@@ -2012,25 +2527,55 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t *>(numberOfEdgesPerFineBucket.get())[j]; k < l; ++k) [[likely]] {
 							
-								// Enable edge's node in the second partition in the bitmap
-								bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+								// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+								
+									// Enable edge's node in the second partition in the bitmap
+									bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+									
+								// Otherwise
+								#else
+								
+									// Enable edge's node in the second partition in the bitmap
+									bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+								#endif
 							}
 						}
 						
 						// Go through all coarse buckets in the column's row
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set current next edge index to the beginning of the coarse bucket
-							uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+							#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set current next edge index to the beginning of the coarse bucket
+								uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set current next edge index to the beginning of the coarse bucket
+								uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t *>(numberOfEdgesPerFineBucket.get())[j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+								// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+								#endif
 								
 								// Put edge's nodes in the coarse bucket
-								*currentNextEdgeIndex = __builtin_rotateleft32(nodes, CPU_COMPRESSED_ITEM_SIZE);
+								*currentNextEdgeIndex = __builtin_rotateleft32(nodes, CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE);
 								
 								// Increment the current next edge index if the edge's node in the second partition has a pair in the bitmap
 								currentNextEdgeIndex += bitmap[(nodes ^ 1) & CPU_COMPRESSED_ITEM_MASK];
@@ -2039,8 +2584,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if CPU trimming rounds before compressing is odd
 							#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 							
-								// Set coarse bucket's number of edges based on the current next edge index
-								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Set coarse bucket's number of edges based on the current next edge index
+									reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+									
+								// Otherwise
+								#else
+								
+									// Set coarse bucket's number of edges based on the current next edge index
+									reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								#endif
 								
 							// Otherwise
 							#else
@@ -2111,8 +2666,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						startTime = chrono::steady_clock::now();
 					#endif
 					
-					// Save previous largest coarse bucket size
-					uint16_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+					// Check if using more RAM for CPU trimming
+					#if CPU_TRIMMING_USE_MORE_RAM
+					
+						// Save previous largest coarse bucket size
+						previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+						
+					// Otherwise
+					#else
+					
+						// Save previous largest coarse bucket size
+						const uint16_t previousLargestCoarseBucketSize = currentLargestCoarseBucketSize;
+					#endif
 					
 					// Go through all groups of coarse buckets
 					for(int i = 0; i < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / CPU_TRIMMING_VECTOR_SCALE_FACTOR; ++i) [[likely]] {
@@ -2160,25 +2725,55 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t *>(numberOfEdgesPerFineBucket.get())[j]; k < l; ++k) [[likely]] {
 							
-								// Enable edge's node in the first partition in the bitmap
-								bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+								// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+								
+									// Enable edge's node in the first partition in the bitmap
+									bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+									
+								// Otherwise
+								#else
+								
+									// Enable edge's node in the first partition in the bitmap
+									bitmap[reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k] & CPU_COMPRESSED_ITEM_MASK] = 1;
+								#endif
 							}
 						}
 						
 						// Go through all coarse buckets in the row's column
 						for(int j = 0; j < CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION; ++j) [[likely]] {
 						
-							// Set current next edge index to the beginning of the coarse bucket
-							uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+							// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+							#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+							
+								// Set current next edge index to the beginning of the coarse bucket
+								uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+								
+							// Otherwise
+							#else
+							
+								// Set current next edge index to the beginning of the coarse bucket
+								uint32_t *currentNextEdgeIndex = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+							#endif
 							
 							// Go through all edges in the coarse bucket
 							for(uint16_t k = 0, l = reinterpret_cast<const uint16_t *>(numberOfEdgesPerFineBucket.get())[j]; k < l; ++k) [[likely]] {
 							
-								// Get edge's nodes
-								const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+								// Check if CPU trimming rounds before compressing is odd and using more RAM for CPU trimming
+								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1 && CPU_TRIMMING_USE_MORE_RAM
+								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									
+								// Otherwise
+								#else
+								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][previousLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+								#endif
 								
 								// Put edge's nodes in the coarse bucket
-								*currentNextEdgeIndex = __builtin_rotateleft32(nodes, CPU_COMPRESSED_ITEM_SIZE);
+								*currentNextEdgeIndex = __builtin_rotateleft32(nodes, CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE);
 								
 								// Increment the current next edge index if the edge's node in the first partition has a pair in the bitmap
 								currentNextEdgeIndex += bitmap[(nodes ^ 1) & CPU_COMPRESSED_ITEM_MASK];
@@ -2187,8 +2782,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if CPU trimming rounds before compressing is odd
 							#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 							
-								// Set coarse bucket's number of edges based on the current next edge index
-								reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								// Check if using more RAM for CPU trimming
+								#if CPU_TRIMMING_USE_MORE_RAM
+								
+									// Set coarse bucket's number of edges based on the current next edge index
+									reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[j][i];
+									
+								// Otherwise
+								#else
+								
+									// Set coarse bucket's number of edges based on the current next edge index
+									reinterpret_cast<uint16_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne)[j][i] = currentNextEdgeIndex - reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[j][i];
+								#endif
 								
 							// Otherwise
 							#else
@@ -2373,35 +2978,48 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if CPU trimming rounds is exclusively odd or CPU trimming rounds before compressing is exclusively odd
 							#if ((CPU_TRIMMING_ROUNDS % 2) ^ (CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2)) == 1
 							
-								// Get edge's nodes
-								const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
-								
 								// Check if CPU trimming rounds before compressing is odd
 								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 								
+									// Check if using more RAM for CPU trimming
+									#if CPU_TRIMMING_USE_MORE_RAM
+									
+										// Get edge's nodes
+										const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+										
+									// Otherwise
+									#else
+									
+										// Get edge's nodes
+										const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									#endif
+									
 									// Check if GPU trimming rounds is even
 									#if GPU_TRIMMING_ROUNDS % 2 == 0
 									
 										// Set next remaining edge to the edge's uncompressed nodes
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 										
 									// Otherwise
 									#else
 									
 										// Set next remaining edge to the edge's uncompressed nodes
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
 									#endif
 									
 								// Otherwise
 								#else
 								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+									
 									// Check if GPU trimming rounds is even
 									#if GPU_TRIMMING_ROUNDS % 2 == 0
 									
 										// Set next remaining edge to the edge's uncompressed nodes
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
 										
 									// Otherwise
@@ -2409,24 +3027,34 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									
 										// Set next remaining edge to the edge's uncompressed nodes
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 									#endif
 								#endif
 								
 							// Otherwise
 							#else
 							
-								// Get edge's nodes
-								const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
-								
 								// Check if CPU trimming rounds before compressing is odd
 								#if CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING % 2 == 1
 								
+									// Check if using more RAM for CPU trimming
+									#if CPU_TRIMMING_USE_MORE_RAM
+									
+										// Get edge's nodes
+										const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsOne)[i][j][k];
+										
+									// Otherwise
+									#else
+									
+										// Get edge's nodes
+										const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									#endif
+									
 									// Check if GPU trimming rounds is even
 									#if GPU_TRIMMING_ROUNDS % 2 == 0
 									
 										// Set next remaining edge to the edge's uncompressed nodes
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
 										
 									// Otherwise
@@ -2434,24 +3062,27 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									
 										// Set next remaining edge to the edge's uncompressed nodes
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 									#endif
 									
 								// Otherwise
 								#else
 								
+									// Get edge's nodes
+									const uint32_t &nodes = reinterpret_cast<const uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][currentLargestCoarseBucketSize]>(cpuTrimmingThreadsCoarseBucketsTwo)[i][j][k];
+									
 									// Check if GPU trimming rounds is even
 									#if GPU_TRIMMING_ROUNDS % 2 == 0
 									
 										// Set next remaining edge to the edge's uncompressed nodes
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 										
 									// Otherwise
 									#else
 									
 										// Set next remaining edge to the edge's uncompressed nodes
-										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE + 1)] & ~1) | ((nodes >> CPU_COMPRESSED_ITEM_SIZE) & 1);
+										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS] = (cpuTrimmingThreadsCompressedLookupTableSecondPartition[j][nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE + 1)] & ~1) | ((nodes >> (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) & 1);
 										remainingEdges[previousNumberOfEdges * NUMBER_OF_EDGE_COMPONENTS + 1] = (cpuTrimmingThreadsCompressedLookupTableFirstPartition[i][(nodes & CPU_COMPRESSED_ITEM_MASK) >> 1] & ~1) | (nodes & 1);
 									#endif
 								#endif
@@ -2939,7 +3570,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		
 		// Ensure memory is fully allocated
 		setBufferGuaranteed(remainingEdges.get(), 0, MAX_NUMBER_OF_EDGES_AFTER_TRIMMING * NUMBER_OF_EDGE_COMPONENTS * sizeof(uint32_t));
-		setBufferGuaranteed(cpuTrimmingThreadsCoarseBucketsTwo.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_COMPRESSING);
+		setBufferGuaranteed(cpuTrimmingThreadsCoarseBucketsTwo.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_SHRUNK_COARSE_BUCKET_ITEM_SIZE * CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_BEFORE_SHRINKING_COARSE_BUCKETS);
 		setBufferGuaranteed(cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t));
 		setBufferGuaranteed(cpuTrimmingThreadsCompressedLookupTableFirstPartition.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_FIRST_PARTITION);
 		setBufferGuaranteed(cpuTrimmingThreadsCompressedLookupTableSecondPartition.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION);
