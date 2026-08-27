@@ -9315,6 +9315,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// Check if stopping after a specified number of graphs
 			#if STOP_AFTER_NUMBER_OF_GRAPHS != 0
 			
+				// Get mining end time
+				const chrono::steady_clock::time_point miningEndTime = chrono::steady_clock::now();
+				
+				// Display message
+				cout << "Processing " TO_STRING(STOP_AFTER_NUMBER_OF_GRAPHS) " graphs finished in " << static_cast<chrono::duration<double, milli>>(miningEndTime - miningStartTime) << " and " << solutionsFound << " solutions were found" << endl;
+				
 				// Break
 				break;
 			#endif
