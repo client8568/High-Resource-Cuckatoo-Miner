@@ -48,7 +48,7 @@ static constexpr const int BLAKE2B_SIGMA[][16] = {
 // Function prototypes
 
 // BLAKE2b
-__attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], uint64_t nonce) noexcept;
+__attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], NonceType nonce) noexcept;
 
 // BLAKE2b step
 __attribute__((always_inline)) static inline void blake2bStep(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ a, uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ b, uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ c, uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ d, const uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ x, const uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ y) noexcept;
@@ -57,64 +57,109 @@ __attribute__((always_inline)) static inline void blake2bStep(uint64_t __attribu
 // Supporting function implementation
 
 // BLAKE2b
-__attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], uint64_t nonce) noexcept {
+__attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], NonceType nonce) noexcept {
 
 	// Set buffer to beginning of header
 	uint64_t buffer[BLAKE2B_BUFFER_SIZE / sizeof(uint64_t)];
-	__builtin_memcpy_inline(buffer, header, sizeof(buffer));
+	__builtin_memcpy_inline(buffer, header, min(sizeof(buffer), static_cast<size_t>(HEADER_SIZE_EXCLUDING_NONCE)));
 	
-	// Go through all rounds
+	// Set initial states
 	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) a = BLAKE2B_INITIAL_STATE[0];
 	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) b = BLAKE2B_INITIAL_STATE[1];
 	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) c = BLAKE2B_INITIAL_STATE[2];
-	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) d = BLAKE2B_INITIAL_STATE[3];
 	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) x;
 	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) y;
 	
-	#pragma clang loop unroll(full)
-	for(int i = 0; i < BLAKE2B_NUMBER_OF_ROUNDS; ++i) [[likely]] {
+	// Check if header and nonce can fit in one BLAKE2b buffer
+	#if HEADER_SIZE_EXCLUDING_NONCE + NONCE_SIZE <= BLAKE2B_BUFFER_SIZE
 	
-		// Set x and y for column step
-		x = {buffer[BLAKE2B_SIGMA[i][0]], buffer[BLAKE2B_SIGMA[i][2]], buffer[BLAKE2B_SIGMA[i][4]], buffer[BLAKE2B_SIGMA[i][6]]};
-		y = {buffer[BLAKE2B_SIGMA[i][1]], buffer[BLAKE2B_SIGMA[i][3]], buffer[BLAKE2B_SIGMA[i][5]], buffer[BLAKE2B_SIGMA[i][7]]};
+		// Set initial states
+		uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) d = {BLAKE2B_INITIAL_STATE[3][0] ^ (sizeof(buffer) ^ (HEADER_SIZE_EXCLUDING_NONCE + sizeof(nonce))), BLAKE2B_INITIAL_STATE[3][1], BLAKE2B_INITIAL_STATE[3][2] ^ UINT64_MAX, BLAKE2B_INITIAL_STATE[3][3]};
 		
-		// Perform column step
-		blake2bStep(a, b, c, d, x, y);
+		// Check if nonce is big endian in the header
+		#if NONCE_IN_HEADER_IS_BIG_ENDIAN
 		
-		// Update b, c, and d for diagonal step
-		b = __builtin_shufflevector(b, b, 1, 2, 3, 0);
-		c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
-		d = __builtin_shufflevector(d, d, 3, 0, 1, 2);
+			// Put nonce in big endian format
+			#if NONCE_SIZE == 2
+				nonce = __builtin_bswap16(nonce);
+			#elif NONCE_SIZE == 4
+				nonce = __builtin_bswap32(nonce);
+			#elif NONCE_SIZE == 8
+				nonce = __builtin_bswap64(nonce);
+			#endif
+		#endif
 		
-		// Set x, and y for diagonal step
-		x = {buffer[BLAKE2B_SIGMA[i][8]], buffer[BLAKE2B_SIGMA[i][10]], buffer[BLAKE2B_SIGMA[i][12]], buffer[BLAKE2B_SIGMA[i][14]]};
-		y = {buffer[BLAKE2B_SIGMA[i][9]], buffer[BLAKE2B_SIGMA[i][11]], buffer[BLAKE2B_SIGMA[i][13]], buffer[BLAKE2B_SIGMA[i][15]]};
+		// Append nonce to buffer
+		__builtin_memcpy_inline(&reinterpret_cast<uint8_t *>(buffer)[HEADER_SIZE_EXCLUDING_NONCE], &nonce, sizeof(nonce));
 		
-		// Perform diagonal step
-		blake2bStep(a, b, c, d, x, y);
+		// Pad remainder of buffer with zeros
+		__builtin_memset_inline(&reinterpret_cast<uint8_t *>(buffer)[HEADER_SIZE_EXCLUDING_NONCE + sizeof(nonce)], 0, sizeof(buffer) - (HEADER_SIZE_EXCLUDING_NONCE + sizeof(nonce)));
 		
-		// Update b, c, and d for column step
-		b = __builtin_shufflevector(b, b, 3, 0, 1, 2);
-		c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
-		d = __builtin_shufflevector(d, d, 1, 2, 3, 0);
-	}
+	// Otherwise
+	#else
 	
-	// Set buffer to end of header
-	__builtin_memcpy_inline(buffer, &header[sizeof(buffer)], HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer));
-	
-	// Append nonce in big endian to buffer
-	nonce = __builtin_bswap64(nonce);
-	__builtin_memcpy_inline(&reinterpret_cast<uint8_t *>(buffer)[HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer)], &nonce, sizeof(nonce));
-	
-	// Pad remainder of buffer with zeros
-	__builtin_memset_inline(&reinterpret_cast<uint8_t *>(buffer)[HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer) + sizeof(nonce)], 0, sizeof(buffer) - (HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer) + sizeof(nonce)));
+		// Set initial states
+		uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) d = BLAKE2B_INITIAL_STATE[3];
+		
+		// Go through all rounds
+		#pragma clang loop unroll(full)
+		for(int i = 0; i < BLAKE2B_NUMBER_OF_ROUNDS; ++i) [[likely]] {
+		
+			// Set x and y for column step
+			x = {buffer[BLAKE2B_SIGMA[i][0]], buffer[BLAKE2B_SIGMA[i][2]], buffer[BLAKE2B_SIGMA[i][4]], buffer[BLAKE2B_SIGMA[i][6]]};
+			y = {buffer[BLAKE2B_SIGMA[i][1]], buffer[BLAKE2B_SIGMA[i][3]], buffer[BLAKE2B_SIGMA[i][5]], buffer[BLAKE2B_SIGMA[i][7]]};
+			
+			// Perform column step
+			blake2bStep(a, b, c, d, x, y);
+			
+			// Update b, c, and d for diagonal step
+			b = __builtin_shufflevector(b, b, 1, 2, 3, 0);
+			c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+			d = __builtin_shufflevector(d, d, 3, 0, 1, 2);
+			
+			// Set x, and y for diagonal step
+			x = {buffer[BLAKE2B_SIGMA[i][8]], buffer[BLAKE2B_SIGMA[i][10]], buffer[BLAKE2B_SIGMA[i][12]], buffer[BLAKE2B_SIGMA[i][14]]};
+			y = {buffer[BLAKE2B_SIGMA[i][9]], buffer[BLAKE2B_SIGMA[i][11]], buffer[BLAKE2B_SIGMA[i][13]], buffer[BLAKE2B_SIGMA[i][15]]};
+			
+			// Perform diagonal step
+			blake2bStep(a, b, c, d, x, y);
+			
+			// Update b, c, and d for column step
+			b = __builtin_shufflevector(b, b, 3, 0, 1, 2);
+			c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+			d = __builtin_shufflevector(d, d, 1, 2, 3, 0);
+		}
+		
+		// Set buffer to end of header
+		__builtin_memcpy_inline(buffer, &header[sizeof(buffer)], HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer));
+		
+		// Check if nonce is big endian in the header
+		#if NONCE_IN_HEADER_IS_BIG_ENDIAN
+		
+			// Put nonce in big endian format
+			#if NONCE_SIZE == 2
+				nonce = __builtin_bswap16(nonce);
+			#elif NONCE_SIZE == 4
+				nonce = __builtin_bswap32(nonce);
+			#elif NONCE_SIZE == 8
+				nonce = __builtin_bswap64(nonce);
+			#endif
+		#endif
+		
+		// Append nonce to buffer
+		__builtin_memcpy_inline(&reinterpret_cast<uint8_t *>(buffer)[HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer)], &nonce, sizeof(nonce));
+		
+		// Pad remainder of buffer with zeros
+		__builtin_memset_inline(&reinterpret_cast<uint8_t *>(buffer)[HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer) + sizeof(nonce)], 0, sizeof(buffer) - (HEADER_SIZE_EXCLUDING_NONCE - sizeof(buffer) + sizeof(nonce)));
+		
+		// Updates states
+		result = a ^= BLAKE2B_INITIAL_STATE[0] ^ c;
+		b ^= BLAKE2B_INITIAL_STATE[1] ^ d;
+		c = BLAKE2B_INITIAL_STATE[2];
+		d = {BLAKE2B_INITIAL_STATE[3][0] ^ (sizeof(buffer) ^ (HEADER_SIZE_EXCLUDING_NONCE + sizeof(nonce))), BLAKE2B_INITIAL_STATE[3][1], BLAKE2B_INITIAL_STATE[3][2] ^ UINT64_MAX, BLAKE2B_INITIAL_STATE[3][3]};
+	#endif
 	
 	// Go through all but the last round
-	result = a ^= BLAKE2B_INITIAL_STATE[0] ^ c;
-	b ^= BLAKE2B_INITIAL_STATE[1] ^ d;
-	c = BLAKE2B_INITIAL_STATE[2];
-	d = {BLAKE2B_INITIAL_STATE[3][0] ^ (sizeof(buffer) ^ (HEADER_SIZE_EXCLUDING_NONCE + sizeof(nonce))), BLAKE2B_INITIAL_STATE[3][1], BLAKE2B_INITIAL_STATE[3][2] ^ UINT64_MAX, BLAKE2B_INITIAL_STATE[3][3]};
-	
 	#pragma clang loop unroll(full)
 	for(int i = 0; i < BLAKE2B_NUMBER_OF_ROUNDS - 1; ++i) [[likely]] {
 	
@@ -174,8 +219,18 @@ __attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__
 	// Update c for column step
 	c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
 	
-	// Get result
-	result ^= a ^ c;
+	// Check if header and nonce can fit in one BLAKE2b buffer
+	#if HEADER_SIZE_EXCLUDING_NONCE + NONCE_SIZE <= BLAKE2B_BUFFER_SIZE
+	
+		// Get result
+		result = a ^ BLAKE2B_INITIAL_STATE[0] ^ c;
+		
+	// Otherwise
+	#else
+	
+		// Get result
+		result ^= a ^ c;
+	#endif
 }
 
 // BLAKE2b step

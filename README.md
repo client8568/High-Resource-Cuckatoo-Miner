@@ -94,6 +94,16 @@ make CPU_TRIMMING_ROUNDS=335
 make SOLUTION_SIZE=42
 ```
 
+* A `NONCE_SIZE` setting can be used to set the size of the block header nonce to find a solution for. Set this to work with the cryptocurrency that you want to mine. The default value for this setting is `8`.
+```
+make NONCE_SIZE=8
+```
+
+* A `NONCE_IN_HEADER_IS_BIG_ENDIAN` setting can be used to set if the nonce is encoded in the block header in big endian format. Set this to work with the cryptocurrency that you want to mine. The default value for this setting is `true`.
+```
+make NONCE_IN_HEADER_IS_BIG_ENDIAN=true
+```
+
 * A `HEADER_SIZE_EXCLUDING_NONCE` setting can be used to set the size of the block header excluding its nonce to find a solution for. Set this to work with the cryptocurrency that you want to mine. The default value for this setting is `238`.
 ```
 make HEADER_SIZE_EXCLUDING_NONCE=238
@@ -307,6 +317,21 @@ make USE_SIGNAL_HANDLER=true
 * A `CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS` setting can be used to display a message when an edge is lost during CPU trimming due to lack of bucket space. This setting is intended to be used by developers. The default value for this setting is `true`.
 ```
 make CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS=true
+```
+
+* A `STARTING_NONCE` setting can be used to set the first nonce used when not mining to a stratum server. This setting is intended to be used by developers. The default value for this setting is `0`.
+```
+make STARTING_NONCE=0
+```
+
+* A `STARTING_HEADER=` setting can be used to set the header used when not mining to a stratum server. This must only contain the ASCII uppercase characters ([A-Z]), ASCII lowercase characters ([a-z]), and ASCII spaces ([ ]). This setting is intended to be used by developers. The default value for this setting is ``.
+```
+make STARTING_HEADER=
+```
+
+* A `STOP_AFTER_NUMBER_OF_GRAPHS` setting can be used to stop this program after it processes a specified number of graphs. If this setting is `0` then this program won't ever stop. This setting is intended to be used by developers. The default value for this setting is `0`.
+```
+make STOP_AFTER_NUMBER_OF_GRAPHS=0
 ```
 
 This program's default settings are set for cuckatoo32 and should be fine tuned by you on the system that you'll be running it on in order to maximize its performance. If you want to perform cuckatoo31 with it, then building this program with the following settings will give you a good starting point which you'll need to further fine tune on your system to maximize its performance:

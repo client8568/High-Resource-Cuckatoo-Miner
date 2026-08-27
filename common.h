@@ -56,6 +56,31 @@ using namespace std;
 
 // Constants
 
+// Check if nonce is a uint8
+#if NONCE_SIZE == 1
+
+	// Nonce type
+	typedef uint8_t NonceType;
+	
+// Otherwise check if nonce is a uint16
+#elif NONCE_SIZE == 2
+
+	// Nonce type
+	typedef uint16_t NonceType;
+	
+// Otherwise check if nonce is a uint32
+#elif NONCE_SIZE == 4
+
+	// Nonce type
+	typedef uint32_t NonceType;
+	
+// Otherwise nonce is a uint64
+#else
+
+	// Nonce type
+	typedef uint64_t NonceType;
+#endif
+
 // Min edge bits
 #define MIN_EDGE_BITS 10
 

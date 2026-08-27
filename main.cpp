@@ -8,6 +8,7 @@
 #include <execution>
 #include <functional>
 #include <getopt.h>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -334,8 +335,11 @@ static_assert(MAX_NUMBER_OF_EDGES_AFTER_TRIMMING >= SOLUTION_SIZE, "Too many tri
 // Throw error if solution size is invalid
 static_assert(SOLUTION_SIZE > 0 && SOLUTION_SIZE <= INT_MAX && SOLUTION_SIZE % 2 == 0, "Solution size is invalid");
 
+// Throw error if nonce size is invalid
+static_assert(NONCE_SIZE == sizeof(uint8_t) || NONCE_SIZE == sizeof(uint16_t) || NONCE_SIZE == sizeof(uint32_t) || NONCE_SIZE == sizeof(uint64_t), "Nonce size is invalid");
+
 // Throw error if header size excluding nonce is invalid
-static_assert(HEADER_SIZE_EXCLUDING_NONCE > BLAKE2B_BUFFER_SIZE - sizeof(uint64_t) && HEADER_SIZE_EXCLUDING_NONCE <= BLAKE2B_BUFFER_SIZE * 2 - sizeof(uint64_t), "Header size excluding nonce is invalid");
+static_assert(HEADER_SIZE_EXCLUDING_NONCE > 0 && HEADER_SIZE_EXCLUDING_NONCE <= BLAKE2B_BUFFER_SIZE * 2 - NONCE_SIZE, "Header size excluding nonce is invalid");
 
 // Throw error if GPU number of most significant bits used for coarse bucket sorting is invalid
 static_assert(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING > 0 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING < EDGE_BITS / 2, "GPU number of most significant bits used for coarse bucket sorting is invalid");
@@ -440,6 +444,15 @@ static_assert(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES > 0 && STRATUM_SERVER
 // Throw error if stratum server send keep alive request interval seconds is invalid
 static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS <= chrono::seconds::max().count(), "Stratum server send keep alive request interval seconds is invalid");
 
+// Throw error if starting nonce is invalid
+static_assert(STARTING_NONCE >= 0 && STARTING_NONCE <= numeric_limits<NonceType>::max(), "Starting nonce is invalid");
+
+// Throw error if starting header is invalid
+static_assert(STARTING_HEADER_SIZE <= HEADER_SIZE_EXCLUDING_NONCE && TO_STRING(STARTING_HEADER) && sizeof(TO_STRING(STARTING_HEADER)) >= sizeof('\0') && !TO_STRING(STARTING_HEADER)[sizeof(TO_STRING(STARTING_HEADER)) - sizeof('\0')] && __builtin_strlen(TO_STRING(STARTING_HEADER)) == sizeof(TO_STRING(STARTING_HEADER)) - sizeof('\0'), "Starting header is invalid");
+
+// Throw error if stop after number of graphs is invalid
+static_assert(STOP_AFTER_NUMBER_OF_GRAPHS >= 0 && STOP_AFTER_NUMBER_OF_GRAPHS <= UINT64_MAX, "Stop after number of graphs is invalid");
+
 // Check if using max, more, less, or min RAM for GPU trimming together
 #if (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MORE_RAM) || (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_LESS_RAM) || (GPU_TRIMMING_USE_MAX_RAM && GPU_TRIMMING_USE_MIN_RAM) || (GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_LESS_RAM) || (GPU_TRIMMING_USE_MORE_RAM && GPU_TRIMMING_USE_MIN_RAM) || (GPU_TRIMMING_USE_LESS_RAM && GPU_TRIMMING_USE_MIN_RAM)
 
@@ -473,6 +486,27 @@ static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STR
 
 	// Display message
 	#warning CPU bounds checking not avoiding conditional statements will slow down your mining rate
+#endif
+
+// Check if starting nonce is set and mining to a stratum server
+#if STARTING_NONCE != 0 && MINE_TO_A_STRATUM_SERVER
+
+	// Display message
+	#warning Setting the starting nonce will have no affect while mining to a stratum server
+#endif
+
+// Check if starting header is set and mining to a stratum server
+#if STARTING_HEADER_SIZE != 0 && MINE_TO_A_STRATUM_SERVER
+
+	// Display message
+	#warning Setting the starting header will have no affect while mining to a stratum server
+#endif
+
+// Check if stopping after a specified number of graphs and mining to a stratum server
+#if STOP_AFTER_NUMBER_OF_GRAPHS != 0 && MINE_TO_A_STRATUM_SERVER
+
+	// Display message
+	#warning Stopping after a specified number of graphs will stop mining after awhile
 #endif
 
 
@@ -5820,7 +5854,14 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			
 			// Create job values
 			uint8_t jobHeader[HEADER_SIZE_EXCLUDING_NONCE] = {};
-			uint64_t jobNonce[2] = {0, 1};
+			NonceType jobNonce[2] = {STARTING_NONCE, STARTING_NONCE + 1};
+			
+			// Check if starting header is set
+			#if STARTING_HEADER_SIZE != 0
+			
+				// Set job header to the starting header
+				__builtin_memcpy(jobHeader, TO_STRING(STARTING_HEADER), STARTING_HEADER_SIZE);
+			#endif
 			
 			// Check if mining to a stratum server
 			#if MINE_TO_A_STRATUM_SERVER
@@ -6793,25 +6834,29 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Start GPU trimming on the current job
 				commandQueue->commit((const MTL4::CommandBuffer *[]){trimEdgesCommandBuffer.get()}, 1, trimEdgesCommitOptions);
 				
-				// Check if CPU trimming threads haven't been primed
-				if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
+				// Check if not displaying tuning times
+				#if !DISPLAY_TUNING_TIMES
 				
-					// Start CPU trimming on nothing
-					cpuTrimmingThreadsCoarseBucketsOne = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET]>(cpuBucketsBuffer->contents());
-					cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(numberOfEdgesPerCpuBucketBuffer->contents());
-					cpuTrimmingThreadsFinished = false;
-					startCpuTrimmingThreadsTriggerToggle = !startCpuTrimmingThreadsTriggerToggle;
-					cpuTrimmingThreadsLock.unlock();
-					startCpuTrimmingThreadsConditionalVariable.notify_all();
+					// Check if CPU trimming threads haven't been primed
+					if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
 					
-					// Wait for CPU trimming to finish
-					cpuTrimmingThreadsLock.lock();
-					cpuTrimmingThreadsFinishedConditionalVariable.wait(cpuTrimmingThreadsLock, [&cpuTrimmingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
-					
-						// Return if CPU trimming threads have finished
-						return cpuTrimmingThreadsFinished;
-					});
-				}
+						// Start CPU trimming on nothing
+						cpuTrimmingThreadsCoarseBucketsOne = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET]>(cpuBucketsBuffer->contents());
+						cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(numberOfEdgesPerCpuBucketBuffer->contents());
+						cpuTrimmingThreadsFinished = false;
+						startCpuTrimmingThreadsTriggerToggle = !startCpuTrimmingThreadsTriggerToggle;
+						cpuTrimmingThreadsLock.unlock();
+						startCpuTrimmingThreadsConditionalVariable.notify_all();
+						
+						// Wait for CPU trimming to finish
+						cpuTrimmingThreadsLock.lock();
+						cpuTrimmingThreadsFinishedConditionalVariable.wait(cpuTrimmingThreadsLock, [&cpuTrimmingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
+						
+							// Return if CPU trimming threads have finished
+							return cpuTrimmingThreadsFinished;
+						});
+					}
+				#endif
 				
 				// Check if waiting for GPU trimming to finish failed
 				commandQueueFinishedSemaphore.acquire();
@@ -6885,24 +6930,28 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Start GPU transferring on the current job
 				commandQueue->commit((const MTL4::CommandBuffer *[]){transferEdgesCommandBuffer.get()}, 1, transferEdgesCommitOptions);
 				
-				// Check if CPU searching threads haven't been primed
-				if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
+				// Check if not displaying tuning times
+				#if !DISPLAY_TUNING_TIMES
 				
-					// Start CPU searching on nothing
-					recoverEdgesParameters.solutionNodes[3] = 0;
-					cpuSearchingThreadsFinished = false;
-					startCpuSearchingThreadsTriggerToggle = !startCpuSearchingThreadsTriggerToggle;
-					cpuSearchingThreadsLock.unlock();
-					startCpuSearchingThreadsConditionalVariable.notify_all();
+					// Check if CPU searching threads haven't been primed
+					if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
 					
-					// Wait for CPU searching to finish
-					cpuSearchingThreadsLock.lock();
-					cpuSearchingThreadsFinishedConditionalVariable.wait(cpuSearchingThreadsLock, [&cpuSearchingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
-					
-						// Return if CPU searching threads have finished
-						return cpuSearchingThreadsFinished;
-					});
-				}
+						// Start CPU searching on nothing
+						recoverEdgesParameters.solutionNodes[3] = 0;
+						cpuSearchingThreadsFinished = false;
+						startCpuSearchingThreadsTriggerToggle = !startCpuSearchingThreadsTriggerToggle;
+						cpuSearchingThreadsLock.unlock();
+						startCpuSearchingThreadsConditionalVariable.notify_all();
+						
+						// Wait for CPU searching to finish
+						cpuSearchingThreadsLock.lock();
+						cpuSearchingThreadsFinishedConditionalVariable.wait(cpuSearchingThreadsLock, [&cpuSearchingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
+						
+							// Return if CPU searching threads have finished
+							return cpuSearchingThreadsFinished;
+						});
+					}
+				#endif
 				
 				// Check if waiting for GPU transferring to finish failed
 				commandQueueFinishedSemaphore.acquire();
@@ -7165,25 +7214,29 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 				
-				// Check if CPU trimming threads haven't been primed
-				if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
+				// Check if not displaying tuning times
+				#if !DISPLAY_TUNING_TIMES
 				
-					// Start CPU trimming on nothing
-					cpuTrimmingThreadsCoarseBucketsOne = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET]>(mappedCpuBucketsBuffer);
-					cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(mappedNumberOfEdgesPerCpuBucketBuffer);
-					cpuTrimmingThreadsFinished = false;
-					startCpuTrimmingThreadsTriggerToggle = !startCpuTrimmingThreadsTriggerToggle;
-					cpuTrimmingThreadsLock.unlock();
-					startCpuTrimmingThreadsConditionalVariable.notify_all();
+					// Check if CPU trimming threads haven't been primed
+					if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
 					
-					// Wait for CPU trimming to finish
-					cpuTrimmingThreadsLock.lock();
-					cpuTrimmingThreadsFinishedConditionalVariable.wait(cpuTrimmingThreadsLock, [&cpuTrimmingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
-					
-						// Return if CPU trimming threads have finished
-						return cpuTrimmingThreadsFinished;
-					});
-				}
+						// Start CPU trimming on nothing
+						cpuTrimmingThreadsCoarseBucketsOne = reinterpret_cast<uint64_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION][CPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET]>(mappedCpuBucketsBuffer);
+						cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne = reinterpret_cast<uint32_t (*)[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION]>(mappedNumberOfEdgesPerCpuBucketBuffer);
+						cpuTrimmingThreadsFinished = false;
+						startCpuTrimmingThreadsTriggerToggle = !startCpuTrimmingThreadsTriggerToggle;
+						cpuTrimmingThreadsLock.unlock();
+						startCpuTrimmingThreadsConditionalVariable.notify_all();
+						
+						// Wait for CPU trimming to finish
+						cpuTrimmingThreadsLock.lock();
+						cpuTrimmingThreadsFinishedConditionalVariable.wait(cpuTrimmingThreadsLock, [&cpuTrimmingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
+						
+							// Return if CPU trimming threads have finished
+							return cpuTrimmingThreadsFinished;
+						});
+					}
+				#endif
 				
 				// Check if waiting for GPU trimming to finish failed
 				if(clWaitForEvents(1, &gpuLastEvent) != CL_SUCCESS || clReleaseEvent(gpuLastEvent) != CL_SUCCESS || (gpuLastEvent = nullptr)) [[unlikely]] {
@@ -7234,24 +7287,28 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 				
-				// Check if CPU searching threads haven't been primed
-				if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
-					
-					// Start CPU searching on nothing
-					recoverEdgesParameters.solutionNodes[3] = 0;
-					cpuSearchingThreadsFinished = false;
-					startCpuSearchingThreadsTriggerToggle = !startCpuSearchingThreadsTriggerToggle;
-					cpuSearchingThreadsLock.unlock();
-					startCpuSearchingThreadsConditionalVariable.notify_all();
-					
-					// Wait for CPU searching to finish
-					cpuSearchingThreadsLock.lock();
-					cpuSearchingThreadsFinishedConditionalVariable.wait(cpuSearchingThreadsLock, [&cpuSearchingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
-					
-						// Return if CPU searching threads have finished
-						return cpuSearchingThreadsFinished;
-					});
-				}
+				// Check if not displaying tuning times
+				#if !DISPLAY_TUNING_TIMES
+				
+					// Check if CPU searching threads haven't been primed
+					if(returnStatus != EXIT_SUCCESS) [[unlikely]] {
+						
+						// Start CPU searching on nothing
+						recoverEdgesParameters.solutionNodes[3] = 0;
+						cpuSearchingThreadsFinished = false;
+						startCpuSearchingThreadsTriggerToggle = !startCpuSearchingThreadsTriggerToggle;
+						cpuSearchingThreadsLock.unlock();
+						startCpuSearchingThreadsConditionalVariable.notify_all();
+						
+						// Wait for CPU searching to finish
+						cpuSearchingThreadsLock.lock();
+						cpuSearchingThreadsFinishedConditionalVariable.wait(cpuSearchingThreadsLock, [&cpuSearchingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
+						
+							// Return if CPU searching threads have finished
+							return cpuSearchingThreadsFinished;
+						});
+					}
+				#endif
 				
 				// Check if waiting for GPU transferring to finish failed
 				if(clWaitForEvents(1, &gpuLastEvent) != CL_SUCCESS || clReleaseEvent(gpuLastEvent) != CL_SUCCESS || (gpuLastEvent = nullptr)) [[unlikely]] {
@@ -7576,8 +7633,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// Get CPU start time
 			chrono::steady_clock::time_point cpuStartTime = miningStartTime;
 			
-			// Loop forever
-			while(true) {
+			// Check if stopping after a specified number of graphs
+			#if STOP_AFTER_NUMBER_OF_GRAPHS != 0
+			
+				// Loop though all graphs to process
+				while(graphsProcessed < STOP_AFTER_NUMBER_OF_GRAPHS) [[likely]] {
+				
+			// Otherwise
+			#else
+			
+				// Loop forever
+				while(true) {
+			#endif
 			
 				// Check if using an Apple device
 				#ifdef __APPLE__
@@ -7728,21 +7795,62 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 				#endif
 				
-				// Check if displaying tuning times
-				#if DISPLAY_TUNING_TIMES
+				// Check if displaying tuning times or not mining to a stratum server
+				#if DISPLAY_TUNING_TIMES || !MINE_TO_A_STRATUM_SERVER
 				
+					// Check if not mining to a stratum server
+					#if !MINE_TO_A_STRATUM_SERVER
+					
+						// Display message
+						cout << "Header with nonce: 0x";
+						
+						// Go through all characters in the job header
+						for(size_t i = 0; i < HEADER_SIZE_EXCLUDING_NONCE; ++i) [[likely]] {
+						
+							// Display character
+							cout << hex << setw(sizeof(uint8_t) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << static_cast<uint16_t>(jobHeader[i]) << setfill(' ') << setw(0) << dec;
+						}
+						
+						// Check if nonce is big endian in the header
+						#if NONCE_IN_HEADER_IS_BIG_ENDIAN
+						
+							// Display nonce for the previous job
+							cout << hex << setw(sizeof(NonceType) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << static_cast<uint64_t>(jobNonce[1 - currentJobIndex]) << setfill(' ') << setw(0) << dec;
+							
+						// Otherwise
+						#else
+						
+							// Display nonce for the previous job in little endian format
+							#if NONCE_SIZE == 1
+								cout << hex << setw(sizeof(NonceType) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << static_cast<uint64_t>(jobNonce[1 - currentJobIndex]) << setfill(' ') << setw(0) << dec;
+							#elif NONCE_SIZE == 2
+								cout << hex << setw(sizeof(NonceType) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << static_cast<uint64_t>(__builtin_bswap16(jobNonce[1 - currentJobIndex])) << setfill(' ') << setw(0) << dec;
+							#elif NONCE_SIZE == 4
+								cout << hex << setw(sizeof(NonceType) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << static_cast<uint64_t>(__builtin_bswap32(jobNonce[1 - currentJobIndex])) << setfill(' ') << setw(0) << dec;
+							#else
+								cout << hex << setw(sizeof(NonceType) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << static_cast<uint64_t>(__builtin_bswap64(jobNonce[1 - currentJobIndex])) << setfill(' ') << setw(0) << dec;
+							#endif
+						#endif
+						
+						// Display new line
+						cout << endl;
+					#endif
+					
 					// Display message
-					cout << "SipHash keys: " << hex;
+					cout << "Nonce: " << static_cast<uint64_t>(jobNonce[1 - currentJobIndex]) << endl;
+					
+					// Display message
+					cout << "SipHash keys: ";
 					
 					// Go through all SipHash keys
 					for(int i = 0; i < NUMBER_OF_SIPHASH_KEYS; ++i) [[likely]] {
 					
 						// Display SipHash key for the previous job
-						cout << "0x" << sipHashKeys[1 - currentJobIndex][i] << ' ';
+						cout << "0x" << hex << setw(sizeof(uint64_t) * HEXADECIMAL_CHARACTER_SIZE) << setfill('0') << sipHashKeys[1 - currentJobIndex][i] << setfill(' ') << setw(0) << dec << ' ';
 					}
 					
 					// Display new line
-					cout << dec << endl;
+					cout << endl;
 				#endif
 				
 				// Check if using an Apple device
@@ -9203,6 +9311,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Get graph start time
 				graphStartTime = graphEndTime;
 			}
+			
+			// Check if stopping after a specified number of graphs
+			#if STOP_AFTER_NUMBER_OF_GRAPHS != 0
+			
+				// Break
+				break;
+			#endif
 			
 		} while(!closing && returnStatus == EXIT_SUCCESS);
 	
