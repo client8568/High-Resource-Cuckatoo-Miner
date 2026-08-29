@@ -4141,6 +4141,112 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	// Set closing to false
 	static volatile sig_atomic_t closing = false;
 	
+	// Check if displaying power usage
+	#if DISPLAY_POWER_USAGE
+	
+		// Create total power used
+		alignas(hardware_destructive_interference_size) double totalPowerUsed = 0;
+		
+		// Create total power samples
+		alignas(hardware_destructive_interference_size) int totalPowerSamples = 0;
+		
+		// Create CPU recovering threads mutex
+		alignas(hardware_destructive_interference_size) mutex powerUsageThreadMutex;
+		
+		// Create power usage thread lock
+		unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
+		
+		// Check if using an Apple device
+		#ifdef __APPLE__
+		
+			// Create power usage thread
+			thread powerUsageThread([&totalPowerUsed, &totalPowerSamples, &powerUsageThreadMutex]() __attribute__((always_inline)) noexcept {
+			
+		// Otherwise
+		#else
+		
+			// Create power usage thread
+			thread powerUsageThread([]() __attribute__((always_inline)) noexcept {
+		#endif
+		
+			// Check if using an Apple device
+			#ifdef __APPLE__
+			
+				// Check if setting thread's scheduling priority to low was successful
+				if(!pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0)) [[likely]] {
+				
+					// Check if getting the matching dictionary for the AppleSMC service was successful
+					const CFDictionaryRef serviceMatchingDictionary = IOServiceMatching("AppleSMC");
+					if(serviceMatchingDictionary) [[likely]] {
+					
+						// Check if getting the AppleSMC service was successful
+						const io_service_t service = IOServiceGetMatchingService(kIOMainPortDefault, serviceMatchingDictionary);
+						if(service) [[likely]] {
+						
+							// Check if opening connection to the AppleSMC service was successful
+							io_connect_t serviceConnection;
+							if(IOServiceOpen(service, mach_task_self_, 0, &serviceConnection) == KERN_SUCCESS) [[likely]] {
+							
+								// Create input parameters to get the total power in key's info
+								SmcParameters inputParameters = {
+								
+									// Key
+									.key = __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("PDTR")),
+									
+									// Data 8
+									.data8 = kSMCGetKeyInfo,
+								};
+								
+								// Check if getting the total power in key's info was successful and the total power in key's info is valid
+								SmcParameters outputParameters;
+								size_t outputParametersSize = sizeof(outputParameters);
+								
+								if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result && outputParameters.keyInfo.dataSize == sizeof(float) && outputParameters.keyInfo.dataType == __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("flt "))) [[likely]] {
+								
+									// Set input parameters to read the total power in key's value
+									inputParameters.data8 = kSMCReadKey;
+									inputParameters.keyInfo.dataSize = outputParameters.keyInfo.dataSize;
+									
+									// Create power usage thread lock
+									unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
+									
+									// Loop while not closing
+									while(!closing) [[likely]] {
+									
+										// Check if reading the total power in key's value was successful
+										if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
+										
+											// Lock power usage thread lock
+											powerUsageThreadLock.lock();
+											
+											// Update total power used to include the total power in key's value
+											totalPowerUsed += *reinterpret_cast<const float *>(&outputParameters.bytes);
+											
+											// Increment total power samples
+											++totalPowerSamples;
+											
+											// Unlock power usage thread lock
+											powerUsageThreadLock.unlock();
+										}
+										
+										// Wait before reading the total power in key's value again
+										usleep(SMC_POLL_RATE_MICROSECONDS);
+									}
+								}
+								
+								// Close service connection
+								IOServiceClose(serviceConnection);
+							}
+							
+							// Free service
+							IOObjectRelease(service);
+						}
+					}
+				}
+			#endif
+		});
+	#endif
+	
 	// Check if using signal handler and not using Windows
 	#if USE_SIGNAL_HANDLER && !defined _WIN32
 	
@@ -4265,6 +4371,21 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 			#endif
+		#endif
+		
+		// Check if displaying power usage
+		#if DISPLAY_POWER_USAGE
+		
+			// Check if creating energy consumption failed
+			const EnergyConsumption energyConsumption;
+			if(!energyConsumption) [[unlikely]] {
+			
+				// Display message
+				cout << "Monitoring energy consumption failed" << endl;
+				
+				// Break
+				break;
+			}
 		#endif
 		
 		// Display message
@@ -4780,7 +4901,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// Check if reading source file failed
 					char sourceFileContents[sourceFileSize];
-					if(fread(sourceFileContents, 1, sourceFileSize, sourceFile.get()) != sizeof(sourceFileContents)) [[unlikely]] {
+					if(fread(sourceFileContents, sizeof(char), sourceFileSize, sourceFile.get()) != sizeof(sourceFileContents)) [[unlikely]] {
 					
 						// Display message
 						cout << "Reading gpu.metal failed" << endl;
@@ -5561,7 +5682,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// Check if reading source file failed
 					char sourceFileContents[sourceFileSize];
-					if(fread(sourceFileContents, 1, sourceFileSize, sourceFile.get()) != sizeof(sourceFileContents)) [[unlikely]] {
+					if(fread(sourceFileContents, sizeof(char), sourceFileSize, sourceFile.get()) != sizeof(sourceFileContents)) [[unlikely]] {
 					
 						// Display message
 						cout << "Reading gpu.cl failed" << endl;
@@ -7615,6 +7736,23 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				transferEdgesCommitOptions->addFeedbackHandler(commitOptionsFeedbackHandler);
 			#endif
 			
+			// Check if displaying power usage
+			#if DISPLAY_POWER_USAGE
+			
+				// Get energy consumption before
+				pair energyConsumptionBefore = energyConsumption.getTotalEnergyConsumption();
+				
+				// Lock power usage thread lock
+				powerUsageThreadLock.lock();
+				
+				// Reset total power used
+				totalPowerUsed = 0;
+				totalPowerSamples = 0;
+				
+				// Unlock power usage thread lock
+				powerUsageThreadLock.unlock();
+			#endif
+			
 			// Set solutions found to zero
 			uint64_t solutionsFound = 0;
 			
@@ -8985,6 +9123,38 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					transferEdgesCommitOptions->addFeedbackHandler(commitOptionsFeedbackHandler);
 				#endif
 				
+				// Check if displaying power usage
+				#if DISPLAY_POWER_USAGE
+				
+					// Get energy consumption after
+					const pair energyConsumptionAfter = energyConsumption.getTotalEnergyConsumption();
+					
+					// Get GPU and CPU energy consumed
+					const unsigned long long gpuEnergyConsumed = energyConsumptionAfter.first - energyConsumptionBefore.first;
+					const unsigned long long cpuEnergyConsumed = energyConsumptionAfter.second - energyConsumptionBefore.second;
+					
+					// Update energy consumption before
+					energyConsumptionBefore = energyConsumptionAfter;
+					
+					// Lock power usage thread lock
+					powerUsageThreadLock.lock();
+					
+					// Check if total power used was monitored
+					double powerUsed = 0;
+					if(totalPowerSamples) [[likely]] {
+					
+						// Get power used
+						powerUsed = totalPowerUsed / totalPowerSamples;
+						
+						// Reset total power used
+						totalPowerUsed = 0;
+						totalPowerSamples = 0;
+					}
+					
+					// Unlock power usage thread lock
+					powerUsageThreadLock.unlock();
+				#endif
+				
 				// Check if not performing CPU searching during GPU trimming
 				#if !CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
 				
@@ -9305,8 +9475,36 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Get graph end time
 				const chrono::steady_clock::time_point graphEndTime = chrono::steady_clock::now();
 				
+				// Get time elapsed
+				const auto timeElapsed = static_cast<chrono::duration<double>>(graphEndTime - graphStartTime).count();
+				
+				// Check if displaying power usage
+				#if DISPLAY_POWER_USAGE
+				
+					// Check if CPU energy used was monitored
+					if(energyConsumptionBefore.second) [[likely]] {
+					
+						// Display message
+						cout << "CPU used " << ((cpuEnergyConsumed / timeElapsed) / NANOWATTS_IN_A_WATT) << "W of power" << endl;
+					}
+					
+					// Check if GPU energy used was monitored
+					if(energyConsumptionBefore.first) [[likely]] {
+					
+						// Display message
+						cout << "GPU used " << ((gpuEnergyConsumed / timeElapsed) / NANOWATTS_IN_A_WATT) << "W of power" << endl;
+					}
+					
+					// Check if power used was monitored
+					if(powerUsed) [[likely]] {
+					
+						// Update total power used
+						cout << "System used " << powerUsed << "W of power in total" << endl;
+					}
+				#endif
+				
 				// Display message
-				cout << "Current mining rate is " << (1 / static_cast<chrono::duration<double>>(graphEndTime - graphStartTime).count()) << " g/s, overall mining rate is " << (graphsProcessed / static_cast<chrono::duration<double>>(graphEndTime - miningStartTime).count()) << " g/s, and solutions found to graphs processed ration is " << solutionsFound << '/' << graphsProcessed << endl << endl;
+				cout << "Current mining rate is " << (1 / timeElapsed) << " g/s, overall mining rate is " << (graphsProcessed / static_cast<chrono::duration<double>>(graphEndTime - miningStartTime).count()) << " g/s, and solutions found to graphs processed ration is " << solutionsFound << '/' << graphsProcessed << endl << endl;
 				
 				// Get graph start time
 				graphStartTime = graphEndTime;
@@ -9364,6 +9562,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		// Join CPU recovering thread
 		cpuRecoveringThreads[i].join();
 	}
+	
+	// Check if displaying power usage
+	#if DISPLAY_POWER_USAGE
+	
+		// Check if using an Apple device
+		#ifdef __APPLE__
+		
+			// Send signal to power usage thread to interrupt sleep
+			pthread_kill(powerUsageThread.native_handle(), SIGUSR1);
+		#endif
+		
+		// Join power usage thread
+		powerUsageThread.join();
+	#endif
 	
 	// Return return status
 	return returnStatus;

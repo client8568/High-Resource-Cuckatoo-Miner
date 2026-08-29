@@ -15,6 +15,9 @@
 	
 	// Header files
 	#include <ws2tcpip.h>
+	#include <setupapi.h>
+	#include <initguid.h>
+	#include <emi.h>
 	
 // Otherwise
 #else
@@ -37,6 +40,7 @@
 	#define NS_PRIVATE_IMPLEMENTATION
 	
 	// Header files
+	#include <IOKit/IOKitLib.h>
 	#include <IOKit/pwr_mgt/IOPMLib.h>
 	#include <mach/thread_act.h>
 	#include <sys/sysctl.h>
@@ -136,11 +140,38 @@ using namespace std;
 // Bytes in a gigabyte
 #define BYTES_IN_A_GIGABYTE (BYTES_IN_A_KILOBYTE * KILOBYTES_IN_A_MEGABYTE * MEGABYTES_IN_A_GIGABYTE)
 
+// Seconds in a minute
+#define SECONDS_IN_A_MINUTE 60
+
+// Minutes in an hour
+#define MINUTES_IN_AN_HOUR 60
+
 // Milliseconds in a second
 #define MILLISECONDS_IN_A_SECOND 1000
 
+// Milliseconds in a second
+#define MICROSECONDS_IN_A_MILLISECOND 1000
+
 // Nanoseconds in a second
 #define NANOSECONDS_IN_A_SECOND 1000000000
+
+// Nanojoules in a joule
+#define NANOJOULES_IN_A_JOULE 1000000000
+
+// Nanojoules in a millijoule
+#define NANOJOULES_IN_A_MILLIJOULE 1000000
+
+// Nanojoules in a microjoule
+#define NANOJOULES_IN_A_MICROJOULE 1000
+
+// Picojoules in a nanojoule
+#define PICOJOULES_IN_A_NANOJOULE 1000
+
+// Nanowatts in a watt
+#define NANOWATTS_IN_A_WATT 1000000000
+
+// picojoule in a picowatt-hours
+#define PICOJOULES_IN_A_PICOWATT_HOUR (SECONDS_IN_A_MINUTE * MINUTES_IN_AN_HOUR)
 
 // Decimal number base
 #define DECIMAL_NUMBER_BASE 10
@@ -176,6 +207,116 @@ using namespace std;
 	// Set buffer guaranteed
 	#define setBufferGuaranteed(buffer, value, size) memset_explicit(buffer, value, size)
 #endif
+
+// SMC poll rate microseconds
+#define SMC_POLL_RATE_MICROSECONDS (250 * MICROSECONDS_IN_A_MILLISECOND)
+
+// SMC selectors
+enum SmcSelectors {
+
+	// Client open
+	kSMCUserClientOpen = 0,
+	
+	// Client close
+	kSMCUserClientClose = 1,
+	
+	// Handle event
+	kSMCHandleYPCEvent = 2,
+	
+	// Read key
+	kSMCReadKey = 5,
+	
+	// Write key
+	kSMCWriteKey = 6,
+	
+	// Key key count
+	kSMCGetKeyCount = 7,
+	
+	// Get key from index
+	kSMCGetKeyFromIndex = 8,
+	
+	// Get key info
+	kSMCGetKeyInfo = 9
+};
+
+
+// Structures
+
+// SMC parameters structure
+struct SmcParameters {
+
+	// Key
+	uint32_t key;
+	
+	// Version
+	struct {
+	
+		// Major
+		uint8_t major;
+		
+		// Minor
+		uint8_t minor;
+		
+		// Build
+		uint8_t build;
+		
+		// Reserved
+		uint8_t reserved;
+		
+		// Release
+		uint16_t release;
+		
+	} version;
+	
+	// Limit data
+	struct {
+	
+		// Version
+		uint16_t version;
+		
+		// Length
+		uint16_t length;
+		
+		// CPU limit
+		uint32_t cpuLimit;
+		
+		// GPU limit
+		uint32_t gpuLimit;
+		
+		// Mem limit
+		uint32_t memLimit;
+		
+	} limitData;
+	
+	// Key info
+	struct {
+	
+		// Data size
+		uint32_t dataSize;
+		
+		// Data type
+		uint32_t dataType;
+		
+		// Data attributes
+		uint8_t dataAttributes;
+		
+	} keyInfo;
+	
+	// Result
+	uint8_t result;
+	
+	// Status
+	uint8_t status;
+	
+	// Data 8
+	uint8_t data8;
+	
+	// Data 32
+	uint32_t data32;
+	
+	// Bytes
+	uint8_t bytes[32];
+};
 
 
 // Classes
@@ -316,15 +457,15 @@ class PreventSleep final {
 	// Private
 	private:
 	
-		// Error occurred
-		bool errorOccurred;
-		
 		// Check if using an Apple device
 		#ifdef __APPLE__
 		
 			// Assertion ID
 			IOPMAssertionID assertionID;
 		#endif
+		
+		// Error occurred
+		const bool errorOccurred;
 };
 
 // Check if Windows
@@ -355,7 +496,46 @@ class PreventSleep final {
 			static constexpr const BYTE MINOR_VERSION = 2;
 			
 			// Error occurred
-			bool errorOccurred;
+			const bool errorOccurred;
+	};
+#endif
+
+// Check if displaying power usage
+#if DISPLAY_POWER_USAGE
+
+	// Energy consumption class
+	class EnergyConsumption final {
+	
+		// Public
+		public:
+		
+			// Constructor
+			__attribute__((always_inline)) inline explicit EnergyConsumption() noexcept;
+			
+			// Destructor
+			__attribute__((always_inline)) inline ~EnergyConsumption() noexcept;
+			
+			// Bool operator
+			__attribute__((always_inline)) inline explicit operator bool() const noexcept;
+			
+			// Get total energy consumption
+			__attribute__((always_inline)) inline pair<unsigned long long, unsigned long long> getTotalEnergyConsumption() const noexcept;
+			
+		// Private
+		private:
+		
+			// Check if using an Apple device
+			#ifdef __APPLE__
+			
+				// Channels
+				const CFTypeRef channels;
+				
+				// Subscription
+				const CFTypeRef subscription;
+			#endif
+			
+			// Error occurred
+			const bool errorOccurred;
 	};
 #endif
 
@@ -379,6 +559,32 @@ __attribute__((always_inline)) static inline bool setThreadPriorityAndAffinity(u
 
 // Get number of high performance CPU cores
 __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerformanceCpuCores() noexcept;
+
+// Check if displaying power usage and using an Apple device
+#if DISPLAY_POWER_USAGE && defined __APPLE__
+
+	// Extern C
+	extern "C" {
+	
+		// IOReport copy channels in groups
+		CFTypeRef IOReportCopyChannelsInGroup(CFStringRef group, CFTypeRef a, uint64_t b, uint64_t c, uint64_t d);
+		
+		// IOReport create subscription
+		CFTypeRef IOReportCreateSubscription(void *a, CFTypeRef channels, CFTypeRef *b, uint64_t c, CFTypeRef d);
+		
+		// IOReport create samples
+		CFDictionaryRef IOReportCreateSamples(CFTypeRef subscription, CFTypeRef channels, CFTypeRef a);
+		
+		// IOReport channel get channel name
+		CFStringRef IOReportChannelGetChannelName(CFTypeRef item);
+		
+		// IOReport channel get unit label
+		CFStringRef IOReportChannelGetUnitLabel(CFTypeRef item);
+		
+		// IOReport simple get integer value
+		int64_t IOReportSimpleGetIntegerValue(CFTypeRef item, int32_t a);
+	}
+#endif
 
 
 // Supporting function implementation
@@ -462,6 +668,390 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 	
 		// Return if an error didn't occurred
 		return !errorOccurred;
+	}
+#endif
+
+// Check if displaying power usage
+#if DISPLAY_POWER_USAGE
+
+	// Energy consumption constructor
+	__attribute__((always_inline)) inline EnergyConsumption::EnergyConsumption() noexcept :
+	
+		// Check if using an Apple device
+		#ifdef __APPLE__
+		
+			// Get energy model channels
+			channels(IOReportCopyChannelsInGroup(CFSTR("Energy Model"), nullptr, 0, 0, 0)),
+			
+			// Get subscription to channels
+			subscription(IOReportCreateSubscription(nullptr, channels, const_cast<CFTypeRef *>(&static_cast<const CFTypeRef &>(CFTypeRef())), 0, nullptr)),
+			
+			// Set error occurred to if getting channels or subscription failed
+			errorOccurred(!channels || !subscription)
+			
+		// Otherwise
+		#else
+		
+			// Set error occurred to false
+			errorOccurred(false)
+		#endif
+	{
+	}
+	
+	// Energy consumption destructor
+	__attribute__((always_inline)) inline EnergyConsumption::~EnergyConsumption() noexcept {
+	
+		// Check if using an Apple device
+		#ifdef __APPLE__
+		
+			// Check if getting subscription was successful
+			if(subscription) [[likely]] {
+			
+				// Free subscription
+				CFRelease(subscription);
+			}
+			
+			// Check if getting channels was successful
+			if(channels) [[likely]] {
+			
+				// Free channels
+				CFRelease(channels);
+			}
+		#endif
+	}
+	
+	// Energy consumption bool operator
+	__attribute__((always_inline)) inline EnergyConsumption::operator bool() const noexcept {
+	
+		// Return if an error didn't occurred
+		return !errorOccurred;
+	}
+	
+	// Energy consumption get total energy consumption
+	__attribute__((always_inline)) inline pair<unsigned long long, unsigned long long> EnergyConsumption::getTotalEnergyConsumption() const noexcept {
+	
+		// Set GPU and CPU total energy consumption to zero
+		unsigned long long gpuTotalEnergyConsumption = 0;
+		unsigned long long cpuTotalEnergyConsumption = 0;
+		
+		// Check if Windows
+		#ifdef _WIN32
+		
+			// Check if getting energy meter devices was successful
+			const HDEVINFO deviceInformationSet = SetupDiGetClassDevs(&GUID_DEVICE_ENERGY_METER, nullptr, nullptr, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+			if(deviceInformationSet != INVALID_HANDLE_VALUE) [[likely]] {
+			
+				// Go through all energy meter devices
+				SP_DEVICE_INTERFACE_DATA device = {
+				
+					// Size
+					.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA)
+				};
+				
+				for(DWORD i = 0; SetupDiEnumDeviceInterfaces(deviceInformationSet, nullptr, &GUID_DEVICE_ENERGY_METER, i, &device); ++i) [[likely]] {
+				
+					// Check if getting the device's details size was successful
+					DWORD deviceDetailsSize;
+					if(!SetupDiGetDeviceInterfaceDetail(deviceInformationSet, &device, nullptr, 0, &deviceDetailsSize, nullptr) && GetLastError() == ERROR_INSUFFICIENT_BUFFER && deviceDetailsSize) [[likely]] {
+					
+						// Check if getting the device's details was successful
+						alignas(SP_DEVICE_INTERFACE_DETAIL_DATA) uint8_t deviceDetails[deviceDetailsSize];
+						reinterpret_cast<SP_DEVICE_INTERFACE_DETAIL_DATA *>(deviceDetails)->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+						
+						if(SetupDiGetDeviceInterfaceDetail(deviceInformationSet, &device, reinterpret_cast<SP_DEVICE_INTERFACE_DETAIL_DATA *>(deviceDetails), deviceDetailsSize, nullptr, nullptr)) [[likely]] {
+						
+							// Check if opening device's file was successful
+							HANDLE deviceFile = CreateFile(reinterpret_cast<const SP_DEVICE_INTERFACE_DETAIL_DATA *>(deviceDetails)->DevicePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+							if(deviceFile != INVALID_HANDLE_VALUE) [[likely]] {
+							
+								// Check if getting device's version was successful
+								EMI_VERSION version;
+								if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_VERSION, nullptr, 0, &version, sizeof(version), nullptr, nullptr)) [[likely]] {
+								
+									// Check if version is one
+									if(version.EmiVersion == EMI_VERSION_V1) [[unlikely]] {
+									
+										// Check if getting device's metadata size was successful
+										EMI_METADATA_SIZE metadataSize;
+										if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_METADATA_SIZE, nullptr, 0, &metadataSize, sizeof(metadataSize), nullptr, nullptr) && metadataSize.MetadataSize) [[likely]] {
+										
+											// Check if getting device's metadata was successful and device is a CPU socket
+											alignas(EMI_METADATA_V1) uint8_t metadata[metadataSize.MetadataSize];
+											if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_METADATA, nullptr, 0, metadata, metadataSize.MetadataSize, nullptr, nullptr) && wcslen(reinterpret_cast<const EMI_METADATA_V1 *>(metadata)->MeteredHardwareName) >= sizeof("_PKG") - sizeof('\0') && !_wcsnicmp(&reinterpret_cast<const EMI_METADATA_V1 *>(metadata)->MeteredHardwareName[wcslen(reinterpret_cast<const EMI_METADATA_V1 *>(metadata)->MeteredHardwareName) - (sizeof("_PKG") - sizeof('\0'))], L"_PKG", sizeof("_PKG") - sizeof('\0'))) [[unlikely]] {
+											
+												// Check if device's measurement unit is compatible
+												if(reinterpret_cast<const EMI_METADATA_V1 *>(metadata)->MeasurementUnit == EmiMeasurementUnitPicowattHours) [[likely]] {
+												
+													// Check if getting device's measurement was successful
+													EMI_MEASUREMENT_DATA_V1 measurement;
+													if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_MEASUREMENT, nullptr, 0, &measurement, sizeof(measurement), nullptr, nullptr)) [[likely]] {
+													
+														// Add channel's measurement to the CPU total energy consumption
+														cpuTotalEnergyConsumption += measurement.AbsoluteEnergy * PICOJOULES_IN_A_PICOWATT_HOUR;
+													}
+												}
+											}
+										}
+									}
+									
+									// Otherwise check if version is two
+									else if(version.EmiVersion == EMI_VERSION_V2) [[likely]] {
+									
+										// Check if getting device's metadata size was successful
+										EMI_METADATA_SIZE metadataSize;
+										if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_METADATA_SIZE, nullptr, 0, &metadataSize, sizeof(metadataSize), nullptr, nullptr) && metadataSize.MetadataSize) [[likely]] {
+										
+											// Check if getting device's metadata was successful
+											alignas(EMI_METADATA_V2) uint8_t metadata[metadataSize.MetadataSize];
+											if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_METADATA, nullptr, 0, metadata, metadataSize.MetadataSize, nullptr, nullptr) && reinterpret_cast<const EMI_METADATA_V2 *>(metadata)->ChannelCount) [[likely]] {
+											
+												// Check if getting device's measurement was successful
+												EMI_MEASUREMENT_DATA_V2 measurement[reinterpret_cast<const EMI_METADATA_V2 *>(metadata)->ChannelCount];
+												if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_MEASUREMENT, nullptr, 0, &measurement, sizeof(measurement), nullptr, nullptr)) [[likely]] {
+												
+													// Go through all of the device's channels
+													const EMI_CHANNEL_V2 *channel = &reinterpret_cast<const EMI_METADATA_V2 *>(metadata)->Channels[0];
+													for(USHORT j = 0; j < reinterpret_cast<const EMI_METADATA_V2 *>(metadata)->ChannelCount; ++j, channel = EMI_CHANNEL_V2_NEXT_CHANNEL(channel)) [[likely]] {
+													
+														// Check if channel's measurement unit is compatible and channel is a CPU socket
+														if(channel->MeasurementUnit == EmiMeasurementUnitPicowattHours && wcslen(channel->ChannelName) >= sizeof("_PKG") - sizeof('\0') && !_wcsnicmp(&channel->ChannelName[wcslen(channel->ChannelName) - (sizeof("_PKG") - sizeof('\0'))], L"_PKG", sizeof("_PKG") - sizeof('\0'))) [[unlikely]] {
+														
+															// Add channel's measurement to the CPU total energy consumption
+															cpuTotalEnergyConsumption += measurement[0].ChannelData[j].AbsoluteEnergy * PICOJOULES_IN_A_PICOWATT_HOUR;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+								
+								// Close device's file
+								CloseHandle(deviceFile);
+							}
+						}
+					}
+				}
+				
+				// Free device information set
+				SetupDiDestroyDeviceInfoList(deviceInformationSet);
+			}
+			
+			// Make CPU total energy consumption have the correct units
+			cpuTotalEnergyConsumption /= PICOJOULES_IN_A_NANOJOULE;
+			
+		// Otherwise check if using an Apple device
+		#elif defined __APPLE__
+		
+			// Check if getting samples from the subscription was successful
+			const CFDictionaryRef samples = IOReportCreateSamples(subscription, channels, nullptr);
+			if(samples) [[likely]] {
+			
+				// Check if samples are valid
+				if(CFGetTypeID(samples) == CFDictionaryGetTypeID()) [[likely]] {
+				
+					// Check if getting items from the samples was successful
+					const CFArrayRef items = reinterpret_cast<CFArrayRef>(CFDictionaryGetValue(samples, CFSTR("IOReportChannels")));
+					if(items && CFGetTypeID(items) == CFArrayGetTypeID()) [[likely]] {
+					
+						// Go through all items
+						for(CFIndex i = 0, j = CFArrayGetCount(items); i < j; ++i) [[likely]] {
+						
+							// Check if getting item was successful
+							const CFTypeRef item = CFArrayGetValueAtIndex(items, i);
+							if(item) [[likely]] {
+							
+								// Check if getting item's channel name, unit label, and value was successful
+								const CFStringRef channelName = IOReportChannelGetChannelName(item);
+								const CFStringRef unitLabel = IOReportChannelGetUnitLabel(item);
+								const int64_t value = IOReportSimpleGetIntegerValue(item, 0);
+								
+								if(channelName && CFGetTypeID(channelName) == CFStringGetTypeID() && unitLabel && CFGetTypeID(unitLabel) == CFStringGetTypeID() && value > 0) [[likely]] {
+								
+									// Check if channel is desired
+									if(
+									
+										// GPU energy
+										CFStringHasSuffix(channelName, CFSTR("GPU Energy")) ||
+										
+										// CPU energy
+										CFStringHasSuffix(channelName, CFSTR("CPU Energy"))
+										
+									) [[unlikely]] {
+									
+										// Check if item's units is joules
+										unsigned long long valueInCorrectUnits;
+										if(CFStringCompare(unitLabel, CFSTR("J"), 0) == kCFCompareEqualTo) [[likely]] {
+										
+											// Set value in correct units
+											valueInCorrectUnits = static_cast<unsigned long long>(value) * NANOJOULES_IN_A_JOULE;
+										}
+										
+										// Otherwise check if item's units is millijoules
+										else if(CFStringCompare(unitLabel, CFSTR("mJ"), 0) == kCFCompareEqualTo) [[likely]] {
+										
+											// Set value in correct units
+											valueInCorrectUnits = static_cast<unsigned long long>(value) * NANOJOULES_IN_A_MILLIJOULE;
+										}
+										
+										// Otherwise check if item's units is microjoules
+										else if(CFStringCompare(unitLabel, CFSTR("uJ"), 0) == kCFCompareEqualTo) [[likely]] {
+										
+											// Set value in correct units
+											valueInCorrectUnits = static_cast<unsigned long long>(value) * NANOJOULES_IN_A_MICROJOULE;
+										}
+										
+										// Otherwise check if item's units is nanojoules
+										else if(CFStringCompare(unitLabel, CFSTR("nJ"), 0) == kCFCompareEqualTo) [[likely]] {
+										
+											// Set value in correct units
+											valueInCorrectUnits = value;
+										}
+										
+										// Otherwise
+										else [[unlikely]] {
+										
+											// Go to next item
+											continue;
+										}
+										
+										// Check if item is GPU related
+										if(CFStringFind(channelName, CFSTR("GPU"), kCFCompareCaseInsensitive).location != kCFNotFound) [[unlikely]] {
+										
+											// Add value in correct units to the GPU total energy consumption
+											gpuTotalEnergyConsumption += valueInCorrectUnits;
+										}
+										
+										// Otherwise
+										else [[likely]] {
+										
+											// Add value in correct units to the CPU total energy consumption
+											cpuTotalEnergyConsumption += valueInCorrectUnits;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				// Free samples
+				CFRelease(samples);
+			}
+			
+		// Otherwise
+		#else
+		
+			// Check if opening power capping directory was successful
+			const unique_ptr<DIR, decltype(&closedir)> powerCappingDirectory(opendir("/sys/devices/virtual/powercap"), closedir);
+			if(powerCappingDirectory) [[likely]] {
+			
+				// Go through all entries in the power capping directory
+				dirent *entry;
+				while((entry = readdir(powerCappingDirectory.get()))) [[likely]] {
+				
+					// Check if entry is a control type
+					if(entry->d_type == DT_DIR && entry->d_name[0] && __builtin_strcmp(entry->d_name, ".") && __builtin_strcmp(entry->d_name, "..")) [[likely]] {
+					
+						// Create control type enabled file path
+						char controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof("/enabled")];
+						__builtin_memcpy(controlTypeEnabledFilePath, "/sys/devices/virtual/powercap/", sizeof("/sys/devices/virtual/powercap/") - sizeof('\0'));
+						__builtin_memcpy(&controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0')], entry->d_name, __builtin_strlen(entry->d_name));
+						__builtin_memcpy(&controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)], "/enabled", sizeof("/enabled"));
+						
+						// Check if opening control type enabled file was successful and the control type is enabled
+						const unique_ptr<FILE, decltype(&fclose)> controlTypeEnabledFile(fopen(controlTypeEnabledFilePath, "rb"), fclose);
+						if(controlTypeEnabledFile && fgetc(controlTypeEnabledFile.get()) == '1') [[likely]] {
+						
+							// Check if opening control type directory was successful
+							controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)] = '\0';
+							const unique_ptr<DIR, decltype(&closedir)> controlTypeDirectory(opendir(controlTypeEnabledFilePath), closedir);
+							if(controlTypeDirectory) [[likely]] {
+							
+								// Go through all entries in the control type directory
+								dirent *controlTypeEntry;
+								while((controlTypeEntry = readdir(controlTypeDirectory.get()))) [[likely]] {
+								
+									// Check if entry is a power zone
+									if(controlTypeEntry->d_type == DT_DIR && controlTypeEntry->d_name[0] && __builtin_strcmp(controlTypeEntry->d_name, ".") && __builtin_strcmp(controlTypeEntry->d_name, "..")) [[likely]] {
+									
+										// Create power zone enabled file path
+										char powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name) + sizeof("/energy_uj")];
+										__builtin_memcpy(powerZoneEnabledFilePath, controlTypeEnabledFilePath, sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name));
+										powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)] = '/';
+										__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/')], controlTypeEntry->d_name, __builtin_strlen(controlTypeEntry->d_name));
+										__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/enabled", sizeof("/enabled"));
+										
+										// Check if opening power zone enabled file was successful and the power zone is enabled
+										const unique_ptr<FILE, decltype(&fclose)> powerZoneEnabledFile(fopen(powerZoneEnabledFilePath, "rb"), fclose);
+										if(powerZoneEnabledFile && fgetc(powerZoneEnabledFile.get()) == '1') [[likely]] {
+										
+											// Check if opening power zone name file was successful
+											__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/name", sizeof("/name"));
+											const unique_ptr<FILE, decltype(&fclose)> powerZoneNameFile(fopen(powerZoneEnabledFilePath, "rb"), fclose);
+											if(powerZoneNameFile) [[likely]] {
+											
+												// Check if going to the end of the power zone name file was successful
+												while(fgetc(powerZoneNameFile.get()) != EOF) [[likely]];
+												
+												if(!ferror(powerZoneNameFile.get())) [[likely]] {
+												
+													// Check if getting power zone name file's size was successful
+													const long powerZoneNameSize = ftell(powerZoneNameFile.get());
+													if(powerZoneNameSize != -1 && !fseek(powerZoneNameFile.get(), 0, SEEK_SET) && static_cast<unsigned long>(powerZoneNameSize) < SIZE_MAX) [[likely]] {
+													
+														// Check if getting power zone's name was successful
+														char powerZoneName[powerZoneNameSize + sizeof('\0')];
+														if(fread(powerZoneName, sizeof(char), powerZoneNameSize, powerZoneNameFile.get()) == static_cast<size_t>(powerZoneNameSize)) [[likely]] {
+														
+															// Make power zone's name a string
+															powerZoneName[powerZoneNameSize] = '\0';
+															
+															// Check if power zone is a CPU socket
+															if(strcasestr(powerZoneName, "package")) [[unlikely]] {
+															
+																// Check if opening power zone energy file was successful
+																__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/energy_uj", sizeof("/energy_uj"));
+																const unique_ptr<FILE, decltype(&fclose)> powerZoneEnergyFile(fopen(powerZoneEnabledFilePath, "rb"), fclose);
+																if(powerZoneEnergyFile) [[likely]] {
+																
+																	// Check if reading the power zone energy file was successful
+																	char powerZoneEnergy[MAX_UINT64_STRING_SIZE + sizeof("\n")];
+																	const size_t powerZoneEnergySize = fread(powerZoneEnergy, sizeof(char), sizeof(powerZoneEnergy), powerZoneEnergyFile.get());
+																	
+																	if(powerZoneEnergySize && powerZoneEnergySize <= MAX_UINT64_STRING_SIZE + sizeof('\n') && !__builtin_memchr(powerZoneEnergy, '\0', powerZoneEnergySize)) [[likely]] {
+																	
+																		// Make power zone energy a string
+																		powerZoneEnergy[powerZoneEnergySize - (__builtin_expect(powerZoneEnergy[powerZoneEnergySize - sizeof('\n')] == '\n', true) ? sizeof('\n') : 0)] = '\0';
+																		
+																		// Check if getting power zone energy as a number was successful
+																		char *end;
+																		errno = 0;
+																		const unsigned long long powerZoneEnergyAsNumber = strtoull(powerZoneEnergy, &end, DECIMAL_NUMBER_BASE);
+																		if(end != powerZoneEnergy && !*end && isdigit(powerZoneEnergy[0]) && (powerZoneEnergy[0] != '0' || !isdigit(powerZoneEnergy[sizeof('0')])) && !errno) [[likely]] {
+																		
+																			// Add power zone energy as a number in correct units to the CPU total energy consumption
+																			cpuTotalEnergyConsumption += powerZoneEnergyAsNumber * NANOJOULES_IN_A_MICROJOULE;
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		#endif
+		
+		// Return GPU and CPU total energy consumption
+		return make_pair(gpuTotalEnergyConsumption, cpuTotalEnergyConsumption);
 	}
 #endif
 
