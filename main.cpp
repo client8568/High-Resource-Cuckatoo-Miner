@@ -4150,6 +4150,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		// Create total power samples
 		alignas(hardware_destructive_interference_size) int totalPowerSamples = 0;
 		
+		// Create overall power used
+		long double overallPowerUsed = 0;
+		
 		// Create CPU recovering threads mutex
 		alignas(hardware_destructive_interference_size) mutex powerUsageThreadMutex;
 		
@@ -4160,7 +4163,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		#ifdef __APPLE__
 		
 			// Create power usage thread
-			thread powerUsageThread([&totalPowerUsed, &totalPowerSamples, &powerUsageThreadMutex]() __attribute__((always_inline)) noexcept {
+			thread powerUsageThread([&totalPowerUsed, &totalPowerSamples, &overallPowerUsed, &powerUsageThreadMutex]() __attribute__((always_inline)) noexcept {
 			
 		// Otherwise
 		#else
@@ -4211,22 +4214,36 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
 									
 									// Loop while not closing
+									float previousValue = 0;
 									while(!closing) [[likely]] {
 									
 										// Check if reading the total power in key's value was successful
 										if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
 										
+											// Get total power in key's value
+											const float value = *reinterpret_cast<const float *>(&outputParameters.bytes);
+											
 											// Lock power usage thread lock
 											powerUsageThreadLock.lock();
 											
 											// Update total power used to include the total power in key's value
-											totalPowerUsed += *reinterpret_cast<const float *>(&outputParameters.bytes);
+											totalPowerUsed += value;
 											
 											// Increment total power samples
 											++totalPowerSamples;
 											
 											// Unlock power usage thread lock
 											powerUsageThreadLock.unlock();
+											
+											// Check if the total power in key's value was updated
+											if(value != previousValue) {
+											
+												// Update overall power used to include the total power in key's value
+												overallPowerUsed += value;
+												
+												// Update previous value
+												previousValue = value;
+											}
 										}
 										
 										// Wait before reading the total power in key's value again
@@ -9498,7 +9515,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Check if power used was monitored
 					if(powerUsed) [[likely]] {
 					
-						// Update total power used
+						// Display message
 						cout << "System used " << powerUsed << "W of power in total" << endl;
 					}
 				#endif
@@ -9575,6 +9592,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		
 		// Join power usage thread
 		powerUsageThread.join();
+		
+		// Check if power used was monitored
+		if(overallPowerUsed) {
+		
+			// Display message
+			cout << "Overall used " << overallPowerUsed << "W of power" << endl;
+		}
 	#endif
 	
 	// Return return status
