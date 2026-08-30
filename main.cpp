@@ -4186,11 +4186,27 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						const io_service_t service = IOServiceGetMatchingService(kIOMainPortDefault, serviceMatchingDictionary);
 						if(service) [[likely]] {
 						
+							// Automatically free service when done
+							const unique_ptr<const io_service_t, void(*)(const io_service_t *)> serviceUniquePointer(&service, [](const io_service_t *servicePointer) __attribute__((always_inline)) noexcept {
+							
+								// Free service
+								__builtin_assume_dereferenceable(servicePointer, sizeof(*servicePointer));
+								IOObjectRelease(*servicePointer);
+							});
+							
 							// Check if opening connection to the AppleSMC service was successful
 							io_connect_t serviceConnection;
 							if(IOServiceOpen(service, mach_task_self_, 0, &serviceConnection) == KERN_SUCCESS) [[likely]] {
 							
-								// Create input parameters to get the total power in key's info
+								// Automatically close service connection when done
+								const unique_ptr<io_connect_t, void(*)(const io_connect_t *)> serviceConnectionUniquePointer(&serviceConnection, [](const io_connect_t *serviceConnectionPointer) __attribute__((always_inline)) noexcept {
+								
+									// Close service connection
+									__builtin_assume_dereferenceable(serviceConnectionPointer, sizeof(*serviceConnectionPointer));
+									IOServiceClose(*serviceConnectionPointer);
+								});
+								
+								// Create input parameters to get the total power key's info
 								SmcParameters inputParameters = {
 								
 									// Key
@@ -4200,13 +4216,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									.data8 = kSMCGetKeyInfo,
 								};
 								
-								// Check if getting the total power in key's info was successful and the total power in key's info is valid
+								// Check if getting the total power key's info was successful and the total power key's info is valid
 								SmcParameters outputParameters;
 								size_t outputParametersSize = sizeof(outputParameters);
 								
 								if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result && outputParameters.keyInfo.dataSize == sizeof(float) && outputParameters.keyInfo.dataType == __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("flt "))) [[likely]] {
 								
-									// Set input parameters to read the total power in key's value
+									// Set input parameters to read the total power key's value
 									inputParameters.data8 = kSMCReadKey;
 									inputParameters.keyInfo.dataSize = outputParameters.keyInfo.dataSize;
 									
@@ -4217,16 +4233,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									float previousValue = 0;
 									while(!closing) [[likely]] {
 									
-										// Check if reading the total power in key's value was successful
+										// Check if reading the total power key's value was successful
 										if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
 										
-											// Get total power in key's value
+											// Get total power key's value
 											const float value = *reinterpret_cast<const float *>(&outputParameters.bytes);
 											
 											// Lock power usage thread lock
 											powerUsageThreadLock.lock();
 											
-											// Update total power used to include the total power in key's value
+											// Update total power used to include the total power key's value
 											totalPowerUsed += value;
 											
 											// Increment total power samples
@@ -4235,10 +4251,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 											// Unlock power usage thread lock
 											powerUsageThreadLock.unlock();
 											
-											// Check if the total power in key's value was updated
+											// Check if the total power key's value was updated
 											if(value != previousValue) {
 											
-												// Update overall power used to include the total power in key's value
+												// Update overall power used to include the total power key's value
 												overallPowerUsed += value;
 												
 												// Update previous value
@@ -4246,17 +4262,11 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 											}
 										}
 										
-										// Wait before reading the total power in key's value again
+										// Wait before reading the total power key's value again
 										usleep(SMC_POLL_RATE_MICROSECONDS);
 									}
 								}
-								
-								// Close service connection
-								IOServiceClose(serviceConnection);
 							}
-							
-							// Free service
-							IOObjectRelease(service);
 						}
 					}
 				}
@@ -9597,7 +9607,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		if(overallPowerUsed) {
 		
 			// Display message
-			cout << "Overall used " << overallPowerUsed << "W of power" << endl;
+			cout << "System used " << overallPowerUsed << "W of power overall" << endl;
 		}
 	#endif
 	

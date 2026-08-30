@@ -208,7 +208,7 @@ using namespace std;
 	#define setBufferGuaranteed(buffer, value, size) memset_explicit(buffer, value, size)
 #endif
 
-// SMC poll rate microseconds
+// SMC poll rate microseconds (SMC values are updated every 500ms, so poll at twice that rate)
 #define SMC_POLL_RATE_MICROSECONDS (250 * MICROSECONDS_IN_A_MILLISECOND)
 
 // SMC selectors
@@ -512,9 +512,6 @@ class PreventSleep final {
 			// Constructor
 			__attribute__((always_inline)) inline explicit EnergyConsumption() noexcept;
 			
-			// Destructor
-			__attribute__((always_inline)) inline ~EnergyConsumption() noexcept;
-			
 			// Bool operator
 			__attribute__((always_inline)) inline explicit operator bool() const noexcept;
 			
@@ -528,10 +525,10 @@ class PreventSleep final {
 			#ifdef __APPLE__
 			
 				// Channels
-				const CFTypeRef channels;
+				const unique_ptr<remove_pointer_t<CFTypeRef>, decltype(&CFRelease)> channels;
 				
 				// Subscription
-				const CFTypeRef subscription;
+				const unique_ptr<remove_pointer_t<CFTypeRef>, decltype(&CFRelease)> subscription;
 			#endif
 			
 			// Error occurred
@@ -681,10 +678,10 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 		#ifdef __APPLE__
 		
 			// Get energy model channels
-			channels(IOReportCopyChannelsInGroup(CFSTR("Energy Model"), nullptr, 0, 0, 0)),
+			channels(IOReportCopyChannelsInGroup(CFSTR("Energy Model"), nullptr, 0, 0, 0), CFRelease),
 			
 			// Get subscription to channels
-			subscription(IOReportCreateSubscription(nullptr, channels, const_cast<CFTypeRef *>(&static_cast<const CFTypeRef &>(CFTypeRef())), 0, nullptr)),
+			subscription(IOReportCreateSubscription(nullptr, channels.get(), const_cast<CFTypeRef *>(&static_cast<const CFTypeRef &>(CFTypeRef())), 0, nullptr), CFRelease),
 			
 			// Set error occurred to if getting channels or subscription failed
 			errorOccurred(!channels || !subscription)
@@ -696,28 +693,6 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 			errorOccurred(false)
 		#endif
 	{
-	}
-	
-	// Energy consumption destructor
-	__attribute__((always_inline)) inline EnergyConsumption::~EnergyConsumption() noexcept {
-	
-		// Check if using an Apple device
-		#ifdef __APPLE__
-		
-			// Check if getting subscription was successful
-			if(subscription) [[likely]] {
-			
-				// Free subscription
-				CFRelease(subscription);
-			}
-			
-			// Check if getting channels was successful
-			if(channels) [[likely]] {
-			
-				// Free channels
-				CFRelease(channels);
-			}
-		#endif
 	}
 	
 	// Energy consumption bool operator
@@ -741,6 +716,9 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 			const HDEVINFO deviceInformationSet = SetupDiGetClassDevs(&GUID_DEVICE_ENERGY_METER, nullptr, nullptr, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
 			if(deviceInformationSet != INVALID_HANDLE_VALUE) [[likely]] {
 			
+				// Automatically free device information set when done
+				const unique_ptr<remove_pointer_t<HDEVINFO>, decltype(&SetupDiDestroyDeviceInfoList)> deviceInformationSetUniquePointer(deviceInformationSet, SetupDiDestroyDeviceInfoList);
+				
 				// Go through all energy meter devices
 				SP_DEVICE_INTERFACE_DATA device = {
 				
@@ -764,6 +742,9 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 							HANDLE deviceFile = CreateFile(reinterpret_cast<const SP_DEVICE_INTERFACE_DETAIL_DATA *>(deviceDetails)->DevicePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 							if(deviceFile != INVALID_HANDLE_VALUE) [[likely]] {
 							
+								// Automatically close device's file when done
+								const unique_ptr<remove_pointer_t<HANDLE>, decltype(&CloseHandle)> deviceFileUniquePointer(deviceFile, CloseHandle);
+								
 								// Check if getting device's version was successful
 								EMI_VERSION version;
 								if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_VERSION, nullptr, 0, &version, sizeof(version), nullptr, nullptr)) [[likely]] {
@@ -825,16 +806,10 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 										}
 									}
 								}
-								
-								// Close device's file
-								CloseHandle(deviceFile);
 							}
 						}
 					}
 				}
-				
-				// Free device information set
-				SetupDiDestroyDeviceInfoList(deviceInformationSet);
 			}
 			
 			// Make CPU total energy consumption have the correct units
@@ -844,14 +819,14 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 		#elif defined __APPLE__
 		
 			// Check if getting samples from the subscription was successful
-			const CFDictionaryRef samples = IOReportCreateSamples(subscription, channels, nullptr);
+			const unique_ptr<remove_pointer_t<CFDictionaryRef>, decltype(&CFRelease)> samples(IOReportCreateSamples(subscription.get(), channels.get(), nullptr), CFRelease);
 			if(samples) [[likely]] {
 			
 				// Check if samples are valid
-				if(CFGetTypeID(samples) == CFDictionaryGetTypeID()) [[likely]] {
+				if(CFGetTypeID(samples.get()) == CFDictionaryGetTypeID()) [[likely]] {
 				
 					// Check if getting items from the samples was successful
-					const CFArrayRef items = reinterpret_cast<CFArrayRef>(CFDictionaryGetValue(samples, CFSTR("IOReportChannels")));
+					const CFArrayRef items = reinterpret_cast<CFArrayRef>(CFDictionaryGetValue(samples.get(), CFSTR("IOReportChannels")));
 					if(items && CFGetTypeID(items) == CFArrayGetTypeID()) [[likely]] {
 					
 						// Go through all items
@@ -934,9 +909,6 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 						}
 					}
 				}
-				
-				// Free samples
-				CFRelease(samples);
 			}
 			
 		// Otherwise
