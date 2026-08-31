@@ -197,7 +197,15 @@ ifeq ($(OS),Windows_NT)
 	ifneq (,$(MSYSTEM))
 	
 		# Set flags and link libraries
-		LIBS += "$(shell echo $$SYSTEMROOT)\System32\OpenCL.dll"
+		LIBS += "$(shell echo $$SYSTEMROOT)\System32\opencl.dll"
+		
+		# Check if displaying power usage
+		ifeq ($(DISPLAY_POWER_USAGE),true)
+		
+			# Set flags and link libraries
+			CFLAGS += -I"./nvml/include"
+			LIBS += -Wl,-Bstatic -L"./nvml/dist/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)/lib" -lnvml -Wl,-Bdynamic -Wl,--delayload=nvml.dll
+		endif
 		
 		# Delete command
 		DELETE_COMMAND = rm -rf
@@ -209,7 +217,15 @@ ifeq ($(OS),Windows_NT)
 	else
 	
 		# Set flags and link libraries
-		LIBS += "$(shell echo %SYSTEMROOT%)\System32\OpenCL.dll"
+		LIBS += "$(shell echo %SYSTEMROOT%)\System32\opencl.dll"
+		
+		# Check if displaying power usage
+		ifeq ($(DISPLAY_POWER_USAGE),true)
+		
+			# Set flags and link libraries
+			CFLAGS += -I"./nvml/include"
+			LIBS += -Wl,-Bstatic -L"./nvml/dist/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)/lib" -lnvml -Wl,-Bdynamic -Wl,--delayload=nvml.dll
+		endif
 		
 		# Delete command
 		DELETE_COMMAND = del /q
@@ -250,6 +266,14 @@ else
 	CFLAGS += -static-libstdc++ -static-libgcc -I"./opencl_headers"
 	LIBS += -Wl,-Bstatic -L"./opencl_loader/dist/linux/$(shell uname -m)/lib" -lOpenCL -Wl,-Bdynamic
 	
+	# Check if displaying power usage
+	ifeq ($(DISPLAY_POWER_USAGE),true)
+	
+		# Set flags and link libraries
+		CFLAGS += -I"./nvml/include"
+		LIBS += -Wl,-Bstatic -L"./nvml/dist/linux/$(shell uname -m)/lib" -lnvidia-ml -Wl,-Bdynamic
+	endif
+	
 	# Check if preventing sleep
 	ifeq ($(PREVENT_SLEEP),true)
 	
@@ -279,19 +303,19 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
 	
-	# OpenCL headers
+	# OpenCL headers (https://github.com/KhronosGroup/OpenCL-Headers)
 	rm -rf "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./opencl_headers"
 	wget "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2026.05.29.tar.gz"
 	tar -xf "./v2026.05.29.tar.gz"
 	rm "./v2026.05.29.tar.gz"
 	mv "./OpenCL-Headers-2026.05.29" "./opencl_headers"
 	
-	# OpenCL loader
+	# OpenCL loader (https://github.com/KhronosGroup/OpenCL-ICD-Loader)
 	rm -rf "./OpenCL-ICD-Loader-2026.05.29" "./opencl_loader"
 	wget "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz"
 	tar -xf "./v2026.05.29.tar.gz"
@@ -307,10 +331,30 @@ linuxDependencies:
 	rm -r "./opencl_loader"
 	mv "./OpenCL-ICD-Loader-2026.05.29" "./opencl_loader"
 	
+	# NVIDIA Management Library (https://packages.nvidia.com/components/cuda_nvml_dev)
+	rm -rf "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./nvml"
+	wget "https://packages.nvidia.com/resolute/pool/amd64/5B515474-7E78-11F1-8656-C51E4F4B317F/cuda-nvml-dev-13-4_13.4.46-1_amd64.deb"
+	dpkg-deb -x "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda"
+	rm "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb"
+	mkdir -p "./nvml/include"
+	mv "./cuda/usr/local/cuda-13.4/include/nvml.h" "./nvml/include"
+	mv "./cuda/usr/share/doc/cuda-nvml-dev-13-4/copyright" "./nvml/LICENSE"
+	mkdir -p "./nvml/dist/linux/x86_64/lib"
+	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/x86_64/lib"
+	rm -r "./cuda"
+	x86_64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/x86_64/lib/libnvidia-ml.a"
+	wget "https://packages.nvidia.com/resolute/pool/arm64/5B515474-7E78-11F1-8656-C51E4F4B317F/cuda-nvml-dev-13-4_13.4.46-1_arm64.deb"
+	dpkg-deb -x "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda"
+	rm "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb"
+	mkdir -p "./nvml/dist/linux/aarch64/lib"
+	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/aarch64/lib"
+	rm -r "./cuda"
+	aarch64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/aarch64/lib/libnvidia-ml.a"
+	
 # Make Apple dependencies (This command works when using macOS: make appleDependencies)
 appleDependencies:
 	
-	# Metal-cpp
+	# Metal-cpp (https://github.com/apple/metal-cpp)
 	rm -rf "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./metal"
 	curl -LO "https://github.com/apple/metal-cpp/archive/refs/tags/release/metal-cpp_macOS27_iOS27.zip"
 	unzip "./metal-cpp_macOS27_iOS27.zip"
@@ -323,7 +367,7 @@ appleDependencies:
 # Make Windows dependencies (This command works when using Windows: mingw32-make windowsDependencies)
 windowsDependencies:
 	
-	rem OpenCL headers
+	rem OpenCL headers (https://github.com/KhronosGroup/OpenCL-Headers)
 	del /q "./v2026.05.29.tar.gz" > "nul" 2>&1
 	if exist "./OpenCL-Headers-2026.05.29" rd /q /s "./OpenCL-Headers-2026.05.29" > "nul"
 	if exist "./opencl_headers" rd /q /s "./opencl_headers" > "nul"
@@ -331,3 +375,21 @@ windowsDependencies:
 	tar -xf "./v2026.05.29.tar.gz"
 	del "./v2026.05.29.tar.gz"
 	rename "./OpenCL-Headers-2026.05.29" "./opencl_headers"
+	
+	rem NVIDIA Management Library (https://packages.nvidia.com/windows/x86_64/archive)
+	del /q "./cuda_13.4.0_windows_x86_64.exe" > "nul" 2>&1
+	del /q "./7zr.exe" > "nul" 2>&1
+	if exist "./cuda" rd /q /s "./cuda" > "nul"
+	if exist "./nvml" rd /q /s "./nvml" > "nul"
+	curl -LO "https://packages.nvidia.com/prerelease/cuda/13.4.0/local_installers/cuda_13.4.0_windows_x86_64.exe"
+	curl -LO "https://github.com/ip7z/7zip/releases/download/26.02/7zr.exe"
+	"./7zr.exe" x "./cuda_13.4.0_windows_x86_64.exe" -o"./cuda"
+	del /q "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe"
+	mkdir "./nvml\include"
+	move "./cuda/cuda_nvml_dev/nvml_dev/include\nvml.h" "./nvml/include"
+	move "./cuda/cuda_nvml_dev/nvml_dev\LICENSE" "./nvml"
+	mkdir "./nvml\dist\windows\AMD64\lib"
+	move "./cuda/cuda_nvml_dev/nvml_dev/lib/x64\nvml.lib" "./nvml/dist/windows/AMD64/lib"
+	mkdir "./nvml\dist\windows\ARM64\lib"
+	move "./cuda/cuda_nvml_dev_cross_arm64/nvml_dev_cross/lib/arm64\nvml.lib" "./nvml/dist/windows/ARM64/lib"
+	rd /q /s "./cuda"

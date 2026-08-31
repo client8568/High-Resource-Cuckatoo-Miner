@@ -18,6 +18,14 @@
 	#include <setupapi.h>
 	#include <initguid.h>
 	#include <emi.h>
+	#include <shlwapi.h>
+	
+	// Check if displaying power usage
+	#if DISPLAY_POWER_USAGE
+	
+		// Header files
+		#include <nvml.h>
+	#endif
 	
 // Otherwise check if using an Apple device
 #elif defined __APPLE__
@@ -45,6 +53,13 @@
 	// Header files
 	#include <netdb.h>
 	#include <netinet/tcp.h>
+	
+	// Check if displaying power usage
+	#if DISPLAY_POWER_USAGE
+	
+		// Header files
+		#include <nvml.h>
+	#endif
 	
 	// Check if preventing sleep
 	#if PREVENT_SLEEP
@@ -192,6 +207,9 @@ using namespace std;
 
 // Max uint64 string size
 #define MAX_UINT64_STRING_SIZE (sizeof("18446744073709551615") - sizeof('\0'))
+
+// UUID size
+#define UUID_SIZE 16
 
 // To string
 #define STRINGIFY(x) #x
@@ -533,8 +551,14 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 			// Constructor
 			__attribute__((always_inline)) inline explicit EnergyConsumption() noexcept;
 			
+			// Destructor
+			__attribute__((always_inline)) inline ~EnergyConsumption() noexcept;
+			
 			// Bool operator
 			__attribute__((always_inline)) inline explicit operator bool() const noexcept;
+			
+			// Set GPU
+			__attribute__((always_inline)) inline void setGpu(const char *vendor [[maybe_unused]], const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept;
 			
 			// Get total energy consumption
 			__attribute__((always_inline)) inline pair<unsigned long long, unsigned long long> getTotalEnergyConsumption() const noexcept;
@@ -550,6 +574,15 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 				
 				// Subscription
 				const unique_ptr<remove_pointer_t<CFTypeRef>, decltype(&CFRelease)> subscription;
+				
+			// Otherwise
+			#else
+			
+				// NVIDIA initialized
+				bool nvidiaInitialized;
+				
+				// NVIDIA device
+				nvmlDevice_t nvidiaDevice;
 			#endif
 			
 			// Error occurred
@@ -827,10 +860,28 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 		// Otherwise
 		#else
 		
+			// Set NVIDIA initialize to false
+			nvidiaInitialized(false),
+			
 			// Set error occurred to false
 			errorOccurred(false)
 		#endif
 	{
+	}
+	
+	// Destructor
+	__attribute__((always_inline)) inline EnergyConsumption::~EnergyConsumption() noexcept {
+	
+		// Check if not using an Apple device
+		#ifndef __APPLE__
+		
+			// Check if NVIDIA is initialized
+			if(nvidiaInitialized) [[likely]] {
+			
+				// Shutdown NVIDIA
+				nvmlShutdown();
+			}
+		#endif
 	}
 	
 	// Energy consumption bool operator
@@ -840,12 +891,86 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 		return !errorOccurred;
 	}
 	
+	// Energy consumption set GPU
+	__attribute__((always_inline)) inline void EnergyConsumption::setGpu(const char *vendor [[maybe_unused]], const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept {
+	
+		// Check if not using an Apple device
+		#ifndef __APPLE__
+		
+			// Check if Windows
+			#ifdef _WIN32
+			
+				// Check if GPU is a NVIDIA GPU
+				if(StrStrIA(vendor, "NVIDIA")) [[likely]] {
+				
+			// Otherwise
+			#else
+			
+				// Check if GPU is a NVIDIA GPU
+				if(strcasestr(vendor, "NVIDIA")) [[likely]] {
+			#endif
+			
+				// Check if initializing NVIDIA was successful
+				nvidiaInitialized = nvmlInit() == NVML_SUCCESS;
+				if(nvidiaInitialized) [[likely]] {
+				
+					// Check if getting GPU's UUID as a string was successful
+					char uuid[sizeof("GPU-") + HEXADECIMAL_CHARACTER_SIZE * 4 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 6];
+					if(sprintf(uuid, "GPU-%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
+					
+						// Check if getting the number of NVIDIA GPUs was successful
+						unsigned int numberOfNvidiaGpus;
+						if(nvmlDeviceGetCount(&numberOfNvidiaGpus) == NVML_SUCCESS) [[likely]] {
+						
+							// Go through all NVIDIA GPUs
+							for(unsigned int i = 0; i < numberOfNvidiaGpus; ++i) [[likely]] {
+							
+								// Check if getting the NVIDIA GPU was successful
+								if(nvmlDeviceGetHandleByIndex(i, &nvidiaDevice) == NVML_SUCCESS) [[likely]] {
+								
+									// Check if getting the NVIDIA GPU's UUID was successful and the UUIDs match
+									char nvidiaUuid[NVML_DEVICE_UUID_V2_BUFFER_SIZE];
+									if(nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcmp(uuid, nvidiaUuid)) [[unlikely]] {
+									
+										// Return
+										return;
+									}
+								}
+							}
+						}
+					}
+					
+					// Shutdown NVIDIA
+					nvmlShutdown();
+					
+					// Set that NVIDIA isn't initialized
+					nvidiaInitialized = false;
+				}
+			}
+		#endif
+	}
+	
 	// Energy consumption get total energy consumption
 	__attribute__((always_inline)) inline pair<unsigned long long, unsigned long long> EnergyConsumption::getTotalEnergyConsumption() const noexcept {
 	
 		// Set GPU and CPU total energy consumption to zero
 		unsigned long long gpuTotalEnergyConsumption = 0;
 		unsigned long long cpuTotalEnergyConsumption = 0;
+		
+		// Check if not using an Apple device
+		#ifndef __APPLE__
+		
+			// Check if NVIDIA is initialized
+			if(nvidiaInitialized) [[likely]] {
+			
+				// Check if getting the GPU's total energy consumption was successful
+				if(nvmlDeviceGetTotalEnergyConsumption(nvidiaDevice, &gpuTotalEnergyConsumption) == NVML_SUCCESS) [[likely]] {
+				
+					// Make GPU total energy consumption have the correct units
+					gpuTotalEnergyConsumption *= NANOJOULES_IN_A_MILLIJOULE;
+				}
+			}
+		#endif
 		
 		// Check if Windows
 		#ifdef _WIN32

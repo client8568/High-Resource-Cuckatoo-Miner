@@ -37,7 +37,7 @@
 	#define CL_TARGET_OPENCL_VERSION 120
 	
 	// Header files
-	#include <CL/cl.h>
+	#include <CL/cl_ext.h>
 #endif
 
 using namespace std;
@@ -4408,7 +4408,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		#if DISPLAY_POWER_USAGE
 		
 			// Check if creating energy consumption failed
-			const EnergyConsumption energyConsumption;
+			EnergyConsumption energyConsumption;
 			if(!energyConsumption) [[unlikely]] {
 			
 				// Display message
@@ -5616,7 +5616,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							__builtin_assume(numberOfGpus > 0);
 							for(cl_uint j = 0; j < numberOfGpus; ++j) [[likely]] {
 							
-								// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, and name
+								// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, name, and vendor
 								cl_bool isAvailable;
 								cl_bool isLittleEndian;
 								cl_ulong memorySize;
@@ -5624,13 +5624,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								size_t profileSize;
 								size_t openClVersionSize;
 								size_t nameSize;
-								if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize) [[likely]] {
+								size_t vendorSize;
+								size_t extensionsSize;
+								if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_VENDOR, 0, nullptr, &vendorSize) == CL_SUCCESS && vendorSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
 								
-									// Check if current GPU supports full profile, its OpenCL version is compatible, and getting its name was successful
+									// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, getting its vendor, and it doesn't have a UUID or getting its UUID was successful
 									char profile[profileSize];
 									char openClVersion[openClVersionSize];
 									char name[nameSize];
-									if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS) [[likely]] {
+									char vendor[vendorSize];
+									char extensions[extensionsSize];
+									cl_uchar uuid[CL_UUID_SIZE_KHR];
+									if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && clGetDeviceInfo(gpus[j], CL_DEVICE_VENDOR, vendorSize, vendor, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS) && (!extensionsSize || !__builtin_strstr(extensions, "cl_khr_device_uuid") || clGetDeviceInfo(gpus[j], CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)) [[likely]] {
 									
 										// Set applicable GPU exists to true
 										applicableGpuExists = true;
@@ -5641,6 +5646,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 										
 											// Set GPU to the current GPU
 											gpu = gpus[j];
+											
+											// Check if displaying power usage
+											#if DISPLAY_POWER_USAGE
+											
+												// Check if getting GPU's UUID was successful
+												if(extensionsSize && __builtin_strstr(extensions, "cl_khr_device_uuid")) [[likely]] {
+												
+													// Throw error if UUID sizes are invalid
+													static_assert(UUID_SIZE == CL_UUID_SIZE_KHR, "UUID sizes are invalid");
+													
+													// Set energy consumption to monitor the GPU
+													energyConsumption.setGpu(vendor, uuid);
+												}
+											#endif
 											
 											// Display message
 											cout << "Using the " << name << " GPU" << endl;
