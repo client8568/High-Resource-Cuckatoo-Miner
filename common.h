@@ -19,16 +19,8 @@
 	#include <initguid.h>
 	#include <emi.h>
 	
-// Otherwise
-#else
-
-	// header files
-	#include <netdb.h>
-	#include <netinet/tcp.h>
-#endif
-
-// Check if using an Apple device
-#ifdef __APPLE__
+// Otherwise check if using an Apple device
+#elif defined __APPLE__
 
 	// Use bounds-checking interfaces
 	#define __STDC_WANT_LIB_EXT1__ 1
@@ -43,7 +35,23 @@
 	#include <IOKit/IOKitLib.h>
 	#include <IOKit/pwr_mgt/IOPMLib.h>
 	#include <mach/thread_act.h>
+	#include <netdb.h>
+	#include <netinet/tcp.h>
 	#include <sys/sysctl.h>
+	
+// Otherwise
+#else
+
+	// Header files
+	#include <netdb.h>
+	#include <netinet/tcp.h>
+	
+	// Check if preventing sleep
+	#if PREVENT_SLEEP
+	
+		// Header files
+		#include <dbus/dbus.h>
+	#endif
 #endif
 
 // Header files
@@ -238,6 +246,9 @@ enum SmcSelectors {
 	// Get key info
 	kSMCGetKeyInfo = 9
 };
+
+// GNOME inhibit suspending session
+#define GNOME_INHIBIT_SUSPENDING_SESSION (1 << 2)
 
 
 // Structures
@@ -439,34 +450,44 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 		static constexpr const char *value = buffer.data();
 };
 
-// Prevent sleep
-class PreventSleep final {
+// Check if preventing sleep
+#if PREVENT_SLEEP
 
-	// Public
-	public:
+	// Prevent sleep
+	class PreventSleep final {
 	
-		// Constructor
-		__attribute__((always_inline)) inline explicit PreventSleep() noexcept;
+		// Public
+		public:
 		
-		// Destructor
-		__attribute__((always_inline)) inline ~PreventSleep() noexcept;
+			// Constructor
+			__attribute__((always_inline)) inline explicit PreventSleep() noexcept;
+			
+			// Destructor
+			__attribute__((always_inline)) inline ~PreventSleep() noexcept;
+			
+			// Bool operator
+			__attribute__((always_inline)) inline explicit operator bool() const noexcept;
+			
+		// Private
+		private:
 		
-		// Bool operator
-		__attribute__((always_inline)) inline explicit operator bool() const noexcept;
-		
-	// Private
-	private:
-	
-		// Check if using an Apple device
-		#ifdef __APPLE__
-		
-			// Assertion ID
-			IOPMAssertionID assertionID;
-		#endif
-		
-		// Error occurred
-		const bool errorOccurred;
-};
+			// Check if using an Apple device
+			#ifdef __APPLE__
+			
+				// Assertion ID
+				IOPMAssertionID assertionID;
+				
+			// Otherwise check if not using Windows
+			#elif !defined _WIN32
+			
+				// Allow sleep message
+				unique_ptr<DBusMessage, decltype(&dbus_message_unref)> allowSleepMessage;
+			#endif
+			
+			// Error occurred
+			const bool errorOccurred;
+	};
+#endif
 
 // Check if Windows
 #ifdef _WIN32
@@ -586,57 +607,174 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 
 // Supporting function implementation
 
-// Prevent sleep constructor
-__attribute__((always_inline)) inline PreventSleep::PreventSleep() noexcept :
+// Check if preventing sleep
+#if PREVENT_SLEEP
 
-	// Check if Windows
-	#ifdef _WIN32
+	// Prevent sleep constructor
+	__attribute__((always_inline)) inline PreventSleep::PreventSleep() noexcept :
 	
-		// Set error occurred to if preventing sleep failed
-		errorOccurred(!SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED))
-		
-	// Otherwise check if using an Apple device
-	#elif defined __APPLE__
-	
-		// Set error occurred to if preventing sleep failed
-		errorOccurred(IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep, kIOPMAssertionLevelOn, CFSTR(TO_STRING(NAME) " is running"), &assertionID) != kIOReturnSuccess)
-		
-	// Otherwise
-	#else
-	
-		// Set error occurred to false
-		errorOccurred(false)
-	#endif
-{
-}
-
-// Prevent sleep destructor
-__attribute__((always_inline)) inline PreventSleep::~PreventSleep() noexcept {
-
-	// Check if an error didn't occur
-	if(!errorOccurred) [[likely]] {
-	
-		// Check if using Windows
+		// Check if Windows
 		#ifdef _WIN32
 		
-			// Allow sleep
-			SetThreadExecutionState(ES_CONTINUOUS);
+			// Set error occurred to if preventing sleep failed
+			errorOccurred(!SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED))
 			
 		// Otherwise check if using an Apple device
 		#elif defined __APPLE__
 		
-			// Allow sleep
-			IOPMAssertionRelease(assertionID);
+			// Set error occurred to if preventing sleep failed
+			errorOccurred(IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep, kIOPMAssertionLevelOn, CFSTR(TO_STRING(NAME) " is running"), &assertionID) != kIOReturnSuccess)
+			
+		// Otherwise
+		#else
+		
+			// Set allow sleep message to nothing
+			allowSleepMessage(nullptr, dbus_message_unref),
+			
+			// Set error occurred to false
+			errorOccurred(false)
+		#endif
+	{
+	
+		// Check if not using Windows or an Apple device
+		#if !defined _WIN32 && !defined __APPLE__
+		
+			// Check if connecting to the session bus was successful
+			DBusConnection *connection = dbus_bus_get(DBUS_BUS_SESSION, nullptr);
+			if(connection) [[likely]] {
+			
+				// Don't close program if the connection closes
+				dbus_connection_set_exit_on_disconnect(connection, false);
+				
+				// Set application identifier and reason
+				const char *applicationIdentifier = TO_STRING(NAME);
+				const char *reason = TO_STRING(NAME) " is running";
+				
+				// Check if creating message to prevent sleep for GNOME-compliant environments was successful
+				unique_ptr<DBusMessage, decltype(&dbus_message_unref)> message(dbus_message_new_method_call("org.gnome.SessionManager", "/org/gnome/SessionManager", "org.gnome.SessionManager", "Inhibit"), dbus_message_unref);
+				if(message) [[likely]] {
+				
+					// Check if setting message's application identifier, toplevel window identifier, reason, and flags arguments was successful
+					if(dbus_message_append_args(message.get(), DBUS_TYPE_STRING, &applicationIdentifier, DBUS_TYPE_UINT32, &static_cast<const dbus_uint32_t &>(dbus_uint32_t(0)), DBUS_TYPE_STRING, &reason, DBUS_TYPE_UINT32, &static_cast<const dbus_uint32_t &>(dbus_uint32_t(GNOME_INHIBIT_SUSPENDING_SESSION)), DBUS_TYPE_INVALID)) [[likely]] {
+					
+						// Check if getting message's reply was successful
+						const unique_ptr<DBusMessage, decltype(&dbus_message_unref)> reply(dbus_connection_send_with_reply_and_block(connection, message.get(), DBUS_TIMEOUT_USE_DEFAULT, nullptr), dbus_message_unref);
+						if(reply) [[likely]] {
+						
+							// Check if getting reply's inhibit cookie was successful
+							dbus_uint32_t inhibitCookie;
+							if(dbus_message_get_args(reply.get(), nullptr, DBUS_TYPE_UINT32, &inhibitCookie, DBUS_TYPE_INVALID)) [[likely]] {
+							
+								// Check if creating message to allow sleep was successful
+								allowSleepMessage = unique_ptr<DBusMessage, decltype(&dbus_message_unref)>(dbus_message_new_method_call("org.gnome.SessionManager", "/org/gnome/SessionManager", "org.gnome.SessionManager", "Uninhibit"), dbus_message_unref);
+								if(allowSleepMessage) [[likely]] {
+								
+									// Check if setting allow sleep message's inhibit cookit argument failed
+									if(!dbus_message_append_args(allowSleepMessage.get(), DBUS_TYPE_UINT32, &inhibitCookie, DBUS_TYPE_INVALID)) [[unlikely]] {
+									
+										// Free allow sleep message
+										allowSleepMessage.reset();
+									}
+									
+									// Otherwise
+									else [[likely]] {
+									
+										// Return
+										return;
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				// Check if creating message to prevent sleep for Freedesktop-compliant environments was successful
+				message = unique_ptr<DBusMessage, decltype(&dbus_message_unref)>(dbus_message_new_method_call("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement/Inhibit", "org.freedesktop.PowerManagement.Inhibit", "Inhibit"), dbus_message_unref);
+				if(message) [[likely]] {
+				
+					// Check if setting message's application identifier and reason arguments was successful
+					if(dbus_message_append_args(message.get(), DBUS_TYPE_STRING, &applicationIdentifier, DBUS_TYPE_STRING, &reason, DBUS_TYPE_INVALID)) [[likely]] {
+					
+						// Check if getting message's reply was successful
+						const unique_ptr<DBusMessage, decltype(&dbus_message_unref)> reply(dbus_connection_send_with_reply_and_block(connection, message.get(), DBUS_TIMEOUT_USE_DEFAULT, nullptr), dbus_message_unref);
+						if(reply) [[likely]] {
+						
+							// Check if getting reply's inhibit cookie was successful
+							dbus_uint32_t inhibitCookie;
+							if(dbus_message_get_args(reply.get(), nullptr, DBUS_TYPE_UINT32, &inhibitCookie, DBUS_TYPE_INVALID)) [[likely]] {
+							
+								// Check if creating message to allow sleep was successful
+								allowSleepMessage = unique_ptr<DBusMessage, decltype(&dbus_message_unref)>(dbus_message_new_method_call("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement/Inhibit", "org.freedesktop.PowerManagement.Inhibit", "UnInhibit"), dbus_message_unref);
+								if(allowSleepMessage) [[likely]] {
+								
+									// Check if setting allow sleep message's inhibit cookit argument failed
+									if(!dbus_message_append_args(allowSleepMessage.get(), DBUS_TYPE_UINT32, &inhibitCookie, DBUS_TYPE_INVALID)) [[unlikely]] {
+									
+										// Free allow sleep message
+										allowSleepMessage.reset();
+									}
+									
+									// Otherwise
+									else [[likely]] {
+									
+										// Return
+										return;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		#endif
 	}
-}
-
-// Prevent sleep bool operator
-__attribute__((always_inline)) inline PreventSleep::operator bool() const noexcept {
-
-	// Return if an error didn't occurred
-	return !errorOccurred;
-}
+	
+	// Prevent sleep destructor
+	__attribute__((always_inline)) inline PreventSleep::~PreventSleep() noexcept {
+	
+		// Check if an error didn't occur
+		if(!errorOccurred) [[likely]] {
+		
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Allow sleep
+				SetThreadExecutionState(ES_CONTINUOUS);
+				
+			// Otherwise check if using an Apple device
+			#elif defined __APPLE__
+			
+				// Allow sleep
+				IOPMAssertionRelease(assertionID);
+				
+			// Otherwise
+			#else
+			
+				// Check if allow sleep message exists
+				if(allowSleepMessage) [[likely]] {
+				
+					// Check if connecting to the session bus was successful
+					DBusConnection *connection = dbus_bus_get(DBUS_BUS_SESSION, nullptr);
+					if(connection) [[likely]] {
+					
+						// Don't close program if the connection closes
+						dbus_connection_set_exit_on_disconnect(connection, false);
+						
+						// Get allow sleep message's reply
+						unique_ptr<DBusMessage, decltype(&dbus_message_unref)>(dbus_connection_send_with_reply_and_block(connection, allowSleepMessage.get(), DBUS_TIMEOUT_USE_DEFAULT, nullptr), dbus_message_unref);
+					}
+				}
+			#endif
+		}
+	}
+	
+	// Prevent sleep bool operator
+	__attribute__((always_inline)) inline PreventSleep::operator bool() const noexcept {
+	
+		// Return if an error didn't occurred
+		return !errorOccurred;
+	}
+#endif
 
 // Check if Windows
 #ifdef _WIN32
@@ -750,7 +888,7 @@ __attribute__((always_inline)) inline PreventSleep::operator bool() const noexce
 								if(DeviceIoControl(deviceFile, IOCTL_EMI_GET_VERSION, nullptr, 0, &version, sizeof(version), nullptr, nullptr)) [[likely]] {
 								
 									// Check if version is one
-									if(version.EmiVersion == EMI_VERSION_V1) [[unlikely]] {
+									if(version.EmiVersion == EMI_VERSION_V1) [[likely]] {
 									
 										// Check if getting device's metadata size was successful
 										EMI_METADATA_SIZE metadataSize;

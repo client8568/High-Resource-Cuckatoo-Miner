@@ -60,7 +60,7 @@ make run
 #### Linux
 This program can be built and ran with Linux by running the following commands in a terminal from the root of this project:
 ```
-sudo apt install libc++-dev
+sudo apt install libc++-dev libdbus-1-dev
 make
 make run
 ```
@@ -297,6 +297,11 @@ make RECOVER_EDGES_FOR_EVERY_GRAPH=false
 * A `DISPLAY_POWER_USAGE` setting can be used to enable displaying the power used while processing each graph. Operating system support for this setting varies, and some operating system require that this program be ran with elevated privileges for this setting to work. The default value for this setting is `true`.
 ```
 make DISPLAY_POWER_USAGE=true
+```
+
+* A `PREVENT_SLEEP` setting can be used to prevent your system from sleeping while this program is running. The default value for this setting is `true`.
+```
+make PREVENT_SLEEP=true
 ```
 
 * A `MINE_TO_A_STRATUM_SERVER` setting can be used to disable connecting to a stratum server. This setting is intended to be used by developers. The default value for this setting is `true`.

@@ -4252,7 +4252,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 											powerUsageThreadLock.unlock();
 											
 											// Check if the total power key's value was updated
-											if(value != previousValue) {
+											if(value != previousValue) [[likely]] {
 											
 												// Update overall power used to include the total power key's value
 												overallPowerUsed += value;
@@ -4367,16 +4367,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			break;
 		}
 		
-		// Check if preventing sleep failed
-		const PreventSleep preventSleep;
-		if(!preventSleep) [[unlikely]] {
+		// Check if preventing sleep
+		#if PREVENT_SLEEP
 		
-			// Display message
-			cout << "Preventing sleep failed" << endl;
+			// Check if preventing sleep failed
+			const PreventSleep preventSleep;
+			if(!preventSleep) [[unlikely]] {
 			
-			// Break
-			break;
-		}
+				// Display message
+				cout << "Preventing sleep failed" << endl;
+				
+				// Break
+				break;
+			}
+		#endif
 		
 		// Check if mining to a stratum server
 		#if MINE_TO_A_STRATUM_SERVER
@@ -9604,7 +9608,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		powerUsageThread.join();
 		
 		// Check if power used was monitored
-		if(overallPowerUsed) {
+		if(overallPowerUsed) [[likely]] {
 		
 			// Display message
 			cout << "System used " << overallPowerUsed << "W of power overall" << endl;
