@@ -3708,6 +3708,17 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				
 					// Set the number of remaining edges to the total number of edges
 					numberOfRemainingEdges = min(totalNumberOfEdges, static_cast<uint32_t>(MAX_NUMBER_OF_EDGES_AFTER_TRIMMING));
+					
+					// Check if CPU trimming bounds checking isn't set to avoid conditional statements
+					#if !CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS
+					
+						// Check if total number of edges is more than the max number of edges after trimming
+						if(totalNumberOfEdges > MAX_NUMBER_OF_EDGES_AFTER_TRIMMING) [[unlikely]] {
+						
+							// Display message
+							cout << "Lost edges at limiting the max number of edges after trimming" << endl;
+						}
+					#endif
 				}
 				
 				// Check if all CPU trimming threads have finished
