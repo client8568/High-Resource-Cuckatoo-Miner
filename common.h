@@ -59,6 +59,7 @@
 	
 		// Header files
 		#include <nvml.h>
+		#include <amd_smi/amdsmi.h>
 	#endif
 	
 	// Check if preventing sleep
@@ -507,7 +508,7 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 	};
 #endif
 
-// Check if Windows
+// Check if using Windows
 #ifdef _WIN32
 
 	// Windows socket class
@@ -583,6 +584,16 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 				
 				// NVIDIA device
 				nvmlDevice_t nvidiaDevice;
+				
+				// Check if not using Windows
+				#ifndef _WIN32
+				
+					// AMD initialized
+					bool amdInitialized;
+					
+					// AMD device
+					amdsmi_processor_handle amdDevice;
+				#endif
 			#endif
 			
 			// Error occurred
@@ -646,7 +657,7 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 	// Prevent sleep constructor
 	__attribute__((always_inline)) inline PreventSleep::PreventSleep() noexcept :
 	
-		// Check if Windows
+		// Check if using Windows
 		#ifdef _WIN32
 		
 			// Set error occurred to if preventing sleep failed
@@ -809,7 +820,7 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 	}
 #endif
 
-// Check if Windows
+// Check if using Windows
 #ifdef _WIN32
 
 	// Windows socket constructor
@@ -863,6 +874,13 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 			// Set NVIDIA initialize to false
 			nvidiaInitialized(false),
 			
+			// Check if not using Windows
+			#ifndef _WIN32
+			
+				// Set AMD initialized to false
+				amdInitialized(false),
+			#endif
+			
 			// Set error occurred to false
 			errorOccurred(false)
 		#endif
@@ -881,6 +899,17 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 				// Shutdown NVIDIA
 				nvmlShutdown();
 			}
+			
+			// Check if not using Windows
+			#ifndef _WIN32
+			
+				// Check if AMD is initialized
+				if(amdInitialized) [[likely]] {
+				
+					// Shutdown AMD
+					amdsmi_shut_down();
+				}
+			#endif
 		#endif
 	}
 	
@@ -897,7 +926,7 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 		// Check if not using an Apple device
 		#ifndef __APPLE__
 		
-			// Check if Windows
+			// Check if using Windows
 			#ifdef _WIN32
 			
 				// Check if GPU is a NVIDIA GPU
@@ -947,6 +976,66 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 					nvidiaInitialized = false;
 				}
 			}
+			
+			// Check if not using Windows
+			#ifndef _WIN32
+			
+				// Check if initializing AMD was successful
+				amdInitialized = amdsmi_init(AMDSMI_INIT_AMD_GPUS) == AMDSMI_STATUS_SUCCESS;
+				if(amdInitialized) [[likely]] {
+				
+					// Check if getting GPU's UUID as a string was successful
+					char uuid[HEXADECIMAL_CHARACTER_SIZE * 4 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 6 + sizeof('\0')];
+					if(sprintf(uuid, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
+					
+						// Check if getting the number of AMD sockets was successful
+						uint32_t numberOfAmdSockets = 0;
+						if(amdsmi_get_socket_handles(&numberOfAmdSockets, nullptr) == AMDSMI_STATUS_SUCCESS && numberOfAmdSockets) [[likely]] {
+						
+							// Check if getting AMD sockets was successful
+							amdsmi_socket_handle amdSockets[numberOfAmdSockets];
+							if(amdsmi_get_socket_handles(&numberOfAmdSockets, amdSockets) == AMDSMI_STATUS_SUCCESS) [[likely]] {
+							
+								// Go through all AMD sockets
+								for(uint32_t i = 0; i < numberOfAmdSockets; ++i) [[likely]] {
+								
+									// Check if getting the socket's number of AMD GPUs was successful
+									uint32_t numberOfAmdGpus = 0;
+									if(amdsmi_get_processor_handles(amdSockets[i], &numberOfAmdGpus, nullptr) == AMDSMI_STATUS_SUCCESS && numberOfAmdGpus) [[likely]] {
+									
+										// Check if getting the socket's AMD GPUs was successful
+										amdsmi_processor_handle amdGpus[numberOfAmdGpus];
+										if(amdsmi_get_processor_handles(amdSockets[i], &numberOfAmdGpus, amdGpus) == AMDSMI_STATUS_SUCCESS) [[likely]] {
+										
+											// Go through all of the socket's AMD GPUs
+											for(uint32_t j = 0; j < numberOfAmdGpus; ++j) [[likely]] {
+											
+												// Check if getting the AMD GPU's UUID was successful and the UUIDs match
+												char amdUuid[AMDSMI_GPU_UUID_SIZE];
+												unsigned int amdUuidSize = sizeof(AMDSMI_GPU_UUID_SIZE);
+												if(amdsmi_get_gpu_device_uuid(amdGpus[j], &amdUuidSize, amdUuid) == AMDSMI_STATUS_SUCCESS && amdUuidSize && !__builtin_strcmp(uuid, amdUuid)) [[unlikely]] {
+												
+													// Set AMD device to the AMD GPU
+													amdDevice = amdGpus[j];
+													
+													// Return
+													return;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					
+					// Shutdown AMD
+					amdsmi_shut_down();
+					
+					// Set that AMD isn't initialized
+					amdInitialized = false;
+				}
+			#endif
 		#endif
 	}
 	
@@ -970,9 +1059,28 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 					gpuTotalEnergyConsumption *= NANOJOULES_IN_A_MILLIJOULE;
 				}
 			}
+			
+			// Check if not using Windows
+			#ifndef _WIN32
+			
+				// Otherwise check if AMD is initialized
+				else if(amdInitialized) [[likely]] {
+				
+					// Check if getting the GPU's total energy consumption was successful
+					uint64_t energyAccumulator;
+					float counterResolution;
+					uint64_t timestamp;
+					if(amdsmi_get_energy_count(amdDevice, &energyAccumulator, &counterResolution, &timestamp) == AMDSMI_STATUS_SUCCESS) [[likely]] {
+					
+						// Set the GPU total energy consumption to the total energy consumption with correct units
+						gpuTotalEnergyConsumption = energyAccumulator * static_cast<long double>(counterResolution) * NANOJOULES_IN_A_MICROJOULE;
+					}
+				}
+			
+			#endif
 		#endif
 		
-		// Check if Windows
+		// Check if using Windows
 		#ifdef _WIN32
 		
 			// Check if getting energy meter devices was successful

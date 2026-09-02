@@ -60,7 +60,7 @@ make run
 #### Linux
 This program can be built and ran with Linux by running the following commands in a terminal from the root of this project:
 ```
-sudo apt install libc++-dev libdbus-1-dev
+sudo apt install libc++-dev libdbus-1-dev libnl-3-dev libnl-genl-3-dev libmnl-dev
 make
 make run
 ```

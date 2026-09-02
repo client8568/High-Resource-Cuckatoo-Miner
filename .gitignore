@@ -10,3 +10,4 @@ cuda-nvml-dev-13-4_13.4.46-1_arm64.deb
 cuda
 cuda_13.4.0_windows_x86_64.exe
 7zr.exe
+rocm-systems

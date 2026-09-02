@@ -270,8 +270,8 @@ else
 	ifeq ($(DISPLAY_POWER_USAGE),true)
 	
 		# Set flags and link libraries
-		CFLAGS += -I"./nvml/include"
-		LIBS += -Wl,-Bstatic -L"./nvml/dist/linux/$(shell uname -m)/lib" -lnvidia-ml -Wl,-Bdynamic
+		CFLAGS += -I"./nvml/include" -I"./amdsmi/include"
+		LIBS += -Wl,-Bstatic -L"./nvml/dist/linux/$(shell uname -m)/lib" -lnvidia-ml -L"./amdsmi/dist/linux/$(shell uname -m)/lib" -lamd_smi -lamdsminic -lnl-3 -lnl-genl-3 -lmnl -Wl,-Bdynamic
 	endif
 	
 	# Check if preventing sleep
@@ -279,7 +279,7 @@ else
 	
 		# Set flags and link libraries
 		CFLAGS += `pkg-config --cflags dbus-1`
-		LIBS += `pkg-config --libs dbus-1`
+		LIBS += -Wl,-Bstatic `pkg-config --libs dbus-1` -lsystemd -Wl,-Bdynamic
 	endif
 	
 	# Delete command
@@ -303,7 +303,7 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./rocm-systems" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
@@ -320,8 +320,8 @@ linuxDependencies:
 	wget "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz"
 	tar -xf "./v2026.05.29.tar.gz"
 	mv "./OpenCL-ICD-Loader-2026.05.29" "./opencl_loader"
-	cd "./opencl_loader" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/opencl_loader/dist/linux/x86_64" -DCMAKE_C_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl_headers" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS=-fmacro-prefix-map="$(shell pwd)"="." "./CMakeLists.txt" && make && make install && make clean
-	cd "./opencl_loader" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/opencl_loader/dist/linux/aarch64" -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl_headers" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS=-fmacro-prefix-map="$(shell pwd)"="." "./CMakeLists.txt" && make && make install && make clean
+	cd "./opencl_loader" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/opencl_loader/dist/linux/x86_64" -DCMAKE_C_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl_headers" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
+	cd "./opencl_loader" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/opencl_loader/dist/linux/aarch64" -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl_headers" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
 	find "./opencl_loader/dist/linux" ! -name "libOpenCL.a" -type f -delete && find "./opencl_loader/dist/linux" -empty -type d -delete
 	x86_64-linux-gnu-strip --strip-unneeded "./opencl_loader/dist/linux/x86_64/lib/libOpenCL.a"
 	aarch64-linux-gnu-strip --strip-unneeded "./opencl_loader/dist/linux/aarch64/lib/libOpenCL.a"
@@ -350,6 +350,33 @@ linuxDependencies:
 	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/aarch64/lib"
 	rm -r "./cuda"
 	aarch64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/aarch64/lib/libnvidia-ml.a"
+	
+	# AMD System Management Interface (https://github.com/ROCm/rocm-systems/tree/develop/projects/amdsmi)
+	rm -rf "./rocm-systems" "./amdsmi"
+	git clone --filter=blob:none --sparse "https://github.com/ROCm/rocm-systems.git"
+	git -C rocm-systems sparse-checkout set "projects/amdsmi"
+	sed -i 's/add_subdirectory(goamdsmi_shim)//g' "./rocm-systems/projects/amdsmi/CMakeLists.txt"
+	sed -i 's/-msse -msse2//g' "./rocm-systems/projects/amdsmi/CMakeLists.txt"
+	cd "./rocm-systems/projects/amdsmi" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/rocm-systems/projects/amdsmi/dist/linux/x86_64" -DCMAKE_CXX_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
+	sudo dpkg --add-architecture arm64
+	sudo apt update
+	sudo apt install libc++-dev:arm64 libnl-3-dev:arm64 libnl-genl-3-dev:arm64 libmnl-dev:arm64
+	cd "./rocm-systems/projects/amdsmi" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/rocm-systems/projects/amdsmi/dist/linux/aarch64" -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
+	sudo apt install libc++-dev libnl-3-dev libnl-genl-3-dev libmnl-dev
+	mkdir -p "./amdsmi/include/amd_smi"
+	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/include/amd_smi/amdsmi.h" "./amdsmi/include/amd_smi"
+	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/share/doc/amd-smi-lib/LICENSE.txt" "./amdsmi/LICENSE"
+	mkdir -p "./amdsmi/dist/linux/x86_64/lib"
+	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/lib/libamd_smi.a" "./amdsmi/dist/linux/x86_64/lib"
+	x86_64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/x86_64/lib/libamd_smi.a"
+	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/lib/libamdsminic.a" "./amdsmi/dist/linux/x86_64/lib"
+	x86_64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/x86_64/lib/libamdsminic.a"
+	mkdir -p "./amdsmi/dist/linux/aarch64/lib"
+	mv "./rocm-systems/projects/amdsmi/dist/linux/aarch64/lib/libamd_smi.a" "./amdsmi/dist/linux/aarch64/lib"
+	aarch64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/aarch64/lib/libamd_smi.a"
+	mv "./rocm-systems/projects/amdsmi/dist/linux/aarch64/lib/libamdsminic.a" "./amdsmi/dist/linux/aarch64/lib"
+	aarch64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/aarch64/lib/libamdsminic.a"
+	rm -rf "./rocm-systems"
 	
 # Make Apple dependencies (This command works when using macOS: make appleDependencies)
 appleDependencies:
