@@ -28,7 +28,7 @@
 	#define METAL_TARGET_VERSION MTL::LanguageVersion4_0
 	
 	// Header files
-	#include "metal/metal.h"
+	#include "metal.h"
 	
 // Otherwise
 #else

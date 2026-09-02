@@ -959,7 +959,7 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 								
 									// Check if getting the NVIDIA GPU's UUID was successful and the UUIDs match
 									char nvidiaUuid[NVML_DEVICE_UUID_V2_BUFFER_SIZE];
-									if(nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcmp(uuid, nvidiaUuid)) [[unlikely]] {
+									if(nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcasecmp(uuid, nvidiaUuid)) [[unlikely]] {
 									
 										// Return
 										return;
@@ -1013,7 +1013,7 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 												// Check if getting the AMD GPU's UUID was successful and the UUIDs match
 												char amdUuid[AMDSMI_GPU_UUID_SIZE];
 												unsigned int amdUuidSize = sizeof(AMDSMI_GPU_UUID_SIZE);
-												if(amdsmi_get_gpu_device_uuid(amdGpus[j], &amdUuidSize, amdUuid) == AMDSMI_STATUS_SUCCESS && amdUuidSize && !__builtin_strcmp(uuid, amdUuid)) [[unlikely]] {
+												if(amdsmi_get_gpu_device_uuid(amdGpus[j], &amdUuidSize, amdUuid) == AMDSMI_STATUS_SUCCESS && amdUuidSize && !__builtin_strcasecmp(uuid, amdUuid)) [[unlikely]] {
 												
 													// Set AMD device to the AMD GPU
 													amdDevice = amdGpus[j];

@@ -190,7 +190,7 @@ ifeq ($(OS),Windows_NT)
 	PROGRAM_NAME = $(NAME).exe
 	
 	# Set flags and link libraries
-	CFLAGS += -static-libstdc++ -static-libgcc -I"./opencl_headers"
+	CFLAGS += -static-libstdc++ -static-libgcc -I"./opencl/include"
 	LIBS += -lws2_32 -lsetupapi
 	
 	# Check if using MSYS shell
@@ -241,6 +241,7 @@ else ifeq ($(shell uname),Darwin)
 	PROGRAM_NAME = $(NAME)
 	
 	# Set flags and link libraries
+	CFLAGS += -I"./metal/include"
 	LIBS += -framework Foundation -framework IOKit -framework Metal
 	
 	# Check if displaying power usage
@@ -263,8 +264,8 @@ else
 	PROGRAM_NAME = $(NAME)
 	
 	# Set flags and link libraries
-	CFLAGS += -static-libstdc++ -static-libgcc -I"./opencl_headers"
-	LIBS += -Wl,-Bstatic -L"./opencl_loader/dist/linux/$(shell uname -m)/lib" -lOpenCL -Wl,-Bdynamic
+	CFLAGS += -static-libstdc++ -static-libgcc -I"./opencl/include"
+	LIBS += -Wl,-Bstatic -L"./opencl/dist/linux/$(shell uname -m)/lib" -lOpenCL -Wl,-Bdynamic
 	
 	# Check if displaying power usage
 	ifeq ($(DISPLAY_POWER_USAGE),true)
@@ -309,27 +310,29 @@ clean:
 linuxDependencies:
 	
 	# OpenCL headers (https://github.com/KhronosGroup/OpenCL-Headers)
-	rm -rf "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./opencl_headers"
+	rm -rf "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./opencl"
 	wget "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2026.05.29.tar.gz"
 	tar -xf "./v2026.05.29.tar.gz"
 	rm "./v2026.05.29.tar.gz"
-	mv "./OpenCL-Headers-2026.05.29" "./opencl_headers"
+	mkdir -p "./opencl/include"
+	mv "./OpenCL-Headers-2026.05.29/LICENSE" "./opencl"
+	mv "./OpenCL-Headers-2026.05.29/CL" "./opencl/include"
+	rm -r "./OpenCL-Headers-2026.05.29"
 	
 	# OpenCL loader (https://github.com/KhronosGroup/OpenCL-ICD-Loader)
-	rm -rf "./OpenCL-ICD-Loader-2026.05.29" "./opencl_loader"
+	rm -rf "./OpenCL-ICD-Loader-2026.05.29"
 	wget "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz"
 	tar -xf "./v2026.05.29.tar.gz"
-	mv "./OpenCL-ICD-Loader-2026.05.29" "./opencl_loader"
-	cd "./opencl_loader" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/opencl_loader/dist/linux/x86_64" -DCMAKE_C_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl_headers" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
-	cd "./opencl_loader" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/opencl_loader/dist/linux/aarch64" -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl_headers" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
-	find "./opencl_loader/dist/linux" ! -name "libOpenCL.a" -type f -delete && find "./opencl_loader/dist/linux" -empty -type d -delete
-	x86_64-linux-gnu-strip --strip-unneeded "./opencl_loader/dist/linux/x86_64/lib/libOpenCL.a"
-	aarch64-linux-gnu-strip --strip-unneeded "./opencl_loader/dist/linux/aarch64/lib/libOpenCL.a"
-	tar -xf "./v2026.05.29.tar.gz"
 	rm "./v2026.05.29.tar.gz"
-	mv "./opencl_loader/dist" "./OpenCL-ICD-Loader-2026.05.29"
-	rm -r "./opencl_loader"
-	mv "./OpenCL-ICD-Loader-2026.05.29" "./opencl_loader"
+	cd "./OpenCL-ICD-Loader-2026.05.29" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/OpenCL-ICD-Loader-2026.05.29/dist/linux/x86_64" -DCMAKE_C_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl/include" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
+	cd "./OpenCL-ICD-Loader-2026.05.29" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/OpenCL-ICD-Loader-2026.05.29/dist/linux/aarch64" -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl/include" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
+	mkdir -p "./opencl/dist/linux/x86_64/lib"
+	mv "./OpenCL-ICD-Loader-2026.05.29/dist/linux/x86_64/lib/libOpenCL.a" "./opencl/dist/linux/x86_64/lib"
+	x86_64-linux-gnu-strip --strip-unneeded "./opencl/dist/linux/x86_64/lib/libOpenCL.a"
+	mkdir -p "./opencl/dist/linux/aarch64/lib"
+	mv "./OpenCL-ICD-Loader-2026.05.29/dist/linux/aarch64/lib/libOpenCL.a" "./opencl/dist/linux/aarch64/lib"
+	aarch64-linux-gnu-strip --strip-unneeded "./opencl/dist/linux/aarch64/lib/libOpenCL.a"
+	rm -r "./OpenCL-ICD-Loader-2026.05.29"
 	
 	# NVIDIA Management Library (https://packages.nvidia.com/components/cuda_nvml_dev)
 	rm -rf "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./nvml"
@@ -341,15 +344,15 @@ linuxDependencies:
 	mv "./cuda/usr/share/doc/cuda-nvml-dev-13-4/copyright" "./nvml/LICENSE"
 	mkdir -p "./nvml/dist/linux/x86_64/lib"
 	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/x86_64/lib"
-	rm -r "./cuda"
 	x86_64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/x86_64/lib/libnvidia-ml.a"
+	rm -r "./cuda"
 	wget "https://packages.nvidia.com/resolute/pool/arm64/5B515474-7E78-11F1-8656-C51E4F4B317F/cuda-nvml-dev-13-4_13.4.46-1_arm64.deb"
 	dpkg-deb -x "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda"
 	rm "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb"
 	mkdir -p "./nvml/dist/linux/aarch64/lib"
 	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/aarch64/lib"
-	rm -r "./cuda"
 	aarch64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/aarch64/lib/libnvidia-ml.a"
+	rm -r "./cuda"
 	
 	# AMD System Management Interface (https://github.com/ROCm/rocm-systems/tree/develop/projects/amdsmi)
 	rm -rf "./rocm-systems" "./amdsmi"
@@ -360,9 +363,9 @@ linuxDependencies:
 	cd "./rocm-systems/projects/amdsmi" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/rocm-systems/projects/amdsmi/dist/linux/x86_64" -DCMAKE_CXX_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
 	sudo dpkg --add-architecture arm64
 	sudo apt update
-	sudo apt install libc++-dev:arm64 libnl-3-dev:arm64 libnl-genl-3-dev:arm64 libmnl-dev:arm64
+	sudo apt install -y libc++-dev:arm64
 	cd "./rocm-systems/projects/amdsmi" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/rocm-systems/projects/amdsmi/dist/linux/aarch64" -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
-	sudo apt install libc++-dev libnl-3-dev libnl-genl-3-dev libmnl-dev
+	sudo apt install -y libc++-dev
 	mkdir -p "./amdsmi/include/amd_smi"
 	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/include/amd_smi/amdsmi.h" "./amdsmi/include/amd_smi"
 	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/share/doc/amd-smi-lib/LICENSE.txt" "./amdsmi/LICENSE"
@@ -386,8 +389,8 @@ appleDependencies:
 	curl -LO "https://github.com/apple/metal-cpp/archive/refs/tags/release/metal-cpp_macOS27_iOS27.zip"
 	unzip "./metal-cpp_macOS27_iOS27.zip"
 	rm "./metal-cpp_macOS27_iOS27.zip"
-	mkdir "./metal"
-	cd "./metal-cpp-release-metal-cpp_macOS27_iOS27" && "./SingleHeader/MakeSingleHeader.py" -o "../metal/metal.h" "./Metal/Metal.hpp"
+	mkdir -p "./metal/include"
+	cd "./metal-cpp-release-metal-cpp_macOS27_iOS27" && "./SingleHeader/MakeSingleHeader.py" -o "../metal/include/metal.h" "./Metal/Metal.hpp"
 	mv "./metal-cpp-release-metal-cpp_macOS27_iOS27/LICENSE.txt" "./metal/LICENSE"
 	rm -r "./metal-cpp-release-metal-cpp_macOS27_iOS27"
 	
@@ -397,11 +400,14 @@ windowsDependencies:
 	rem OpenCL headers (https://github.com/KhronosGroup/OpenCL-Headers)
 	del /q "./v2026.05.29.tar.gz" > "nul" 2>&1
 	if exist "./OpenCL-Headers-2026.05.29" rd /q /s "./OpenCL-Headers-2026.05.29" > "nul"
-	if exist "./opencl_headers" rd /q /s "./opencl_headers" > "nul"
+	if exist "./opencl" rd /q /s "./opencl" > "nul"
 	curl -LO "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/tags/v2026.05.29.tar.gz"
 	tar -xf "./v2026.05.29.tar.gz"
 	del "./v2026.05.29.tar.gz"
-	rename "./OpenCL-Headers-2026.05.29" "./opencl_headers"
+	mkdir "./opencl\include"
+	move "./OpenCL-Headers-2026.05.29\LICENSE" "./opencl"
+	move "./OpenCL-Headers-2026.05.29\CL" "./opencl/include"
+	rd /q /s "./OpenCL-Headers-2026.05.29"
 	
 	rem NVIDIA Management Library (https://packages.nvidia.com/windows/x86_64/archive)
 	del /q "./cuda_13.4.0_windows_x86_64.exe" > "nul" 2>&1

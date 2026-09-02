@@ -1,5 +1,0 @@
-EXPORTS
-clGetLayerInfo
-clInitLayer
-clInitLayerWithProperties
-clDeinitLayer
