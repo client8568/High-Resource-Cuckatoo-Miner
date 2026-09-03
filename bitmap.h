@@ -41,7 +41,7 @@ template<const uint64_t size> class Bitmap final {
 	private:
 	
 		// Buffer
-		unique_ptr<uint64_t[], void(*)(uint64_t [])> buffer;
+		const unique_ptr<uint64_t[], void(*)(uint64_t [])> buffer;
 };
 
 

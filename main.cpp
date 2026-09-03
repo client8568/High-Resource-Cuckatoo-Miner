@@ -574,6 +574,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		bool displayHelp = false;
 		bool helpRequested = false;
 		int option;
+		optind = 0;
 		#if MINE_TO_A_STRATUM_SERVER
 		
 			// Go through all options while not displaying help
@@ -4285,26 +4286,48 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		});
 	#endif
 	
-	// Check if using signal handler and not using Windows
-	#if USE_SIGNAL_HANDLER && !defined _WIN32
+	// Check if using signal handler
+	#if USE_SIGNAL_HANDLER
 	
-		// Initialize signal action to restart syscalls when interrupted
-		const struct sigaction signalAction = {
+		// Check if using Windows
+		#ifdef _WIN32
 		
-			// Handler
-			.sa_handler = [](const int signal) __attribute__((always_inline)) noexcept {
+			// Automatically restore default interrupt signal handler when done
+			const unique_ptr<volatile sig_atomic_t, void(*)(volatile sig_atomic_t *)> closingUniquePointer(&closing, [](volatile sig_atomic_t *closingPointer [[maybe_unused]]) __attribute__((always_inline)) noexcept {
 			
-				// Check if interrupt or terminate signal occurred
-				if(signal == SIGINT || signal == SIGTERM) [[likely]] {
+				// Restore default interrupt signal handler
+				signal(SIGINT, SIG_DFL);
+			});
+			
+		// Otherwise
+		#else
+		
+			// Initialize signal action to restart syscalls when interrupted
+			const struct sigaction signalAction = {
+			
+				// Handler
+				.sa_handler = [](const int signal) __attribute__((always_inline)) noexcept {
 				
-					// Set closing to true
-					closing = true;
-				}
-			},
+					// Check if interrupt or terminate signal occurred
+					if(signal == SIGINT || signal == SIGTERM) [[likely]] {
+					
+						// Set closing to true
+						closing = true;
+					}
+				},
+				
+				// Flags
+				.sa_flags = SA_RESTART
+			};
 			
-			// Flags
-			.sa_flags = SA_RESTART
-		};
+			// Automatically restore default interrupt signal handler when done
+			const unique_ptr<volatile sig_atomic_t, void(*)(volatile sig_atomic_t *)> closingUniquePointer(&closing, [](volatile sig_atomic_t *closingPointer [[maybe_unused]]) __attribute__((always_inline)) noexcept {
+			
+				// Restore default interrupt signal handler
+				signal(SIGINT, SIG_DFL);
+				signal(SIGTERM, SIG_DFL);
+			});
+		#endif
 	#endif
 	
 	// Create break loop
@@ -4684,11 +4707,11 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 				}
 				
-				// Check if no applicable GPUs exist
+				// Check if no applicable GPU exists
 				if(!gpu) [[unlikely]] {
 				
 					// Display message
-					cout << "No applicable GPUs exist" << endl;
+					cout << "No applicable GPU exists" << endl;
 					
 					// Break
 					break;
@@ -5685,11 +5708,11 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 				}
 				
-				// Check if no applicable GPUs exist
+				// Check if no applicable GPU exists
 				if(!applicableGpuExists) [[unlikely]] {
 				
 					// Display message
-					cout << "No applicable GPUs exist" << endl;
+					cout << "No applicable GPU exists" << endl;
 					
 					// Break
 					break;
@@ -9560,7 +9583,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					if(powerUsed) [[likely]] {
 					
 						// Display message
-						cout << "System used " << powerUsed << "W of power in total" << endl;
+						cout << "System used " << fixed << setprecision(3) << overallPowerUsed << setprecision(6) << defaultfloat << "W of power overall" << endl;
 					}
 				#endif
 				

@@ -71,7 +71,7 @@ template<const uint32_t size, const bool isSet = false> class HashTable final {
 	private:
 	
 		// Entries
-		unique_ptr<HashTableEntry[], void(*)(HashTableEntry [])> entries;
+		const unique_ptr<HashTableEntry[], void(*)(HashTableEntry [])> entries;
 };
 
 

@@ -334,7 +334,7 @@ make CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS=true
 make STARTING_NONCE=0
 ```
 
-* A `STARTING_HEADER=` setting can be used to set the header used when not mining to a stratum server. This must only contain the ASCII uppercase characters ([A-Z]), ASCII lowercase characters ([a-z]), and ASCII spaces ([ ]). This setting is intended to be used by developers. The default value for this setting is ``.
+* A `STARTING_HEADER=` setting can be used to set the header used when not mining to a stratum server. This must only contain ASCII uppercase characters ([A-Z]), ASCII lowercase characters ([a-z]), and ASCII spaces ([ ]). This setting is intended to be used by developers. The default value for this setting is nothing.
 ```
 make STARTING_HEADER=
 ```
