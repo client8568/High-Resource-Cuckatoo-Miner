@@ -134,6 +134,11 @@ make GPU_TRIMMING_USE_MIN_RAM=false
 make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=8
 ```
 
+* A `GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS` setting can be used to enable performing fine bucket sorting on the GPU in two steps instead of one. Using two steps requires less VRAM. This settings affects the GPU trimming speed. The default value for this setting is `false`.
+```
+make GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false
+```
+
 * A `GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING` setting can be used to set the number of most significant bits used for initial fine bucket sorting by the GPU. This settings affects the GPU trimming speed. The default value for this setting is `8`.
 ```
 make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=8
@@ -147,6 +152,36 @@ make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=7
 * A `GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU coarse bucket sort edges kernel. This settings affects the GPU trimming speed. The default value for this setting is `512`.
 ```
 make GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
+```
+
+* A `GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket edges in steps round one kernels. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+```
+make GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
+```
+
+* A `GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU trim edges in steps round one step one kernel. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+```
+make GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
+```
+
+* A `GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU trim edges in steps round one step two kernel. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+```
+make GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
+```
+
+* A `GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket edges in steps round two kernels. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+```
+make GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
+```
+
+* A `GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU trim edges in steps round two step one kernel. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+```
+make GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
+```
+
+* A `GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU trim edges in steps round two step two kernel. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+```
+make GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
 ```
 
 * A `GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket sort initial edges kernel. This settings affects the GPU trimming speed. The default value for this setting is `512`.

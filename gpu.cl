@@ -102,6 +102,210 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 // Check if using max RAM for GPU trimming
 #if GPU_TRIMMING_USE_MAX_RAM
 
+	// Fine bucket sort edges in steps round one step one
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Fine bucket sort edges in steps round one step one
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Fine bucket sort edges in steps round one step one
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round one step one
+	__kernel void trimEdgesInStepsRoundOneStepOne(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Trim edges in steps round one step one
+	__kernel void trimEdgesInStepsRoundOneStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Trim edges in steps round one step one
+	__kernel void trimEdgesInStepsRoundOneStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round one step two
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Fine bucket sort edges in steps round one step two
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Fine bucket sort edges in steps round one step two
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round one step two
+	__kernel void trimEdgesInStepsRoundOneStepTwo(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Trim edges in steps round one step two
+	__kernel void trimEdgesInStepsRoundOneStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Trim edges in steps round one step two
+	__kernel void trimEdgesInStepsRoundOneStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Update largest coarse bucket size in steps round one
+__kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restrict largestCoarseBucketSize, __global const uint *restrict numberOfEdgesPerCoarseBucket);
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round two step one part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+	// Fine bucket sort edges in steps round two step one part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Fine bucket sort edges in steps round two step one part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+	// Fine bucket sort edges in steps round two step one part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Fine bucket sort edges in steps round two step one part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+	// Fine bucket sort edges in steps round two step one part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round two step one
+	__kernel void trimEdgesInStepsRoundTwoStepOne(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Trim edges in steps round two step one
+	__kernel void trimEdgesInStepsRoundTwoStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Trim edges in steps round two step one
+	__kernel void trimEdgesInStepsRoundTwoStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round two step two part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+	// Fine bucket sort edges in steps round two step two part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Fine bucket sort edges in steps round two step two part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+	// Fine bucket sort edges in steps round two step two part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Fine bucket sort edges in steps round two step two part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+	// Fine bucket sort edges in steps round two step two part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round two step two
+	__kernel void trimEdgesInStepsRoundTwoStepTwo(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Trim edges in steps round two step two
+	__kernel void trimEdgesInStepsRoundTwoStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Trim edges in steps round two step two
+	__kernel void trimEdgesInStepsRoundTwoStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Update largest coarse bucket size in steps round two
+__kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restrict largestCoarseBucketSize, __global const uint *restrict numberOfEdgesPerCoarseBucket);
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort initial edges in steps part one
+	__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+	// Fine bucket sort initial edges in steps part two
+	__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
+	
+// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+
+	// Fine bucket sort initial edges in steps part one
+	__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+	// Fine bucket sort initial edges in steps part two
+	__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+// Otherwise
+#else
+
+	// Fine bucket sort initial edges in steps part one
+	__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+	
+	// Fine bucket sort initial edges part two
+	__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters);
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
 	// Fine bucket sort initial edges
 	__kernel void fineBucketSortInitialEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize);
 	
@@ -331,9 +535,3586 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		currentLargestCoarseBucketSize = max(currentLargestCoarseBucketSize, numberOfEdgesPerCoarseBucket[i]);
 	}
 	
-	// Set largest coarse bucket size based on the current largest coarse bucket size
-	*largestCoarseBucketSize = ((min(currentLargestCoarseBucketSize, (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
+	// Check if performing GPU fine bucket sorting in two steps
+	#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
+	
+		// Set largest coarse bucket size based on the current largest coarse bucket size
+		*largestCoarseBucketSize = ((min(currentLargestCoarseBucketSize, (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
+		
+	// Otherwise
+	#else
+	
+		// Set largest coarse bucket size based on the current largest coarse bucket size
+		*largestCoarseBucketSize = ((min(currentLargestCoarseBucketSize, (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
+	#endif
 }
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round one step one
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = min(numberOfEdgesPerCoarseBucket[coarseBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET);
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get this work item's edge index
+		const uint edgeIndex = nextEdgeIndex[fineBucketIndex % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndex;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndex < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + edgeIndex] = nodes;
+		}
+		
+		// Get this work item's other edge index
+		const uint edgeIndexOther = nextEdgeIndex[fineBucketIndexOther % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndexOther;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndexOther < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = nodesOther;
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort edges in steps round one step one
+		__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort edges in steps round one step one
+		__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = min(numberOfEdgesPerCoarseBucket[coarseBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET);
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint node;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				node = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint nodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's node
+				fineBucketIndex = (node >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					nodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's node
+					fineBucketIndexOther = (nodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get this work item's edge index
+		const uint edgeIndex = nextEdgeIndex[fineBucketIndex % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndex;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndex < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + edgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + edgeIndex] = (uint2)(edge, node);
+			#endif
+		}
+		
+		// Get this work item's other edge index
+		const uint edgeIndexOther = nextEdgeIndex[fineBucketIndexOther % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndexOther;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndexOther < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExistsOther, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's other edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = edgeOther;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's other edge and its node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = (uint2)(edgeOther, nodeOther);
+			#endif
+		}
+	}
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round one step one
+	__kernel void trimEdgesInStepsRoundOneStepOne(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket) {
+	
+		// Get local ID
+		const uint localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const uint fineBucketIndex = groupId;
+		
+		// Go through all bitmap parts as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get the edges in this work group's fine bucket
+		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set edge's node in the bitmap
+			setBitInBitmap(bitmap, edges[i].x & GPU_INITIAL_BITMAP_ITEM_MASK);
+		}
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per coarse bucket to zero
+			localNumberOfEdgesPerCoarseBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Get this work item's edge's nodes
+			const uint2 nodes = edges[min(i + localId, numberOfEdges - 1)];
+			
+			// Get if this work item's edge survives by having a node pair in the bitmap
+			const bool edgeSurvives = (i + localId < numberOfEdges) && isBitSetInBitmap(bitmap, (nodes.x ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			
+			// Check if this work item's edge survives
+			ushort coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Get the coarse bucket index for the edge's other node
+				coarseBucketIndex = nodes.y >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Check if the local coarse bucket isn't empty
+				const uint localNumberOfEdges = atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0);
+				if(__builtin_expect(localNumberOfEdges, true)) {
+				
+					// Get all the next edge index in the coarse bucket as a work group
+					nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + localId], localNumberOfEdges);
+				}
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Put this work item's edge's nodes in the coarse bucket
+				coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = nodes.yx;
+			}
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Trim edges in steps round one step one
+		__kernel void trimEdgesInStepsRoundOneStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Trim edges in steps round one step one
+		__kernel void trimEdgesInStepsRoundOneStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const ushort fineBucketIndex = get_group_id(0);
+		
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		#endif
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
+		
+		// Go through all bitmap parts as a work group
+		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Set edge's node in the bitmap
+				__builtin_assume(edges[i] < NUMBER_OF_EDGES);
+				setBitInBitmap(bitmap, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edges[i] >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edges[i] * 2)) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Set edge's node in the bitmap
+				setBitInBitmap(bitmap, edges[i].y & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+		}
+		
+		// Check if local ID is less than the number of local number of edges per coarse bucket
+		if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Set all local number of edges per coarse bucket to zero as a work group
+			localNumberOfEdgesPerCoarseBucket[localId] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get this work item's edge
+				const uint edge = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Get this work item's edge and node
+				const uint2 edgeAndNode = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (edgeAndNode.y ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+			
+			// Check if this work item's edge survives
+			uint coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the coarse bucket index for the edge's other node
+					__builtin_assume(edge < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+					
+				// Otherwise
+				#else
+				
+					// Get the coarse bucket index for the edge's other node
+					__builtin_assume(edgeAndNode.x < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeAndNode.x >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeAndNode.x * 2 + 1)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				#endif
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Get all the next edge index in the coarse bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + localId], atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0));
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edge;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edgeAndNode.x;
+				#endif
+			}
+		}
+	}
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round one step two
+	__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's step coarse bucket index
+		const uint stepCoarseBucketIndex = get_group_id(1);
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2 + stepCoarseBucketIndex;
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = min(numberOfEdgesPerCoarseBucket[coarseBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET);
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get this work item's edge index
+		const uint edgeIndex = nextEdgeIndex[fineBucketIndex % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndex;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndex < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + edgeIndex] = nodes;
+		}
+		
+		// Get this work item's other edge index
+		const uint edgeIndexOther = nextEdgeIndex[fineBucketIndexOther % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndexOther;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndexOther < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = nodesOther;
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort edges in steps round one step two
+		__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort edges in steps round one step two
+		__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's step coarse bucket index
+		const uint stepCoarseBucketIndex = get_group_id(1);
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2 + stepCoarseBucketIndex;
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = min(numberOfEdgesPerCoarseBucket[coarseBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET);
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint node;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				node = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint nodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's node
+				fineBucketIndex = (node >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					nodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's node
+					fineBucketIndexOther = (nodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get this work item's edge index
+		const uint edgeIndex = nextEdgeIndex[fineBucketIndex % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndex;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndex < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + edgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + edgeIndex] = (uint2)(edge, node);
+			#endif
+		}
+		
+		// Get this work item's other edge index
+		const uint edgeIndexOther = nextEdgeIndex[fineBucketIndexOther % GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION] + localNextEdgeIndexOther;
+		
+		// Check if the edge index is valid
+		if(__builtin_expect(edgeIndexOther < GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * edgeExistsOther, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's other edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = edgeOther;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's other edge and its node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + edgeIndexOther] = (uint2)(edgeOther, nodeOther);
+			#endif
+		}
+	}
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round one step two
+	__kernel void trimEdgesInStepsRoundOneStepTwo(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket) {
+	
+		// Get local ID
+		const uint localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const uint fineBucketIndex = groupId;
+		
+		// Go through all bitmap parts as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get the edges in this work group's fine bucket
+		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set edge's node in the bitmap
+			setBitInBitmap(bitmap, edges[i].x & GPU_INITIAL_BITMAP_ITEM_MASK);
+		}
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per coarse bucket to zero
+			localNumberOfEdgesPerCoarseBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Get this work item's edge's nodes
+			const uint2 nodes = edges[min(i + localId, numberOfEdges - 1)];
+			
+			// Get if this work item's edge survives by having a node pair in the bitmap
+			const bool edgeSurvives = (i + localId < numberOfEdges) && isBitSetInBitmap(bitmap, (nodes.x ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			
+			// Check if this work item's edge survives
+			ushort coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Get the coarse bucket index for the edge's other node
+				coarseBucketIndex = nodes.y >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Check if the local coarse bucket isn't empty
+				const uint localNumberOfEdges = atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0);
+				if(__builtin_expect(localNumberOfEdges, true)) {
+				
+					// Get all the next edge index in the coarse bucket as a work group
+					nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[localId], localNumberOfEdges);
+				}
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Put this work item's edge's nodes in the coarse bucket
+				coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = nodes.yx;
+			}
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Trim edges in steps round one step two
+		__kernel void trimEdgesInStepsRoundOneStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Trim edges in steps round one step two
+		__kernel void trimEdgesInStepsRoundOneStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const ushort fineBucketIndex = get_group_id(0);
+		
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		#endif
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
+		
+		// Go through all bitmap parts as a work group
+		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Set edge's node in the bitmap
+				__builtin_assume(edges[i] < NUMBER_OF_EDGES);
+				setBitInBitmap(bitmap, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edges[i] >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edges[i] * 2)) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Set edge's node in the bitmap
+				setBitInBitmap(bitmap, edges[i].y & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+		}
+		
+		// Check if local ID is less than the number of local number of edges per coarse bucket
+		if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Set all local number of edges per coarse bucket to zero as a work group
+			localNumberOfEdgesPerCoarseBucket[localId] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get this work item's edge
+				const uint edge = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Get this work item's edge and node
+				const uint2 edgeAndNode = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (edgeAndNode.y ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+			
+			// Check if this work item's edge survives
+			uint coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the coarse bucket index for the edge's other node
+					__builtin_assume(edge < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+					
+				// Otherwise
+				#else
+				
+					// Get the coarse bucket index for the edge's other node
+					__builtin_assume(edgeAndNode.x < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeAndNode.x >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeAndNode.x * 2 + 1)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				#endif
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Get all the next edge index in the coarse bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[localId], atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0));
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edge;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edgeAndNode.x;
+				#endif
+			}
+		}
+	}
+#endif
+
+// Update largest coarse bucket size in steps round one
+__kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restrict largestCoarseBucketSize, __global const uint *restrict numberOfEdgesPerCoarseBucket) {
+
+	// Go through all coarse buckets
+	uint currentLargestCoarseBucketSize = 1;
+	for(ushort i = 0; __builtin_expect(i < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true); ++i) {
+	
+		// Update the current largest coarse bucket size
+		currentLargestCoarseBucketSize = max(currentLargestCoarseBucketSize, max(numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + i], numberOfEdgesPerCoarseBucket[i]));
+	}
+	
+	// Set largest coarse bucket size based on the current largest coarse bucket size
+	*largestCoarseBucketSize = ((currentLargestCoarseBucketSize + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
+}
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round two step one part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's other node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's other node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+		}
+		
+		// Check if this work item's other edge exists
+		if(__builtin_expect(edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+		}
+	}
+	
+	// Fine bucket sort edges in steps round two step one part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's other node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's other node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+		}
+		
+		// Check if this work item's other edge exists
+		if(__builtin_expect(edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort edges in steps round two step one part one
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort edges in steps round two step one part one
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint otherNode;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				otherNode = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint otherNodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's other node
+				fineBucketIndex = (otherNode >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					otherNodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's other node
+					fineBucketIndexOther = (otherNodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			#endif
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				#endif
+			}
+		}
+	}
+	
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort edges in steps round two step one part two
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort edges in steps round two step one part two
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint otherNode;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				otherNode = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint otherNodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's other node
+				fineBucketIndex = (otherNode >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					otherNodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's other node
+					fineBucketIndexOther = (otherNodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			#endif
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				#endif
+			}
+		}
+	}
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round two step one
+	__kernel void trimEdgesInStepsRoundTwoStepOne(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket) {
+	
+		// Get local ID
+		const uint localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const uint fineBucketIndex = groupId;
+		
+		// Go through all bitmap parts as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get the edges in this work group's fine bucket
+		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set edge's other node in the bitmap
+			setBitInBitmap(bitmap, edges[i].x & GPU_INITIAL_BITMAP_ITEM_MASK);
+		}
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per coarse bucket to zero
+			localNumberOfEdgesPerCoarseBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Get this work item's edge's nodes
+			const uint2 nodes = edges[min(i + localId, numberOfEdges - 1)];
+			
+			// Get if this work item's edge survives by having a node pair in the bitmap
+			const bool edgeSurvives = (i + localId < numberOfEdges) && isBitSetInBitmap(bitmap, (nodes.x ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			
+			// Check if this work item's edge survives
+			ushort coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Get the coarse bucket index for the edge's node
+				coarseBucketIndex = nodes.y >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Check if the local coarse bucket isn't empty
+				const uint localNumberOfEdges = atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0);
+				if(__builtin_expect(localNumberOfEdges, true)) {
+				
+					// Get all the next edge index in the coarse bucket as a work group
+					nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * 2 + localId], localNumberOfEdges);
+				}
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Put this work item's edge's nodes in the coarse bucket
+				coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = nodes.yx;
+			}
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Trim edges in steps round two step one
+		__kernel void trimEdgesInStepsRoundTwoStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Trim edges in steps round two step one
+		__kernel void trimEdgesInStepsRoundTwoStepOne(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const ushort fineBucketIndex = get_group_id(0);
+		
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		#endif
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
+		
+		// Go through all bitmap parts as a work group
+		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Set edge's other node in the bitmap
+				__builtin_assume(edges[i] < NUMBER_OF_EDGES);
+				setBitInBitmap(bitmap, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edges[i] >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edges[i] * 2 + 1)) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Set edge's other node in the bitmap
+				setBitInBitmap(bitmap, edges[i].y & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+		}
+		
+		// Check if local ID is less than the number of local number of edges per coarse bucket
+		if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Set all local number of edges per coarse bucket to zero as a work group
+			localNumberOfEdgesPerCoarseBucket[localId] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get this work item's edge
+				const uint edge = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Get this work item's edge and node
+				const uint2 edgeAndNode = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (edgeAndNode.y ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+			
+			// Check if this work item's edge survives
+			uint coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the coarse bucket index for the edge's node
+					__builtin_assume(edge < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+					
+				// Otherwise
+				#else
+				
+					// Get the coarse bucket index for the edge's node
+					__builtin_assume(edgeAndNode.x < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeAndNode.x >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeAndNode.x * 2)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				#endif
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Get all the next edge index in the coarse bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * 2 + localId], atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0));
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edge;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edgeAndNode.x;
+				#endif
+			}
+		}
+	}
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort edges in steps round two step two part one
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's step coarse bucket index
+		const uint stepCoarseBucketIndex = get_group_id(1);
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2 + stepCoarseBucketIndex;
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's other node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's other node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+		}
+		
+		// Check if this work item's other edge exists
+		if(__builtin_expect(edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+		}
+	}
+	
+	// Fine bucket sort edges in steps round two step two part two
+	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's step coarse bucket index
+		const uint stepCoarseBucketIndex = get_group_id(1);
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2 + stepCoarseBucketIndex;
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's other node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's other node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+		}
+		
+		// Check if this work item's other edge exists
+		if(__builtin_expect(edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort edges in steps round two step two part one
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort edges in steps round two step two part one
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's step coarse bucket index
+		const uint stepCoarseBucketIndex = get_group_id(1);
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2 + stepCoarseBucketIndex;
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION + coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint otherNode;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				otherNode = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint otherNodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's other node
+				fineBucketIndex = (otherNode >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					otherNodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's other node
+					fineBucketIndexOther = (otherNodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			#endif
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				#endif
+			}
+		}
+	}
+	
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort edges in steps round two step two part two
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort edges in steps round two step two part two
+		__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's step coarse bucket index
+		const uint stepCoarseBucketIndex = get_group_id(1);
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2 + stepCoarseBucketIndex;
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 2) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 2) * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint otherNode;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				otherNode = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint otherNodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's other node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's other node
+				fineBucketIndex = (otherNode >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's other node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					otherNodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's other node
+					fineBucketIndexOther = (otherNodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			#endif
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				#endif
+			}
+		}
+	}
+#endif
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Trim edges in steps round two step two
+	__kernel void trimEdgesInStepsRoundTwoStepTwo(__global uint2 *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket) {
+	
+		// Get local ID
+		const uint localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const uint fineBucketIndex = groupId;
+		
+		// Go through all bitmap parts as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Get the edges in this work group's fine bucket
+		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set edge's other node in the bitmap
+			setBitInBitmap(bitmap, edges[i].x & GPU_INITIAL_BITMAP_ITEM_MASK);
+		}
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per coarse bucket to zero
+			localNumberOfEdgesPerCoarseBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Get this work item's edge's nodes
+			const uint2 nodes = edges[min(i + localId, numberOfEdges - 1)];
+			
+			// Get if this work item's edge survives by having a node pair in the bitmap
+			const bool edgeSurvives = (i + localId < numberOfEdges) && isBitSetInBitmap(bitmap, (nodes.x ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			
+			// Check if this work item's edge survives
+			ushort coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Get the coarse bucket index for the edge's node
+				coarseBucketIndex = nodes.y >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Check if the local coarse bucket isn't empty
+				const uint localNumberOfEdges = atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0);
+				if(__builtin_expect(localNumberOfEdges, true)) {
+				
+					// Get all the next edge index in the coarse bucket as a work group
+					nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[localId], localNumberOfEdges);
+				}
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Put this work item's edge's nodes in the coarse bucket
+				coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = nodes.yx;
+			}
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Trim edges in steps round two step two
+		__kernel void trimEdgesInStepsRoundTwoStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Trim edges in steps round two step two
+		__kernel void trimEdgesInStepsRoundTwoStepTwo(__global uint *restrict coarseBuckets, __global uint *restrict numberOfEdgesPerCoarseBucket, __global const uint2 *restrict fineBuckets, __global const uint *restrict numberOfEdgesPerFineBucket, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Declare local number of edges per coarse bucket
+		__local uint localNumberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
+		
+		// Declare bitmap
+		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		
+		// Get this work group's fine bucket index
+		const ushort fineBucketIndex = get_group_id(0);
+		
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		#endif
+		
+		// Get the number of edges in this work group's fine bucket
+		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
+		
+		// Go through all bitmap parts as a work group
+		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set bitmap part to zero
+			bitmap[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Set edge's other node in the bitmap
+				__builtin_assume(edges[i] < NUMBER_OF_EDGES);
+				setBitInBitmap(bitmap, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edges[i] >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edges[i] * 2 + 1)) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Set edge's other node in the bitmap
+				setBitInBitmap(bitmap, edges[i].y & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+		}
+		
+		// Check if local ID is less than the number of local number of edges per coarse bucket
+		if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Set all local number of edges per coarse bucket to zero as a work group
+			localNumberOfEdgesPerCoarseBucket[localId] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all of this work group's edges as a work group
+		for(uint i = 0; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get this work item's edge
+				const uint edge = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+				
+			// Otherwise
+			#else
+			
+				// Get this work item's edge and node
+				const uint2 edgeAndNode = edges[min(i + localId, numberOfEdges - 1)];
+				
+				// Get if this work item's edge survives by having a node pair in the bitmap
+				const bool edgeSurvives = (i + localId < numberOfEdges) & isBitSetInBitmap(bitmap, (edgeAndNode.y ^ 1) & GPU_INITIAL_BITMAP_ITEM_MASK);
+			#endif
+			
+			// Check if this work item's edge survives
+			uint coarseBucketIndex;
+			ushort localNextEdgeIndex;
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the coarse bucket index for the edge's node
+					__builtin_assume(edge < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+					
+				// Otherwise
+				#else
+				
+					// Get the coarse bucket index for the edge's node
+					__builtin_assume(edgeAndNode.x < NUMBER_OF_EDGES);
+					coarseBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeAndNode.x >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeAndNode.x * 2)) & NODE_MASK) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING;
+				#endif
+				
+				// Get the local next edge index in the local coarse bucket
+				localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerCoarseBucket[coarseBucketIndex], 1);
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if local ID is less than the number of next edge indices
+			if(__builtin_expect(localId < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true)) {
+			
+				// Get all the next edge index in the coarse bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerCoarseBucket[localId], atomic_xchg(&localNumberOfEdgesPerCoarseBucket[localId], 0));
+			}
+			
+			// Synchronize work group
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// Check if this work item's edge survives
+			if(__builtin_expect(edgeSurvives, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edge;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's edge in the coarse bucket
+					coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + nextEdgeIndex[coarseBucketIndex] + localNextEdgeIndex] = edgeAndNode.x;
+				#endif
+			}
+		}
+	}
+#endif
+
+// Update largest coarse bucket size in steps round two
+__kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restrict largestCoarseBucketSize, __global const uint *restrict numberOfEdgesPerCoarseBucket) {
+
+	// Go through all coarse buckets
+	uint currentLargestCoarseBucketSize = 1;
+	for(ushort i = 0; __builtin_expect(i < GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, true); ++i) {
+	
+		// Update the current largest coarse bucket size
+		currentLargestCoarseBucketSize = max(currentLargestCoarseBucketSize, max(numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * 2 + i], numberOfEdgesPerCoarseBucket[i]));
+	}
+	
+	// Set largest coarse bucket size based on the current largest coarse bucket size
+	*largestCoarseBucketSize = ((currentLargestCoarseBucketSize + 2 - 1) / 2 + GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP - 1) / GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP;
+}
+
+// Check if using max RAM for GPU trimming
+#if GPU_TRIMMING_USE_MAX_RAM
+
+	// Fine bucket sort initial edges in steps part one
+	__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * 2 + coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+		}
+		
+		// Check if this work item's other edge exists
+		if(__builtin_expect(edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+		}
+	}
+	
+	// Fine bucket sort initial edges in steps part two
+	__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get group ID
+		const ushort groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		uint2 nodes;
+		uint fineBucketIndex;
+		ushort localNextEdgeIndex;
+		uint2 nodesOther;
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Get this work item's edge's nodes
+			nodes = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndex];
+			
+			// Get the fine bucket index for the edge's node
+			fineBucketIndex = (nodes.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Get this work item's other edge's nodes
+				nodesOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndexOther];
+				
+				// Get the fine bucket index for the other edge's node
+				fineBucketIndexOther = (nodesOther.x >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if local ID is less than the number of next edge indices
+		if(__builtin_expect(localId < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true)) {
+		
+			// Check if the local fine bucket isn't empty
+			const uint localNumberOfEdges = localNumberOfEdgesPerFineBucket[localId];
+			if(__builtin_expect(localNumberOfEdges, true)) {
+			
+				// Get all the next edge index in the fine bucket as a work group
+				nextEdgeIndex[localId] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + localId], localNumberOfEdges);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+		}
+		
+		// Check if this work item's other edge exists
+		if(__builtin_expect(edgeExistsOther, true)) {
+		
+			// Put this work item's edge's nodes in the fine bucket
+			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+		}
+	}
+	
+// Otherwise
+#else
+
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort initial edges in steps part one
+		__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort initial edges in steps part one
+		__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * 2 + coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint node;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				node = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint nodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's node
+				fineBucketIndex = (node >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					nodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's node
+					fineBucketIndexOther = (nodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using more RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MORE_RAM
+			
+				// Put this work item's edge's nodes in the fine bucket
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(node, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK);
+				
+			// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its node in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, node);
+			#endif
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using more RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MORE_RAM
+				
+					// Put this work item's other edge's nodes in the fine bucket
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(nodeOther, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK);
+					
+				// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its node in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, nodeOther);
+				#endif
+			}
+		}
+	}
+	
+	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	
+		// Fine bucket sort initial edges in steps part two
+		__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+		
+	// Otherwise
+	#else
+	
+		// Fine bucket sort initial edges in steps part two
+		__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize, __constant const struct TrimEdgesParameters *restrict trimEdgesParameters) {
+	#endif
+	
+		// Check if work group's edges don't exist
+		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		
+			// Return
+			return;
+		}
+		
+		// Get local ID
+		const ushort localId = get_local_id(0);
+		
+		// Get local size
+		const ushort localSize = get_local_size(0);
+		
+		// Get group ID
+		const uint groupId = get_group_id(0);
+		
+		// Declare local number of edges per fine bucket
+		__local uint localNumberOfEdgesPerFineBucket[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Declare next edge index
+		__local uint nextEdgeIndex[GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION];
+		
+		// Get this work group's coarse bucket index
+		const uint coarseBucketIndex = get_group_id(1);
+		
+		// Get the number of edges in this work group's coarse bucket
+		const uint numberOfEdges = numberOfEdgesPerCoarseBucket[coarseBucketIndex];
+		
+		// Get this work item's coarse edge indices
+		const uint coarseEdgeIndex = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2) + localId;
+		const uint coarseEdgeIndexOther = (uint)GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP * (groupId * 2 + 1) + localId;
+		
+		// Get if this work item's edges exist in the coarse bucket
+		const bool edgeExists = coarseEdgeIndex < numberOfEdges;
+		
+		// Get this work item's edge if it exists
+		const uint edge = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndex * edgeExists];
+		
+		// Get if this work item's edge other exist in the coarse bucket
+		const bool edgeExistsOther = coarseEdgeIndexOther < numberOfEdges;
+		
+		// Get this work item's other edge if it exists
+		const uint edgeOther = coarseBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET) * (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION / 4) + (ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET / 4) * coarseBucketIndex + coarseEdgeIndexOther * edgeExistsOther];
+		
+		// Go through all local number of edges per fine bucket as a work group
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
+		
+			// Set local number of edges per fine bucket to zero
+			localNumberOfEdgesPerFineBucket[i] = 0;
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if not using min RAM for GPU trimming and not using less RAM for GPU trimming
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			
+			// Check if this work item's edge exists
+			uint node;
+			if(__builtin_expect(edgeExists, true)) {
+			
+				// Get edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				node = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) & NODE_MASK;
+			}
+		#endif
+		
+		// Check if this work item's edge exists
+		ushort fineBucketIndex;
+		ushort localNextEdgeIndex;
+		#if !GPU_TRIMMING_USE_MIN_RAM && !GPU_TRIMMING_USE_LESS_RAM
+			uint nodeOther;
+		#endif
+		ushort fineBucketIndexOther;
+		ushort localNextEdgeIndexOther;
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the fine bucket index for the edge's node
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBucketIndex = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				
+			// Otherwise
+			#else
+			
+				// Get the fine bucket index for the edge's node
+				fineBucketIndex = (node >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+			#endif
+			
+			// Get the local next edge index in the local fine bucket
+			localNextEdgeIndex = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndex], 1);
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Get the fine bucket index for the other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBucketIndexOther = (sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+					
+				// Otherwise
+				#else
+				
+					// Get other edge's node
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					nodeOther = sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2)) & NODE_MASK;
+					
+					// Get the fine bucket index for the other edge's node
+					fineBucketIndexOther = (nodeOther >> GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) & GPU_INITIAL_FINE_BUCKET_INDEX_MASK;
+				#endif
+				
+				// Get the other local next edge index in the local fine bucket
+				localNextEdgeIndexOther = atomic_add(&localNumberOfEdgesPerFineBucket[fineBucketIndexOther], 1);
+			}
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Go through all next edge indices as a work group
+		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		
+			// Get the next edge index in the fine bucket
+			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
+		}
+		
+		// Synchronize work group
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// Check if this work item's edge exists
+		if(__builtin_expect(edgeExists, true)) {
+		
+			// Check if using more RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MORE_RAM
+			
+				// Put this work item's edge's nodes in the fine bucket
+				__builtin_assume(edge < NUMBER_OF_EDGES);
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(node, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edge >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edge * 2 + 1)) & NODE_MASK);
+				
+			// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its node in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, node);
+			#endif
+			
+			// Check if this work item's other edge exists
+			if(__builtin_expect(edgeExistsOther, true)) {
+			
+				// Check if using more RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MORE_RAM
+				
+					// Put this work item's other edge's nodes in the fine bucket
+					__builtin_assume(edgeOther < NUMBER_OF_EDGES);
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(nodeOther, sipHash24(trimEdgesParameters->sipHashKeys, ((ulong)(edgeOther >> (sizeof(uint) * BITS_IN_A_BYTE - 1)) << (sizeof(uint) * BITS_IN_A_BYTE)) | (edgeOther * 2 + 1)) & NODE_MASK);
+					
+				// Otherwise check if using min RAM for GPU trimming or using less RAM for GPU trimming
+				#elif GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its node in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, nodeOther);
+				#endif
+			}
+		}
+	}
+#endif
 
 // Check if using max RAM for GPU trimming
 #if GPU_TRIMMING_USE_MAX_RAM
@@ -696,11 +4477,24 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Synchronize work group
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+		// Check if performing GPU fine bucket sorting in two steps
+		#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 		
-		// Get the number of edges in this work group's fine bucket
-		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * fineBucketIndex];
+			
+			// Get the number of edges in this work group's fine bucket
+			const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			
+			// Get the number of edges in this work group's fine bucket
+			const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
+		#endif
 		
 		// Go through all of this work group's edges as a work group
 		for(uint i = localId; __builtin_expect(i < numberOfEdges, true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
@@ -808,21 +4602,44 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
 		
-		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		// Check if performing GPU fine bucket sorting in two steps
+		#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 		
-			// Get the edges in this work group's fine bucket
-			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the edges in this work group's fine bucket
+				__global const uint *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * fineBucketIndex];
+				
+			// Otherwise
+			#else
+			
+				// Get the edges in this work group's fine bucket
+				__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET / 2) * fineBucketIndex];
+			#endif
+			
+			// Get the number of edges in this work group's fine bucket
+			const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 			
 		// Otherwise
 		#else
 		
-			// Get the edges in this work group's fine bucket
-			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Get the edges in this work group's fine bucket
+				__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+				
+			// Otherwise
+			#else
+			
+				// Get the edges in this work group's fine bucket
+				__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET * fineBucketIndex];
+			#endif
+			
+			// Get the number of edges in this work group's fine bucket
+			const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
 		#endif
-		
-		// Get the number of edges in this work group's fine bucket
-		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
 		
 		// Go through all bitmap parts as a work group
 		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
@@ -1106,45 +4923,97 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Check if this work item's edge exists
 	if(__builtin_expect(edgeExists, true)) {
 	
-		// Check if using min RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM
+		// Check if performing GPU fine bucket sorting in two steps
+		#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 		
-			// Put this work item's edge in the fine bucket
-			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
 			
-		// Otherwise check if using less RAM for GPU trimming
-		#elif GPU_TRIMMING_USE_LESS_RAM
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise check if using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_LESS_RAM
+				
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+				
+			// Otherwise
+			#else
 			
-			// Put this work item's edge and its other node in the fine bucket
-			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			#endif
 			
 		// Otherwise
 		#else
 		
-			// Put this work item's edge and its other node in the fine bucket
-			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			// Check if using min RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM
+			
+				// Put this work item's edge in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = edge;
+				
+			// Otherwise check if using less RAM for GPU trimming
+			#elif GPU_TRIMMING_USE_LESS_RAM
+				
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge and its other node in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = (uint2)(edge, otherNode);
+			#endif
 		#endif
 		
 		// Check if this work item's other edge exists
 		if(__builtin_expect(edgeExistsOther, true)) {
 		
-			// Check if using min RAM for GPU trimming
-			#if GPU_TRIMMING_USE_MIN_RAM
+			// Check if performing GPU fine bucket sorting in two steps
+			#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 			
-				// Put this work item's other edge in the fine bucket
-				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+				// Check if using min RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM
 				
-			// Otherwise check if using less RAM for GPU trimming
-			#elif GPU_TRIMMING_USE_LESS_RAM
-			
-				// Put this work item's other edge and its other node in the fine bucket
-				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise check if using less RAM for GPU trimming
+				#elif GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				#endif
 				
 			// Otherwise
 			#else
 			
-				// Put this work item's other edge and its other node in the fine bucket
-				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				// Check if using min RAM for GPU trimming
+				#if GPU_TRIMMING_USE_MIN_RAM
+				
+					// Put this work item's other edge in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = edgeOther;
+					
+				// Otherwise check if using less RAM for GPU trimming
+				#elif GPU_TRIMMING_USE_LESS_RAM
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+					
+				// Otherwise
+				#else
+				
+					// Put this work item's other edge and its other node in the fine bucket
+					fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = (uint2)(edgeOther, otherNodeOther);
+				#endif
 			#endif
 		}
 	}
@@ -1178,23 +5047,49 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	// Get this work group's fine bucket index
 	const ushort fineBucketIndex = get_group_id(0);
 	
-	// Check if using min RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM
+	// Check if performing GPU fine bucket sorting in two steps
+	#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 	
-		// Get the edges in this work group's fine bucket
-		__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
 		
-	// Otherwise check if using less RAM for GPU trimming
-	#elif GPU_TRIMMING_USE_LESS_RAM
-	
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+			// Get the edges in this work group's fine bucket
+			__global const uint *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+			
+		// Otherwise check if using less RAM for GPU trimming
+		#elif GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+		#endif
 		
 	// Otherwise
 	#else
 	
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		// Check if using min RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+			
+		// Otherwise check if using less RAM for GPU trimming
+		#elif GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		#endif
 	#endif
 	
 	// Get the number of edges in this work group's fine bucket
@@ -1469,34 +5364,74 @@ __kernel void fineBucketSortFinalEdges(__global uint2 *restrict fineBuckets, __g
 	// Check if this work item's edge exists
 	if(__builtin_expect(edgeExists, true)) {
 	
-		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		// Check if performing GPU fine bucket sorting in two steps
+		#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 		
-			// Put this work item's edge's nodes in the fine bucket
-			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+			#endif
 			
 		// Otherwise
 		#else
 		
-			// Put this work item's edge's nodes in the fine bucket
-			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndex) + nextEdgeIndex[fineBucketIndex] + localNextEdgeIndex] = nodes;
+			#endif
 		#endif
 	}
 	
 	// Check if this work item's other edge exists
 	if(__builtin_expect(edgeExistsOther, true)) {
 	
-		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
-		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		// Check if performing GPU fine bucket sorting in two steps
+		#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 		
-			// Put this work item's edge's nodes in the fine bucket
-			fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+			#endif
 			
 		// Otherwise
 		#else
 		
-			// Put this work item's edge's nodes in the fine bucket
-			fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+			// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+			#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+				
+			// Otherwise
+			#else
+			
+				// Put this work item's edge's nodes in the fine bucket
+				fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * ((uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + fineBucketIndexOther) + nextEdgeIndex[fineBucketIndexOther] + localNextEdgeIndexOther] = nodesOther;
+			#endif
 		#endif
 	}
 }
@@ -1532,17 +5467,37 @@ __kernel void trimFinalEdges(__global uint2 *restrict coarseBuckets, __global ui
 	// Synchronize work group
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
-	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	// Check if performing GPU fine bucket sorting in two steps
+	#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 	
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+		#endif
 		
 	// Otherwise
 	#else
 	
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		#endif
 	#endif
 	
 	// Get the number of edges in this work group's fine bucket
@@ -1657,17 +5612,37 @@ __kernel void trimFinalEdgesAndTransferEdges(__global uint2 *restrict cpuBuckets
 	// Synchronize work group
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
-	// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
-	#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+	// Check if performing GPU fine bucket sorting in two steps
+	#if GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS
 	
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 4) * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+		#endif
 		
 	// Otherwise
 	#else
 	
-		// Get the edges in this work group's fine bucket
-		__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		// Check if using min RAM for GPU trimming or using less RAM for GPU trimming
+		#if GPU_TRIMMING_USE_MIN_RAM || GPU_TRIMMING_USE_LESS_RAM
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)(GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET / 2) * fineBucketIndex];
+			
+		// Otherwise
+		#else
+		
+			// Get the edges in this work group's fine bucket
+			__global const uint2 *edges = &fineBuckets[(ulong)GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET * fineBucketIndex];
+		#endif
 	#endif
 	
 	// Get the number of edges in this work group's fine bucket
