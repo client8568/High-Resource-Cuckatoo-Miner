@@ -3,7 +3,7 @@
 ### Description
 Cuckatoo miner for Windows, macOS, and Linux based on [Nicolas Flamel's work](https://github.com/NicolasFlamel1) optimized for the [Clang compiler](https://clang.llvm.org/) that supports cuckatoo10 to cuckatoo32.
 
-This program utilizes a system's CPU and GPU together during the mining process to maximize its mining rate without regard for power usage. This is done in a pipelined approach where the GPU performs the initial edge trimming rounds and transfers the remaining edges to the CPU for the next graph while the CPU performs the remaining edge trimming rounds and searches the remaining edges for a solution for the current graph. If a solution is found then the CPU and GPU work together to recover the edges for that solution. This pipelined approach is visualized in the following table. The CPU and GPU stages in a single column in the table ideally take the same amount of time to complete so that neither the CPU or GPU has to wait very long for the other to complete its current stage. The CPU edge searching stage only scales up to four CPU cores in terms of speed, so most of the additional CPU tasks, like socket I/O and BLAKE2b hashing, are performed during that stage since at least one CPU core is unutilized at that time.
+This program utilizes a system's CPU and GPU together during the mining process to maximize its mining rate. This is done in a pipelined approach where the GPU performs the initial edge trimming rounds and transfers the remaining edges to the CPU for the next graph while the CPU performs the remaining edge trimming rounds and searches the remaining edges for a solution for the current graph. If a solution is found then the CPU and GPU work together to recover the edges for that solution. This pipelined approach is visualized in the following table. The CPU and GPU stages in a single column in the table ideally take the same amount of time to complete so that neither the CPU or GPU has to wait very long for the other to complete its current stage. The CPU edge searching stage only scales up to four CPU cores in terms of speed, so most of the additional CPU tasks, like socket I/O and BLAKE2b hashing, are performed during that stage since at least one CPU core is unutilized at that time.
 
 | Time          | →    | →       | →    | →       | →    | →       | Only If Solution Is Found | →    | →       | →    | →        | →   | →       |
 | ------------- | ---- | -------- | ---- | -------- | ---- | -------- | ------------------------- | ---- | -------- | ---- | -------- | ---- | -------- |
@@ -16,29 +16,26 @@ This program utilizes a system's CPU and GPU together during the mining process 
 
 This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 mining. Several settings are available when building this program that can adjust how much VRAM it requires, and the following table shows how those settings affect this program's VRAM requirement and speed of its GPU trimming stage.
 
-| Cuckatoo Variation | Settings                         | VRAM Required | GPU Trimming Speed |
-| ------------------ | -------------------------------- | ------------- | ------------------ |
-| Cuckatoo31         | Default Settings                 | ≈26.215 GB    | 100%               |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈34.461 GB    | ≈104.334%          |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈29.437 GB    | ≈102.811%          |
-| Cuckatoo31         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈21.184 GB    | ≈76.783%           |
-| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈17.965 GB    | ≈64.189%           |
-| Cuckatoo32         | Default Settings                 | ≈51.958 GB    | 100%               |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true`  | ≈68.322 GB    | ≈104.334%          |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true` | ≈58.352 GB    | ≈102.811%          |
-| Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true` | ≈41.990 GB    | ≈76.783%           |
-| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true`  | ≈35.599 GB    | ≈64.189%           |
-
-This program also requires some RAM when running. Several settings are available when building this program that can adjust how much RAM it requires, and the following table shows how those settings affect this program's RAM requirement and speed of its CPU trimming stage.
-
-| Cuckatoo Variation | Settings                          | RAM Required | CPU Trimming Speed |
-| ------------------ | --------------------------------- | ------------ | ------------------ |
-| Cuckatoo31         | Default Settings                  | ≈1.058 GB    | ≈105.455%          |
-| Cuckatoo31         | `CPU_TRIMMING_USE_MAX_RAM=true`   | ≈1.246 GB    | ≈106.278%          |
-| Cuckatoo31         | `CPU_TRIMMING_USE_MORE_RAM=false` | ≈0.230 GB    | 100%               |
-| Cuckatoo32         | Default Settings                  | ≈2.001 GB    | ≈105.455%          |
-| Cuckatoo32         | `CPU_TRIMMING_USE_MAX_RAM=true`   | ≈2.423 GB    | ≈106.278%          |
-| Cuckatoo32         | `CPU_TRIMMING_USE_MORE_RAM=false` | ≈0.392 GB    | 100%               |
+| Cuckatoo Variation | Settings                                                                                     | VRAM Required | GPU Trimming Speed |
+| ------------------ | -------------------------------------------------------------------------------------------- | ------------- | ------------------ |
+| Cuckatoo31         | Default Settings                                                                             | ≈24.903 GB    | 100%               |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈33.149 GB    | ≈104.969%          |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈24.899 GB    | ≈96.171%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false` | ≈28.125 GB    | ≈102.479%          |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`  | ≈19.875 GB    | ≈92.764%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_LESS_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false` | ≈19.872 GB    | ≈78.389%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_LESS_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`  | ≈14.137 GB    | ≈61.211%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈16.653 GB    | ≈66.515%           |
+| Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈12.528 GB    | ≈58.822%           |
+| Cuckatoo32         | Default Settings                                                                             | ≈49.318 GB    | 100%               |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈65.682 GB    | ≈104.969%          |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈49.315 GB    | ≈96.171%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false` | ≈55.712 GB    | ≈102.479%          |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`  | ≈39.344 GB    | ≈93.513%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false` | ≈39.349 GB    | ≈77.355%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_LESS_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`  | ≈27.966 GB    | ≈59.609%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈32.958 GB    | ≈65.092%           |
+| Cuckatoo32         | `GPU_TRIMMING_USE_MIN_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈24.771 GB    | ≈57.221%           |
 
 ### Building
 It's recommended that you build this program on the same system that you'll be running it on since it uses the `-mtune=native` and `-march=native` compiler flags to optimize itself for the current system's available features.
@@ -79,14 +76,14 @@ All of this programs tuning related settings are provided at build time and they
 make EDGE_BITS=32
 ```
 
-* A `GPU_TRIMMING_ROUNDS` setting can be used to set the number of trimming rounds performed by the GPU. This settings affects the GPU trimming speed and GPU transferring speed. The default value for this setting is `5`.
+* A `GPU_TRIMMING_ROUNDS` setting can be used to set the number of trimming rounds performed by the GPU. This settings affects the GPU trimming speed and GPU transferring speed. The default value for this setting is `28`.
 ```
-make GPU_TRIMMING_ROUNDS=5
+make GPU_TRIMMING_ROUNDS=28
 ```
 
-* A `CPU_TRIMMING_ROUNDS` setting can be used to set the number of trimming rounds performed by the CPU. This settings affects the CPU trimming speed and CPU searching speed. The default value for this setting is `335`.
+* A `CPU_TRIMMING_ROUNDS` setting can be used to set the number of trimming rounds performed by the CPU. This settings affects the CPU trimming speed and CPU searching speed. The default value for this setting is `300`.
 ```
-make CPU_TRIMMING_ROUNDS=335
+make CPU_TRIMMING_ROUNDS=300
 ```
 
 * A `SOLUTION_SIZE` setting can be used to set the size of a valid solution. Set this to work with the cryptocurrency that you want to mine. The default value for this setting is `42`.
@@ -229,9 +226,9 @@ make CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=6
 make CPU_TRIMMING_USE_MAX_RAM=false
 ```
 
-* A `CPU_TRIMMING_USE_MORE_RAM` setting can be used to enable using a faster version of CPU trimming that uses more RAM. This settings affects the CPU trimming speed. The default value for this setting is `true`.
+* A `CPU_TRIMMING_USE_MORE_RAM` setting can be used to enable using a faster version of CPU trimming that uses more RAM. This settings affects the CPU trimming speed. The default value for this setting is `false`.
 ```
-make CPU_TRIMMING_USE_MORE_RAM=true
+make CPU_TRIMMING_USE_MORE_RAM=false
 ```
 
 * A `CPU_TRIMMING_VECTOR_SCALE_FACTOR` setting can be used to set the trimming vector scale factor used by the CPU. This settings affects the CPU trimming speed. The default value for this setting is `4`.
@@ -239,14 +236,14 @@ make CPU_TRIMMING_USE_MORE_RAM=true
 make CPU_TRIMMING_VECTOR_SCALE_FACTOR=4
 ```
 
-* A `CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING` setting can be used to set the number of trimming rounds performed by the CPU before it compresses the edges. This settings affects the CPU trimming speed. The default value for this setting is `25`.
+* A `CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING` setting can be used to set the number of trimming rounds performed by the CPU before it compresses the edges. This settings affects the CPU trimming speed. The default value for this setting is `2`.
 ```
-make CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=25
+make CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=2
 ```
 
-* A `CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING` setting can be used to perform CPU searching during GPU trimming. This settings combines the CPU trimming speed and CPU searching speed. The default value for this setting is `true`.
+* A `CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING` setting can be used to perform CPU searching during GPU trimming. This settings combines the CPU trimming speed and CPU searching speed. The default value for this setting is `false`.
 ```
-make CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING=true
+make CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING=false
 ```
 
 * A `GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM` setting can be used to set the number of edges per work item for the GPU recover edges kernel. This settings affects the GPU recovering speed. The default value for this setting is `512`.
@@ -264,9 +261,9 @@ make GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=64
 make GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_RECOVERED_EDGE_CANDIDATES_PER_WORK_ITEM=8
 ```
 
-* A `CPU_RECOVERING_PERCENT` setting can be used to set the percentage of edges recovered by the CPU. This settings affects the CPU recovering speed and GPU recovering speed. The default value for this setting is `0.143`.
+* A `CPU_RECOVERING_PERCENT` setting can be used to set the percentage of edges recovered by the CPU. This settings affects the CPU recovering speed and GPU recovering speed. The default value for this setting is `0.15`.
 ```
-make CPU_RECOVERING_PERCENT=0.143
+make CPU_RECOVERING_PERCENT=0.15
 ```
 
 * A `CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_RECOVERING_BITMAP` setting can be used to set the number of most significant bits used for recovering bitmap by the CPU. This settings affects the CPU recovering speed. The default value for this setting is `18`.
@@ -329,6 +326,11 @@ make DISPLAY_TUNING_TIMES=false
 make RECOVER_EDGES_FOR_EVERY_GRAPH=false
 ```
 
+* A `MINE_TO_A_STRATUM_SERVER` setting can be used to disable connecting to a stratum server. This setting is intended to be used by developers. The default value for this setting is `true`.
+```
+make MINE_TO_A_STRATUM_SERVER=true
+```
+
 * A `DISPLAY_POWER_USAGE` setting can be used to enable displaying the power used while processing each graph. Operating system support for this setting varies, and some operating system require that this program be ran with elevated privileges for this setting to work. The default value for this setting is `true`.
 ```
 make DISPLAY_POWER_USAGE=true
@@ -337,11 +339,6 @@ make DISPLAY_POWER_USAGE=true
 * A `PREVENT_SLEEP` setting can be used to prevent your system from sleeping while this program is running. The default value for this setting is `true`.
 ```
 make PREVENT_SLEEP=true
-```
-
-* A `MINE_TO_A_STRATUM_SERVER` setting can be used to disable connecting to a stratum server. This setting is intended to be used by developers. The default value for this setting is `true`.
-```
-make MINE_TO_A_STRATUM_SERVER=true
 ```
 
 * A `DISPLAY_STRATUM_SERVER_MESSAGES` setting can be used to display all messages sent to and received from the stratum server. This setting is intended to be used by developers. The default value for this setting is `false`.
@@ -379,7 +376,23 @@ make STARTING_HEADER=
 make STOP_AFTER_NUMBER_OF_GRAPHS=0
 ```
 
-This program's default settings are set for cuckatoo32 and should be fine tuned by you on the system that you'll be running it on in order to maximize its performance. If you want to perform cuckatoo31 with it, then building this program with the following settings will give you a good starting point which you'll need to further fine tune on your system to maximize its performance:
+### Preconfigured Settings
+* Mac Studio M1 Ultra (64 GB unified memory, 48 GPU cores) performing cuckatoo31 targeting fast speed (≈2.31 g/s and ≈183W of power per graph):
 ```
-make EDGE_BITS=31 CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=15
+make EDGE_BITS=31 GPU_TRIMMING_ROUNDS=5 CPU_TRIMMING_ROUNDS=275 GPU_TRIMMING_USE_MAX_RAM=true GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=7 GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=8 CPU_TRIMMING_USE_MORE_RAM=true CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=15 CPU_RECOVERING_PERCENT=0.143
+```
+
+* Mac Studio M1 Ultra (64 GB unified memory, 48 GPU cores) performing cuckatoo31 targeting power efficiency (≈1.64 g/s and ≈110W of power per graph):
+```
+make EDGE_BITS=31 GPU_TRIMMING_ROUNDS=70 CPU_TRIMMING_ROUNDS=30 GPU_TRIMMING_USE_MAX_RAM=true GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=7 GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=8 CPU_TRIMMING_USE_MORE_RAM=true CPU_RECOVERING_PERCENT=0.143
+```
+
+* Mac Studio M1 Ultra (64 GB unified memory, 48 GPU cores) performing cuckatoo32 targeting fast speed (≈1.01 g/s and ≈192W of power per graph):
+```
+make GPU_TRIMMING_ROUNDS=5 CPU_TRIMMING_ROUNDS=335 CPU_TRIMMING_USE_MORE_RAM=true CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=25 CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING=true CPU_RECOVERING_PERCENT=0.143
+```
+
+* Mac Studio M1 Ultra (64 GB unified memory, 48 GPU cores) performing cuckatoo32 targeting power efficiency (≈0.86 g/s and ≈133W of power per graph):
+```
+make GPU_TRIMMING_ROUNDS=70 CPU_TRIMMING_ROUNDS=50 CPU_TRIMMING_USE_MORE_RAM=true CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING=true CPU_RECOVERING_PERCENT=0.143
 ```
