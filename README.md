@@ -19,6 +19,7 @@ This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 min
 | Cuckatoo Variation | Settings                                                                                     | VRAM Required | GPU Trimming Speed |
 | ------------------ | -------------------------------------------------------------------------------------------- | ------------- | ------------------ |
 | Cuckatoo31         | Default Settings                                                                             | ≈24.903 GB    | 100%               |
+| Cuckatoo31         | `GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`                                 | ≈16.653 GB    | ≈89.751%           |
 | Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈33.149 GB    | ≈104.969%          |
 | Cuckatoo31         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈24.899 GB    | ≈96.171%           |
 | Cuckatoo31         | `GPU_TRIMMING_USE_MORE_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false` | ≈28.125 GB    | ≈102.479%          |
@@ -28,6 +29,7 @@ This program requires a lot of VRAM when performing cuckatoo31 or cuckatoo32 min
 | Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈16.653 GB    | ≈66.515%           |
 | Cuckatoo31         | `GPU_TRIMMING_USE_MIN_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈12.528 GB    | ≈58.822%           |
 | Cuckatoo32         | Default Settings                                                                             | ≈49.318 GB    | 100%               |
+| Cuckatoo32         | `GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`                                 | ≈32.950 GB    | ≈90.751%           |
 | Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false`  | ≈65.682 GB    | ≈104.969%          |
 | Cuckatoo32         | `GPU_TRIMMING_USE_MAX_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=true`   | ≈49.315 GB    | ≈96.171%           |
 | Cuckatoo32         | `GPU_TRIMMING_USE_MORE_RAM=true GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=false` | ≈55.712 GB    | ≈102.479%          |
