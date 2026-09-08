@@ -933,8 +933,21 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 		// Check if not using an Apple device
 		#ifndef __APPLE__
 		
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Initialize NVIDIA
+				const unique_ptr<remove_pointer_t<HMODULE>, decltype(&FreeLibrary)> library(LoadLibrary(TEXT("nvml.dll")), FreeLibrary);
+				nvidiaInitialized = library && nvmlInit() == NVML_SUCCESS;
+				
+			// Otherwise
+			#else
+			
+				// Initialize NVIDIA
+				nvidiaInitialized = nvmlInit() == NVML_SUCCESS;
+			#endif
+			
 			// Check if initializing NVIDIA was successful
-			nvidiaInitialized = nvmlInit() == NVML_SUCCESS;
 			if(nvidiaInitialized) [[likely]] {
 			
 				// Check if getting GPU's UUID as a string was successful
