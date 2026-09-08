@@ -20,7 +20,6 @@
 	#include <devpkey.h>
 	#include <emi.h>
 	#include <shlwapi.h>
-	#include <tchar.h>
 	#include <cinttypes>
 	
 	// Check if displaying power usage
@@ -1148,18 +1147,18 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 												// Check if getting the device's location info size was successful
 												DEVPROPTYPE locationInfoType;
 												DWORD locationInfoSize;
-												if(!SetupDiGetDeviceProperty(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, nullptr, 0, &locationInfoSize, 0) && GetLastError() == ERROR_INSUFFICIENT_BUFFER && locationInfoType == DEVPROP_TYPE_STRING && locationInfoSize) [[likely]] {
+												if(!SetupDiGetDevicePropertyW(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, nullptr, 0, &locationInfoSize, 0) && GetLastError() == ERROR_INSUFFICIENT_BUFFER && locationInfoType == DEVPROP_TYPE_STRING && locationInfoSize) [[likely]] {
 												
 													// Check if getting the device's location info was successful
-													alignas(TCHAR *) uint8_t locationInfo[locationInfoSize];
-													if(SetupDiGetDeviceProperty(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, locationInfo, locationInfoSize, nullptr, 0) && locationInfoType == DEVPROP_TYPE_STRING) [[likely]] {
+													alignas(WCHAR *) uint8_t locationInfo[locationInfoSize];
+													if(SetupDiGetDevicePropertyW(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, locationInfo, locationInfoSize, nullptr, 0) && locationInfoType == DEVPROP_TYPE_STRING) [[likely]] {
 													
 														// Check if the AMD GPU has the specified PCI bus info
 														uint32_t amdPciDomain = 0;
 														uint32_t amdPciBus;
 														uint32_t amdPciDevice;
 														uint32_t amdPciFunction;
-														if((_stscanf(reinterpret_cast<const TCHAR *>(locationInfo), TEXT("PCI bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32), &amdPciBus, &amdPciDevice, &amdPciFunction) == 3 || _stscanf(reinterpret_cast<const TCHAR *>(locationInfo), TEXT("PCI segment %" SCNu32 " bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32), &amdPciDomain, &amdPciBus, &amdPciDevice, &amdPciFunction) == 4) && gpuPciInfoExists && amdPciDomain == gpuPciDomain && amdPciBus == gpuPciBus && amdPciDevice == gpuPciDevice && amdPciFunction == gpuPciFunction) [[unlikely]] {
+														if((swscanf(reinterpret_cast<const WCHAR *>(locationInfo), L"PCI bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32, &amdPciBus, &amdPciDevice, &amdPciFunction) == 3 || swscanf(reinterpret_cast<const WCHAR *>(locationInfo), L"PCI segment %" SCNu32 " bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32, &amdPciDomain, &amdPciBus, &amdPciDevice, &amdPciFunction) == 4) && gpuPciInfoExists && amdPciDomain == gpuPciDomain && amdPciBus == gpuPciBus && amdPciDevice == gpuPciDevice && amdPciFunction == gpuPciFunction) [[unlikely]] {
 														
 															// Check if getting the AMD GPU's supported metrics was successful and the AMD GPU's power metric is supported
 															IADLXGPUMetricsSupportPtr gpuMetricsSupport;
