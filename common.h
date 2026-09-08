@@ -240,42 +240,26 @@ using namespace std;
 	#define setBufferGuaranteed(buffer, value, size) memset_explicit(buffer, value, size)
 #endif
 
+// SMC user client connection type
+#define SMC_USER_CLIENT_CONNECTION_TYPE 0
+
+// SMC perform operation selector
+#define SMC_PERFORM_OPERATION_SELECTOR 2
+
+// SMC read key operation
+#define SMC_READ_KEY_OPERATION 5
+
+// SMC get key info operation
+#define SMC_GET_KEY_INFO_OPERATION 9
+
 // SMC poll rate
 #define SMC_POLL_RATE 100ms
 
-// SMC selectors
-enum SmcSelectors {
-
-	// Client open
-	kSMCUserClientOpen = 0,
-	
-	// Client close
-	kSMCUserClientClose = 1,
-	
-	// Handle event
-	kSMCHandleYPCEvent = 2,
-	
-	// Read key
-	kSMCReadKey = 5,
-	
-	// Write key
-	kSMCWriteKey = 6,
-	
-	// Key key count
-	kSMCGetKeyCount = 7,
-	
-	// Get key from index
-	kSMCGetKeyFromIndex = 8,
-	
-	// Get key info
-	kSMCGetKeyInfo = 9
-};
+// GPU power poll rate
+#define GPU_POWER_POLL_RATE 100ms
 
 // GNOME inhibit suspending session
 #define GNOME_INHIBIT_SUSPENDING_SESSION (1 << 2)
-
-// GPU power poll rate
-#define GPU_POWER_POLL_RATE 100ms
 
 
 // Structures

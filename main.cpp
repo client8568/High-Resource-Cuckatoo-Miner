@@ -6512,7 +6512,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								
 								// Check if opening connection to the AppleSMC service was successful
 								io_connect_t serviceConnection;
-								if(IOServiceOpen(service, mach_task_self_, 0, &serviceConnection) == KERN_SUCCESS) [[likely]] {
+								if(IOServiceOpen(service, mach_task_self_, SMC_USER_CLIENT_CONNECTION_TYPE, &serviceConnection) == KERN_SUCCESS) [[likely]] {
 								
 									// Automatically close service connection when done
 									const unique_ptr<io_connect_t, void(*)(const io_connect_t *)> serviceConnectionUniquePointer(&serviceConnection, [](const io_connect_t *serviceConnectionPointer) __attribute__((always_inline)) noexcept {
@@ -6529,17 +6529,17 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 										.key = __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("PDTR")),
 										
 										// Data 8
-										.data8 = kSMCGetKeyInfo,
+										.data8 = SMC_GET_KEY_INFO_OPERATION,
 									};
 									
 									// Check if getting the total power key's info was successful and the total power key's info is valid
 									SmcParameters outputParameters;
 									size_t outputParametersSize = sizeof(outputParameters);
 									
-									if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result && outputParameters.keyInfo.dataSize == sizeof(float) && outputParameters.keyInfo.dataType == __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("flt "))) [[likely]] {
+									if(IOConnectCallStructMethod(serviceConnection, SMC_PERFORM_OPERATION_SELECTOR, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result && outputParameters.keyInfo.dataSize == sizeof(float) && outputParameters.keyInfo.dataType == __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("flt "))) [[likely]] {
 									
 										// Set input parameters to read the total power key's value
-										inputParameters.data8 = kSMCReadKey;
+										inputParameters.data8 = SMC_READ_KEY_OPERATION;
 										inputParameters.keyInfo.dataSize = outputParameters.keyInfo.dataSize;
 										
 										// Create power usage thread lock
@@ -6550,7 +6550,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 										while(!closing) [[likely]] {
 										
 											// Check if reading the total power key's value was successful
-											if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
+											if(IOConnectCallStructMethod(serviceConnection, SMC_PERFORM_OPERATION_SELECTOR, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
 											
 												// Get total power key's value
 												const float value = *reinterpret_cast<const float *>(&outputParameters.bytes);
