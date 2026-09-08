@@ -3,6 +3,13 @@ R"(
 
 // Constants
 
+// Check if builtin assume isn't supported
+#if !defined __has_builtin || !__has_builtin(__builtin_assume)
+
+	// Builtin assume
+	#define __builtin_assume(condition); if(!(condition)) __builtin_unreachable();
+#endif
+
 // Bits in a byte
 #define BITS_IN_A_BYTE 8
 
