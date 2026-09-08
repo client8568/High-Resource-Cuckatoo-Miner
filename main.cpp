@@ -5915,13 +5915,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									size_t extensionsSize;
 									if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
 									
-										// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, and it doesn't have a UUID or getting its UUID was successful
+										// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, and getting its extensions if they exist was successful
 										char profile[profileSize];
 										char openClVersion[openClVersionSize];
 										char name[nameSize];
 										char extensions[extensionsSize];
-										cl_uchar uuid[CL_UUID_SIZE_KHR];
-										if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS) && (!extensionsSize || !__builtin_strstr(extensions, "cl_khr_device_uuid") || clGetDeviceInfo(gpus[j], CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)) [[likely]] {
+										if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS)) [[likely]] {
 										
 											// Set applicable GPU exists to true
 											applicableGpuExists = true;
@@ -5936,14 +5935,22 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 												// Check if displaying power usage
 												#if DISPLAY_POWER_USAGE
 												
-													// Check if getting GPU's UUID was successful
-													if(extensionsSize && __builtin_strstr(extensions, "cl_khr_device_uuid")) [[likely]] {
+													// Get GPU's UUID if it exists
+													cl_uchar uuid[CL_UUID_SIZE_KHR];
+													const bool uuidExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_DEVICE_UUID_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS;
+													
+													// Get GPU's PCI bus info if it exists
+													cl_device_pci_bus_info_khr pciBusInfo;
+													const bool pciBusInfoExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_PCI_BUS_INFO_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pciBusInfo), &pciBusInfo, nullptr) == CL_SUCCESS;
+													
+													// Check if GPU's UUID or PCI bus info exist
+													if(uuidExists || pciBusInfoExists) [[likely]] {
 													
 														// Throw error if UUID sizes are invalid
 														static_assert(sizeof(cl_uchar) == sizeof(uint8_t) && alignof(cl_uchar) == alignof(uint8_t) && CL_UUID_SIZE_KHR == UUID_SIZE, "UUID sizes are invalid");
 														
 														// Set energy consumption to monitor the GPU
-														getGpuPowerUsed = energyConsumption.setGpu(uuid);
+														getGpuPowerUsed = energyConsumption.setGpu(uuidExists, uuid, pciBusInfoExists, pciBusInfo.pci_domain, pciBusInfo.pci_bus, pciBusInfo.pci_device, pciBusInfo.pci_function);
 													}
 												#endif
 												

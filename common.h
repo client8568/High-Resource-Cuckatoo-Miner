@@ -573,7 +573,7 @@ class DisableCout final {
 			__attribute__((always_inline)) inline explicit operator bool() const noexcept;
 			
 			// Set GPU
-			__attribute__((always_inline)) inline function<double()> setGpu(const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept;
+			__attribute__((always_inline)) inline function<double()> setGpu(const bool gpuUuidExists [[maybe_unused]], const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE], const bool gpuPciInfoExists [[maybe_unused]], const uint32_t gpuPciDomain [[maybe_unused]], const uint32_t gpuPciBus [[maybe_unused]], const uint32_t gpuPciDevice [[maybe_unused]], const uint32_t gpuPciFunction [[maybe_unused]]) noexcept;
 			
 			// Get total energy consumption
 			__attribute__((always_inline)) inline pair<unsigned long long, unsigned long long> getTotalEnergyConsumption() const noexcept;
@@ -1000,7 +1000,7 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 	}
 	
 	// Energy consumption set GPU
-	__attribute__((always_inline)) inline function<double()> EnergyConsumption::setGpu(const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept {
+	__attribute__((always_inline)) inline function<double()> EnergyConsumption::setGpu(const bool gpuUuidExists [[maybe_unused]], const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE], const bool gpuPciInfoExists [[maybe_unused]], const uint32_t gpuPciDomain [[maybe_unused]], const uint32_t gpuPciBus [[maybe_unused]], const uint32_t gpuPciDevice [[maybe_unused]], const uint32_t gpuPciFunction [[maybe_unused]]) noexcept {
 	
 		// Check if not using an Apple device
 		#ifndef __APPLE__
@@ -1022,9 +1022,9 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 			// Check if initializing NVIDIA was successful
 			if(nvidiaInitialized) [[likely]] {
 			
-				// Check if getting GPU's UUID as a string was successful
+				// Check if GPU's UUID doesn't exist or getting GPU's UUID as a string was successful
 				char uuid[sizeof("GPU-") + HEXADECIMAL_CHARACTER_SIZE * 4 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 6];
-				if(sprintf(uuid, "GPU-%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
+				if(!gpuUuidExists || sprintf(uuid, "GPU-%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
 				
 					// Check if getting the number of NVIDIA GPUs was successful
 					unsigned int numberOfNvidiaGpus;
@@ -1036,9 +1036,10 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 							// Check if getting the NVIDIA GPU was successful
 							if(nvmlDeviceGetHandleByIndex(i, &nvidiaDevice) == NVML_SUCCESS) [[likely]] {
 							
-								// Check if getting the NVIDIA GPU's UUID was successful and the UUIDs match
+								// Check if the NVIDIA GPU has the specified UUID or PCI bus info
 								char nvidiaUuid[NVML_DEVICE_UUID_V2_BUFFER_SIZE];
-								if(nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcasecmp(uuid, nvidiaUuid)) [[unlikely]] {
+								nvmlPciInfo_t nvidiaPciInfo;
+								if((gpuUuidExists && nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcasecmp(uuid, nvidiaUuid)) || (gpuPciInfoExists && nvmlDeviceGetPciInfo(nvidiaDevice, &nvidiaPciInfo) == NVML_SUCCESS && nvidiaPciInfo.domain == gpuPciDomain && nvidiaPciInfo.bus == gpuPciBus && nvidiaPciInfo.device == gpuPciDevice && __builtin_strchr(nvidiaPciInfo.busId, '.') && strtoul(__builtin_strchr(nvidiaPciInfo.busId, '.') + sizeof('.'), nullptr, DECIMAL_NUMBER_BASE) == gpuPciFunction)) [[unlikely]] {
 								
 									// Check if the GPU supports getting its total energy consumption
 									if(nvmlDeviceGetTotalEnergyConsumption(nvidiaDevice, const_cast<unsigned long long *>(&static_cast<const unsigned long long &>(static_cast<unsigned long long>(0)))) == NVML_SUCCESS) [[likely]] {
@@ -1094,9 +1095,9 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 				amdInitialized = amdsmi_init(AMDSMI_INIT_AMD_GPUS) == AMDSMI_STATUS_SUCCESS;
 				if(amdInitialized) [[likely]] {
 				
-					// Check if getting GPU's UUID as a string was successful
+					// Check if GPU's UUID doesn't exist or getting GPU's UUID as a string was successful
 					char uuid[HEXADECIMAL_CHARACTER_SIZE * 4 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 6 + sizeof('\0')];
-					if(sprintf(uuid, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
+					if(!gpuUuidExists || sprintf(uuid, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
 					
 						// Check if getting the number of AMD sockets was successful
 						uint32_t numberOfAmdSockets = 0;
@@ -1120,10 +1121,11 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 											// Go through all of the socket's AMD GPUs
 											for(uint32_t j = 0; j < numberOfAmdGpus; ++j) [[likely]] {
 											
-												// Check if getting the AMD GPU's UUID was successful and the UUIDs match
+												// Check if the AMD GPU has the specified UUID or PCI bus info
 												char amdUuid[AMDSMI_GPU_UUID_SIZE];
 												unsigned int amdUuidSize = sizeof(AMDSMI_GPU_UUID_SIZE);
-												if(amdsmi_get_gpu_device_uuid(amdGpus[j], &amdUuidSize, amdUuid) == AMDSMI_STATUS_SUCCESS && amdUuidSize && !__builtin_strcasecmp(uuid, amdUuid)) [[unlikely]] {
+												uint64_t amdPciInfo;
+												if((gpuUuidExists && amdsmi_get_gpu_device_uuid(amdGpus[j], &amdUuidSize, amdUuid) == AMDSMI_STATUS_SUCCESS && amdUuidSize && !__builtin_strcasecmp(uuid, amdUuid)) || (gpuPciInfoExists && amdsmi_get_gpu_bdf_id(amdGpus[j], &amdPciInfo) == AMDSMI_STATUS_SUCCESS && (amdPciInfo >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) == gpuPciDomain && ((amdPciInfo >> 8) & 0xFF) == gpuPciBus && ((amdPciInfo >> 3) & 0x1F) == gpuPciDevice && (amdPciInfo & 0x7) == gpuPciFunction)) [[unlikely]] {
 												
 													// Set AMD device to the AMD GPU
 													amdDevice = amdGpus[j];
