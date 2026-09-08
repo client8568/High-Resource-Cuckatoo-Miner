@@ -333,7 +333,7 @@ make RECOVER_EDGES_FOR_EVERY_GRAPH=false
 make MINE_TO_A_STRATUM_SERVER=true
 ```
 
-* A `DISPLAY_POWER_USAGE` setting can be used to enable displaying the power used while processing each graph. Operating system support for this setting varies, and some operating system require that this program be ran with elevated privileges for this setting to work. The default value for this setting is `true`.
+* A `DISPLAY_POWER_USAGE` setting can be used to enable displaying the power used while processing each graph. Operating system support for this setting varies, not all hardware is supported, and some operating system require that this program be ran with elevated privileges for this setting to work. The default value for this setting is `true`.
 ```
 make DISPLAY_POWER_USAGE=true
 ```

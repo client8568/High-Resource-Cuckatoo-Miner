@@ -17,14 +17,19 @@
 	#include <ws2tcpip.h>
 	#include <setupapi.h>
 	#include <initguid.h>
+	#include <devpkey.h>
 	#include <emi.h>
 	#include <shlwapi.h>
+	#include <tchar.h>
+	#include <cinttypes>
 	
 	// Check if displaying power usage
 	#if DISPLAY_POWER_USAGE
 	
 		// Header files
 		#include <nvml.h>
+		#include "ADLXHelper/Windows/Cpp/ADLXHelper.h"
+		#include "Include/IPerformanceMonitoring.h"
 	#endif
 	
 // Otherwise check if using an Apple device
@@ -599,8 +604,20 @@ class DisableCout final {
 				// NVIDIA device
 				nvmlDevice_t nvidiaDevice;
 				
-				// Check if not using Windows
-				#ifndef _WIN32
+				// Check if using Windows
+				#ifdef _WIN32
+				
+					// AMD library
+					ADLXHelper amdLibrary;
+					
+					// AMD performance monitoring services
+					IADLXPerformanceMonitoringServicesPtr amdPerformanceMonitoringServices;
+					
+					// AMD device
+					IADLXGPUPtr amdDevice;
+				
+				// Otherwise
+				#else
 				
 					// AMD initialized
 					bool amdInitialized;
@@ -1088,8 +1105,120 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 				nvidiaInitialized = false;
 			}
 			
-			// Check if not using Windows
-			#ifndef _WIN32
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Check if initializing AMD library was successful
+				if(ADLX_SUCCEEDED(amdLibrary.Initialize())) [[likely]] {
+				
+					// Check if getting AMD performance monitoring services was successful
+					if(ADLX_SUCCEEDED(amdLibrary.GetSystemServices()->GetPerformanceMonitoringServices(&amdPerformanceMonitoringServices))) [[likely]] {
+					
+						// Check if getting all AMD GPUs was successful
+						IADLXGPUListPtr amdGpus;
+						if(ADLX_SUCCEEDED(amdLibrary.GetSystemServices()->GetGPUs(&amdGpus))) [[likely]] {
+						
+							// Go through all AMD GPUs
+							for(adlx_uint i = 0; i < amdGpus->Size(); ++i) [[likely]] {
+							
+								// Check if getting the AMD GPU was successful
+								IADLXGPUPtr amdGpu;
+								if(ADLX_SUCCEEDED(amdGpus->At(i, &amdGpu))) [[likely]] {
+								
+									// Check if getting the AMD GPU's plug and play string was successful
+									const char *plugAndPlayString;
+									if(ADLX_SUCCEEDED(amdGpu->PNPString(&plugAndPlayString))) [[likely]] {
+									
+										// Check if getting the device information set for devices with the plug and play string was successful
+										const HDEVINFO deviceInformationSet = SetupDiGetClassDevsA(nullptr, plugAndPlayString, nullptr, DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+										if(deviceInformationSet != INVALID_HANDLE_VALUE) [[likely]] {
+										
+											// Automatically free device information set when done
+											const unique_ptr<remove_pointer_t<HDEVINFO>, decltype(&SetupDiDestroyDeviceInfoList)> deviceInformationSetUniquePointer(deviceInformationSet, SetupDiDestroyDeviceInfoList);
+											
+											// Go through all devices in the information set
+											SP_DEVINFO_DATA device = {
+											
+												// Size
+												.cbSize = sizeof(SP_DEVINFO_DATA)
+											};
+											
+											for(DWORD j = 0; SetupDiEnumDeviceInfo(deviceInformationSet, j, &device); ++j) [[likely]] {
+											
+												// Check if getting the device's location info size was successful
+												DEVPROPTYPE locationInfoType;
+												DWORD locationInfoSize;
+												if(!SetupDiGetDeviceProperty(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, nullptr, 0, &locationInfoSize, 0) && GetLastError() == ERROR_INSUFFICIENT_BUFFER && locationInfoType == DEVPROP_TYPE_STRING && locationInfoSize) [[likely]] {
+												
+													// Check if getting the device's location info was successful
+													alignas(TCHAR *) uint8_t locationInfo[locationInfoSize];
+													if(SetupDiGetDeviceProperty(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, locationInfo, locationInfoSize, nullptr, 0) && locationInfoType == DEVPROP_TYPE_STRING) [[likely]] {
+													
+														// Check if the AMD GPU has the specified PCI bus info
+														uint32_t amdPciDomain = 0;
+														uint32_t amdPciBus;
+														uint32_t amdPciDevice;
+														uint32_t amdPciFunction;
+														if((_stscanf(reinterpret_cast<const TCHAR *>(locationInfo), TEXT("PCI bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32), &amdPciBus, &amdPciDevice, &amdPciFunction) == 3 || _stscanf(reinterpret_cast<const TCHAR *>(locationInfo), TEXT("PCI segment %" SCNu32 " bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32), &amdPciDomain, &amdPciBus, &amdPciDevice, &amdPciFunction) == 4) && gpuPciInfoExists && amdPciDomain == gpuPciDomain && amdPciBus == gpuPciBus && amdPciDevice == gpuPciDevice && amdPciFunction == gpuPciFunction) [[unlikely]] {
+														
+															// Check if getting the AMD GPU's supported metrics was successful and the AMD GPU's power metric is supported
+															IADLXGPUMetricsSupportPtr gpuMetricsSupport;
+															adlx_bool gpuPowerMetricSupported;
+															if(ADLX_SUCCEEDED(amdPerformanceMonitoringServices->GetSupportedGPUMetrics(amdGpu, &gpuMetricsSupport)) && ADLX_SUCCEEDED(gpuMetricsSupport->IsSupportedGPUPower(&gpuPowerMetricSupported)) && gpuPowerMetricSupported) [[likely]] {
+															
+																// Set AMD device to the AMD GPU
+																amdDevice = amdGpu;
+																
+																// Return how to get the GPU's power used
+																return [this]() __attribute__((always_inline)) noexcept -> double {
+																
+																	// Create power used
+																	adlx_double powerUsed = 0;
+																	
+																	// Check if getting all metrics was successful
+																	IADLXAllMetricsPtr allMetrics;
+																	if(ADLX_SUCCEEDED(amdPerformanceMonitoringServices->GetCurrentAllMetrics(&allMetrics))) [[likely]] {
+																	
+																		// Check if getting the GPU's metrics was successful
+																		IADLXGPUMetricsPtr gpuMetrics;
+																		if(ADLX_SUCCEEDED(allMetrics->GetGPUMetrics(amdDevice, &gpuMetrics))) [[likely]] {
+																		
+																			// Get the GPU's power used
+																			gpuMetrics->GPUPower(&powerUsed);
+																		}
+																	}
+																	
+																	// Return power used
+																	return powerUsed;
+																};
+															}
+															
+															// Otherwise
+															else [[unlikely]] {
+															
+																// Terminate AMD library
+																amdLibrary.Terminate();
+																
+																// Return nothing
+																return nullptr;
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				// Terminate AMD library
+				amdLibrary.Terminate();
+				
+			// Otherwise
+			#else
 			
 				// Check if initializing AMD was successful
 				amdInitialized = amdsmi_init(AMDSMI_INIT_AMD_GPUS) == AMDSMI_STATUS_SUCCESS;
