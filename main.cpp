@@ -9204,8 +9204,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 				#endif
 				
-				// Check if displaying tuning times or not mining to a stratum server
-				#if DISPLAY_TUNING_TIMES || !MINE_TO_A_STRATUM_SERVER
+				// Check if displaying tuning times or stopping after a specified number of graphs
+				#if DISPLAY_TUNING_TIMES || STOP_AFTER_NUMBER_OF_GRAPHS != 0
 				
 					// Check if not mining to a stratum server
 					#if !MINE_TO_A_STRATUM_SERVER
