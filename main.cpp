@@ -6,7 +6,6 @@
 #include <condition_variable>
 #include <csignal>
 #include <execution>
-#include <functional>
 #include <getopt.h>
 #include <iomanip>
 #include <iostream>
@@ -4181,139 +4180,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	// Set closing to false
 	static volatile sig_atomic_t closing = false;
 	
-	// Check if displaying power usage
-	#if DISPLAY_POWER_USAGE
-	
-		// Create total power used
-		alignas(hardware_destructive_interference_size) double totalPowerUsed = 0;
-		
-		// Create total power samples
-		alignas(hardware_destructive_interference_size) int totalPowerSamples = 0;
-		
-		// Create overall power used
-		long double overallPowerUsed = 0;
-		
-		// Create CPU recovering threads mutex
-		alignas(hardware_destructive_interference_size) mutex powerUsageThreadMutex;
-		
-		// Create power usage thread lock
-		unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
-		
-		// Check if using an Apple device
-		#ifdef __APPLE__
-		
-			// Create power usage thread
-			thread powerUsageThread([&totalPowerUsed, &totalPowerSamples, &overallPowerUsed, &powerUsageThreadMutex]() __attribute__((always_inline)) noexcept {
-			
-		// Otherwise
-		#else
-		
-			// Create power usage thread
-			thread powerUsageThread([]() __attribute__((always_inline)) noexcept {
-		#endif
-		
-			// Check if using an Apple device
-			#ifdef __APPLE__
-			
-				// Check if setting thread's scheduling priority to low was successful
-				if(!pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0)) [[likely]] {
-				
-					// Check if getting the matching dictionary for the AppleSMC service was successful
-					const CFDictionaryRef serviceMatchingDictionary = IOServiceMatching("AppleSMC");
-					if(serviceMatchingDictionary) [[likely]] {
-					
-						// Check if getting the AppleSMC service was successful
-						const io_service_t service = IOServiceGetMatchingService(kIOMainPortDefault, serviceMatchingDictionary);
-						if(service) [[likely]] {
-						
-							// Automatically free service when done
-							const unique_ptr<const io_service_t, void(*)(const io_service_t *)> serviceUniquePointer(&service, [](const io_service_t *servicePointer) __attribute__((always_inline)) noexcept {
-							
-								// Free service
-								__builtin_assume_dereferenceable(servicePointer, sizeof(*servicePointer));
-								IOObjectRelease(*servicePointer);
-							});
-							
-							// Check if opening connection to the AppleSMC service was successful
-							io_connect_t serviceConnection;
-							if(IOServiceOpen(service, mach_task_self_, 0, &serviceConnection) == KERN_SUCCESS) [[likely]] {
-							
-								// Automatically close service connection when done
-								const unique_ptr<io_connect_t, void(*)(const io_connect_t *)> serviceConnectionUniquePointer(&serviceConnection, [](const io_connect_t *serviceConnectionPointer) __attribute__((always_inline)) noexcept {
-								
-									// Close service connection
-									__builtin_assume_dereferenceable(serviceConnectionPointer, sizeof(*serviceConnectionPointer));
-									IOServiceClose(*serviceConnectionPointer);
-								});
-								
-								// Create input parameters to get the total power key's info
-								SmcParameters inputParameters = {
-								
-									// Key
-									.key = __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("PDTR")),
-									
-									// Data 8
-									.data8 = kSMCGetKeyInfo,
-								};
-								
-								// Check if getting the total power key's info was successful and the total power key's info is valid
-								SmcParameters outputParameters;
-								size_t outputParametersSize = sizeof(outputParameters);
-								
-								if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result && outputParameters.keyInfo.dataSize == sizeof(float) && outputParameters.keyInfo.dataType == __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("flt "))) [[likely]] {
-								
-									// Set input parameters to read the total power key's value
-									inputParameters.data8 = kSMCReadKey;
-									inputParameters.keyInfo.dataSize = outputParameters.keyInfo.dataSize;
-									
-									// Create power usage thread lock
-									unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
-									
-									// Loop while not closing
-									float previousValue = 0;
-									while(!closing) [[likely]] {
-									
-										// Check if reading the total power key's value was successful
-										if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
-										
-											// Get total power key's value
-											const float value = *reinterpret_cast<const float *>(&outputParameters.bytes);
-											
-											// Lock power usage thread lock
-											powerUsageThreadLock.lock();
-											
-											// Update total power used to include the total power key's value
-											totalPowerUsed += value;
-											
-											// Increment total power samples
-											++totalPowerSamples;
-											
-											// Unlock power usage thread lock
-											powerUsageThreadLock.unlock();
-											
-											// Check if the total power key's value was updated
-											if(value != previousValue) [[likely]] {
-											
-												// Update overall power used to include the total power key's value
-												overallPowerUsed += value;
-												
-												// Update previous value
-												previousValue = value;
-											}
-										}
-										
-										// Wait before reading the total power key's value again
-										usleep(SMC_POLL_RATE_MICROSECONDS);
-									}
-								}
-							}
-						}
-					}
-				}
-			#endif
-		});
-	#endif
-	
 	// Check if using signal handler
 	#if USE_SIGNAL_HANDLER
 	
@@ -4356,6 +4222,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				signal(SIGTERM, SIG_DFL);
 			});
 		#endif
+	#endif
+	
+	// Check if displaying power usage
+	#if DISPLAY_POWER_USAGE
+	
+		// Create overall power used
+		long double overallPowerUsed = 0;
 	#endif
 	
 	// Create break loop
@@ -4479,6 +4352,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Break
 				break;
 			}
+			
+			// Check if not using an Apple device
+			#ifndef __APPLE__
+			
+				// Create get GPU power used
+				function<double()> getGpuPowerUsed;
+			#endif
 		#endif
 		
 		// Display message
@@ -6018,7 +5898,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							__builtin_assume(numberOfGpus > 0);
 							for(cl_uint j = 0; j < numberOfGpus; ++j) [[likely]] {
 							
-								// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, name, and vendor
+								// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, and name
 								cl_bool isAvailable;
 								cl_bool isLittleEndian;
 								cl_ulong memorySize;
@@ -6026,18 +5906,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								size_t profileSize;
 								size_t openClVersionSize;
 								size_t nameSize;
-								size_t vendorSize;
 								size_t extensionsSize;
-								if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_VENDOR, 0, nullptr, &vendorSize) == CL_SUCCESS && vendorSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
+								if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
 								
-									// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, getting its vendor, and it doesn't have a UUID or getting its UUID was successful
+									// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, and it doesn't have a UUID or getting its UUID was successful
 									char profile[profileSize];
 									char openClVersion[openClVersionSize];
 									char name[nameSize];
-									char vendor[vendorSize];
 									char extensions[extensionsSize];
 									cl_uchar uuid[CL_UUID_SIZE_KHR];
-									if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && clGetDeviceInfo(gpus[j], CL_DEVICE_VENDOR, vendorSize, vendor, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS) && (!extensionsSize || !__builtin_strstr(extensions, "cl_khr_device_uuid") || clGetDeviceInfo(gpus[j], CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)) [[likely]] {
+									if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS) && (!extensionsSize || !__builtin_strstr(extensions, "cl_khr_device_uuid") || clGetDeviceInfo(gpus[j], CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)) [[likely]] {
 									
 										// Set applicable GPU exists to true
 										applicableGpuExists = true;
@@ -6056,10 +5934,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 												if(extensionsSize && __builtin_strstr(extensions, "cl_khr_device_uuid")) [[likely]] {
 												
 													// Throw error if UUID sizes are invalid
-													static_assert(UUID_SIZE == CL_UUID_SIZE_KHR, "UUID sizes are invalid");
+													static_assert(sizeof(cl_uchar) == sizeof(uint8_t) && alignof(cl_uchar) == alignof(uint8_t) && CL_UUID_SIZE_KHR == UUID_SIZE, "UUID sizes are invalid");
 													
 													// Set energy consumption to monitor the GPU
-													energyConsumption.setGpu(vendor, uuid);
+													getGpuPowerUsed = energyConsumption.setGpu(uuid);
 												}
 											#endif
 											
@@ -6575,6 +6453,192 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		
 		// Display message
 		cout << "Finished acquiring GPU and allocating GPU memory" << endl;
+		
+		// Check if displaying power usage
+		#if DISPLAY_POWER_USAGE
+		
+			// Create total power used
+			alignas(hardware_destructive_interference_size) double totalPowerUsed = 0;
+			
+			// Create total power samples
+			alignas(hardware_destructive_interference_size) int totalPowerSamples = 0;
+			
+			// Create GPU total power used
+			alignas(hardware_destructive_interference_size) double gpuTotalPowerUsed = 0;
+			
+			// Create GPU total power samples
+			alignas(hardware_destructive_interference_size) int gpuTotalPowerSamples = 0;
+			
+			// Create CPU recovering threads mutex
+			alignas(hardware_destructive_interference_size) mutex powerUsageThreadMutex;
+			
+			// Create power usage thread lock
+			unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
+			
+			// Check if using an Apple device
+			#ifdef __APPLE__
+			
+				// Create power usage thread
+				thread powerUsageThread([&overallPowerUsed, &totalPowerUsed, &totalPowerSamples, &powerUsageThreadMutex]() __attribute__((always_inline)) noexcept {
+				
+					// Check if setting thread's scheduling priority to low was successful
+					if(!pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0)) [[likely]] {
+					
+						// Check if getting the matching dictionary for the AppleSMC service was successful
+						const CFDictionaryRef serviceMatchingDictionary = IOServiceMatching("AppleSMC");
+						if(serviceMatchingDictionary) [[likely]] {
+						
+							// Check if getting the AppleSMC service was successful
+							const io_service_t service = IOServiceGetMatchingService(kIOMainPortDefault, serviceMatchingDictionary);
+							if(service) [[likely]] {
+							
+								// Automatically free service when done
+								const unique_ptr<const io_service_t, void(*)(const io_service_t *)> serviceUniquePointer(&service, [](const io_service_t *servicePointer) __attribute__((always_inline)) noexcept {
+								
+									// Free service
+									__builtin_assume_dereferenceable(servicePointer, sizeof(*servicePointer));
+									IOObjectRelease(*servicePointer);
+								});
+								
+								// Check if opening connection to the AppleSMC service was successful
+								io_connect_t serviceConnection;
+								if(IOServiceOpen(service, mach_task_self_, 0, &serviceConnection) == KERN_SUCCESS) [[likely]] {
+								
+									// Automatically close service connection when done
+									const unique_ptr<io_connect_t, void(*)(const io_connect_t *)> serviceConnectionUniquePointer(&serviceConnection, [](const io_connect_t *serviceConnectionPointer) __attribute__((always_inline)) noexcept {
+									
+										// Close service connection
+										__builtin_assume_dereferenceable(serviceConnectionPointer, sizeof(*serviceConnectionPointer));
+										IOServiceClose(*serviceConnectionPointer);
+									});
+									
+									// Create input parameters to get the total power key's info
+									SmcParameters inputParameters = {
+									
+										// Key
+										.key = __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("PDTR")),
+										
+										// Data 8
+										.data8 = kSMCGetKeyInfo,
+									};
+									
+									// Check if getting the total power key's info was successful and the total power key's info is valid
+									SmcParameters outputParameters;
+									size_t outputParametersSize = sizeof(outputParameters);
+									
+									if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result && outputParameters.keyInfo.dataSize == sizeof(float) && outputParameters.keyInfo.dataType == __builtin_bswap32(*reinterpret_cast<const decltype(inputParameters.key) *>("flt "))) [[likely]] {
+									
+										// Set input parameters to read the total power key's value
+										inputParameters.data8 = kSMCReadKey;
+										inputParameters.keyInfo.dataSize = outputParameters.keyInfo.dataSize;
+										
+										// Create power usage thread lock
+										unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
+										
+										// Loop while not closing
+										float previousValue = 0;
+										while(!closing) [[likely]] {
+										
+											// Check if reading the total power key's value was successful
+											if(IOConnectCallStructMethod(serviceConnection, kSMCHandleYPCEvent, &inputParameters, sizeof(inputParameters), &outputParameters, &outputParametersSize) == KERN_SUCCESS && !outputParameters.result) [[likely]] {
+											
+												// Get total power key's value
+												const float value = *reinterpret_cast<const float *>(&outputParameters.bytes);
+												
+												// Lock power usage thread lock
+												powerUsageThreadLock.lock();
+												
+												// Update total power used to include the total power key's value
+												totalPowerUsed += value;
+												
+												// Increment total power samples
+												++totalPowerSamples;
+												
+												// Unlock power usage thread lock
+												powerUsageThreadLock.unlock();
+												
+												// Check if the total power key's value was updated
+												if(value != previousValue) [[likely]] {
+												
+													// Update overall power used to include the total power key's value
+													overallPowerUsed += value;
+													
+													// Update previous value
+													previousValue = value;
+												}
+											}
+											
+											// Wait before reading the total power key's value again
+											this_thread::sleep_for(SMC_POLL_RATE);
+										}
+									}
+								}
+							}
+						}
+					}
+				});
+				
+			// Otherwise
+			#else
+			
+				// Create power usage thread
+				thread powerUsageThread([&getGpuPowerUsed, &gpuTotalPowerUsed, &gpuTotalPowerSamples, &powerUsageThreadMutex]() __attribute__((always_inline)) noexcept {
+				
+					// Check if get GPU power used exists
+					if(getGpuPowerUsed) [[likely]] {
+					
+						// Check if using Windows
+						#ifdef _WIN32
+						
+							// Check if setting thread's scheduling priority to low was successful
+							if(SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL)) [[likely]] {
+							
+						// Otherwise
+						#else
+						
+							// Check if getting thread's scheduling policy failed
+							int schedulingPolicy;
+							sched_param schedulingParameters;
+							if(pthread_getschedparam(pthread_self(), &schedulingPolicy, &schedulingParameters)) [[unlikely]] {
+							
+								// Return
+								return;
+							}
+							
+							// Check if setting thread's scheduling priority to low was successful
+							schedulingParameters.sched_priority = max(schedulingParameters.sched_priority - 1, 0);
+							if(!pthread_setschedparam(pthread_self(), schedulingPolicy, &schedulingParameters)) [[likely]] {
+						#endif
+						
+							// Create power usage thread lock
+							unique_lock powerUsageThreadLock(powerUsageThreadMutex, defer_lock);
+							
+							// Loop while not closing
+							while(!closing) [[likely]] {
+							
+								// Get GPU's power used
+								const double powerUsed = getGpuPowerUsed();
+								
+								// Lock power usage thread lock
+								powerUsageThreadLock.lock();
+								
+								// Update GPU total power used to include the power used
+								gpuTotalPowerUsed += powerUsed;
+								
+								// Increment GPU total power samples
+								++gpuTotalPowerSamples;
+								
+								// Unlock power usage thread lock
+								powerUsageThreadLock.unlock();
+								
+								// Wait before reading the GPU's power used again
+								this_thread::sleep_for(GPU_POWER_POLL_RATE);
+							}
+						}
+					}
+				});
+			#endif
+		#endif
 		
 		// Loop while not closing and an error hasn't occurred
 		do [[likely]] {
@@ -8813,6 +8877,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				totalPowerUsed = 0;
 				totalPowerSamples = 0;
 				
+				// Reset GPU total power used
+				gpuTotalPowerUsed = 0;
+				gpuTotalPowerSamples = 0;
+				
 				// Unlock power usage thread lock
 				powerUsageThreadLock.unlock();
 			#endif
@@ -10505,6 +10573,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						totalPowerSamples = 0;
 					}
 					
+					// Check if GPU total power used was monitored
+					double gpuPowerUsed = 0;
+					if(gpuTotalPowerSamples) [[likely]] {
+						
+						// Get GPU power used
+						gpuPowerUsed = gpuTotalPowerUsed / gpuTotalPowerSamples;
+						
+						// Reset GPU total power used
+						gpuTotalPowerUsed = 0;
+						gpuTotalPowerSamples = 0;
+					}
+					
 					// Unlock power usage thread lock
 					powerUsageThreadLock.unlock();
 				#endif
@@ -10849,6 +10929,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						cout << "GPU used " << ((gpuEnergyConsumed / timeElapsed) / NANOWATTS_IN_A_WATT) << "W of power" << endl;
 					}
 					
+					// Otherwise check if GPU power used was monitored
+					else if(gpuPowerUsed) [[likely]] {
+					
+						// Display message
+						cout << "GPU used " << gpuPowerUsed << "W of power" << endl;
+					}
+					
 					// Check if power used was monitored
 					if(powerUsed) [[likely]] {
 					
@@ -10878,7 +10965,17 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#endif
 			
 		} while(!closing && returnStatus == EXIT_SUCCESS);
-	
+		
+		// Set closing to true
+		closing = true;
+		
+		// Check if displaying power usage
+		#if DISPLAY_POWER_USAGE
+		
+			// Join power usage thread
+			powerUsageThread.join();
+		#endif
+		
 	} while(false);
 	
 	// Close CPU threads
@@ -10920,16 +11017,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	// Check if displaying power usage
 	#if DISPLAY_POWER_USAGE
 	
-		// Check if using an Apple device
-		#ifdef __APPLE__
-		
-			// Send signal to power usage thread to interrupt sleep
-			pthread_kill(powerUsageThread.native_handle(), SIGUSR1);
-		#endif
-		
-		// Join power usage thread
-		powerUsageThread.join();
-		
 		// Check if power used was monitored
 		if(overallPowerUsed) [[likely]] {
 		

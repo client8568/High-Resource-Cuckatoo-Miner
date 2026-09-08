@@ -77,6 +77,7 @@
 #include <charconv>
 #include <cstdint>
 #include <dirent.h>
+#include <functional>
 #include <thread>
 
 using namespace std;
@@ -191,6 +192,9 @@ using namespace std;
 // Picojoules in a nanojoule
 #define PICOJOULES_IN_A_NANOJOULE 1000
 
+// Milliwatts in a watt
+#define MILLIWATTS_IN_A_WATT 1000
+
 // Nanowatts in a watt
 #define NANOWATTS_IN_A_WATT 1000000000
 
@@ -235,8 +239,8 @@ using namespace std;
 	#define setBufferGuaranteed(buffer, value, size) memset_explicit(buffer, value, size)
 #endif
 
-// SMC poll rate microseconds (SMC values are updated every 500ms, so poll at twice that rate)
-#define SMC_POLL_RATE_MICROSECONDS (250 * MICROSECONDS_IN_A_MILLISECOND)
+// SMC poll rate
+#define SMC_POLL_RATE 100ms
 
 // SMC selectors
 enum SmcSelectors {
@@ -268,6 +272,9 @@ enum SmcSelectors {
 
 // GNOME inhibit suspending session
 #define GNOME_INHIBIT_SUSPENDING_SESSION (1 << 2)
+
+// GPU power poll rate
+#define GPU_POWER_POLL_RATE 100ms
 
 
 // Structures
@@ -559,7 +566,7 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 			__attribute__((always_inline)) inline explicit operator bool() const noexcept;
 			
 			// Set GPU
-			__attribute__((always_inline)) inline void setGpu(const char *vendor [[maybe_unused]], const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept;
+			__attribute__((always_inline)) inline function<double()> setGpu(const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept;
 			
 			// Get total energy consumption
 			__attribute__((always_inline)) inline pair<unsigned long long, unsigned long long> getTotalEnergyConsumption() const noexcept;
@@ -921,60 +928,78 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 	}
 	
 	// Energy consumption set GPU
-	__attribute__((always_inline)) inline void EnergyConsumption::setGpu(const char *vendor [[maybe_unused]], const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept {
+	__attribute__((always_inline)) inline function<double()> EnergyConsumption::setGpu(const uint8_t gpuUuid [[maybe_unused]] [UUID_SIZE]) noexcept {
 	
 		// Check if not using an Apple device
 		#ifndef __APPLE__
 		
-			// Check if using Windows
-			#ifdef _WIN32
+			// Check if initializing NVIDIA was successful
+			nvidiaInitialized = nvmlInit() == NVML_SUCCESS;
+			if(nvidiaInitialized) [[likely]] {
 			
-				// Check if GPU is a NVIDIA GPU
-				if(StrStrIA(vendor, "NVIDIA")) [[likely]] {
+				// Check if getting GPU's UUID as a string was successful
+				char uuid[sizeof("GPU-") + HEXADECIMAL_CHARACTER_SIZE * 4 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 6];
+				if(sprintf(uuid, "GPU-%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
 				
-			// Otherwise
-			#else
-			
-				// Check if GPU is a NVIDIA GPU
-				if(strcasestr(vendor, "NVIDIA")) [[likely]] {
-			#endif
-			
-				// Check if initializing NVIDIA was successful
-				nvidiaInitialized = nvmlInit() == NVML_SUCCESS;
-				if(nvidiaInitialized) [[likely]] {
-				
-					// Check if getting GPU's UUID as a string was successful
-					char uuid[sizeof("GPU-") + HEXADECIMAL_CHARACTER_SIZE * 4 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 2 + sizeof('-') + HEXADECIMAL_CHARACTER_SIZE * 6];
-					if(sprintf(uuid, "GPU-%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", gpuUuid[0], gpuUuid[1], gpuUuid[2], gpuUuid[3], gpuUuid[4], gpuUuid[5], gpuUuid[6], gpuUuid[7], gpuUuid[8], gpuUuid[9], gpuUuid[10], gpuUuid[11], gpuUuid[12], gpuUuid[13], gpuUuid[14], gpuUuid[15]) == sizeof(uuid) - sizeof('\0')) [[likely]] {
+					// Check if getting the number of NVIDIA GPUs was successful
+					unsigned int numberOfNvidiaGpus;
+					if(nvmlDeviceGetCount(&numberOfNvidiaGpus) == NVML_SUCCESS) [[likely]] {
 					
-						// Check if getting the number of NVIDIA GPUs was successful
-						unsigned int numberOfNvidiaGpus;
-						if(nvmlDeviceGetCount(&numberOfNvidiaGpus) == NVML_SUCCESS) [[likely]] {
+						// Go through all NVIDIA GPUs
+						for(unsigned int i = 0; i < numberOfNvidiaGpus; ++i) [[likely]] {
 						
-							// Go through all NVIDIA GPUs
-							for(unsigned int i = 0; i < numberOfNvidiaGpus; ++i) [[likely]] {
+							// Check if getting the NVIDIA GPU was successful
+							if(nvmlDeviceGetHandleByIndex(i, &nvidiaDevice) == NVML_SUCCESS) [[likely]] {
 							
-								// Check if getting the NVIDIA GPU was successful
-								if(nvmlDeviceGetHandleByIndex(i, &nvidiaDevice) == NVML_SUCCESS) [[likely]] {
+								// Check if getting the NVIDIA GPU's UUID was successful and the UUIDs match
+								char nvidiaUuid[NVML_DEVICE_UUID_V2_BUFFER_SIZE];
+								if(nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcasecmp(uuid, nvidiaUuid)) [[unlikely]] {
 								
-									// Check if getting the NVIDIA GPU's UUID was successful and the UUIDs match
-									char nvidiaUuid[NVML_DEVICE_UUID_V2_BUFFER_SIZE];
-									if(nvmlDeviceGetUUID(nvidiaDevice, nvidiaUuid, sizeof(nvidiaUuid)) == NVML_SUCCESS && !__builtin_strcasecmp(uuid, nvidiaUuid)) [[unlikely]] {
+									// Check if the GPU supports getting its total energy consumption
+									if(nvmlDeviceGetTotalEnergyConsumption(nvidiaDevice, const_cast<unsigned long long *>(&static_cast<const unsigned long long &>(static_cast<unsigned long long>(0)))) == NVML_SUCCESS) [[likely]] {
 									
-										// Return
-										return;
+										// Return nothing
+										return nullptr;
+									}
+									
+									// Otherwise check if the GPU supports getting its power usage
+									else if(nvmlDeviceGetPowerUsage(nvidiaDevice, const_cast<unsigned int *>(&static_cast<const unsigned int &>(static_cast<unsigned int>(0)))) == NVML_SUCCESS) [[likely]] {
+									
+										// Return how to get the GPU's power used
+										return [this]() __attribute__((always_inline)) noexcept -> double {
+										
+											// Get the GPU's power used
+											unsigned int powerUsed = 0;
+											nvmlDeviceGetPowerUsage(nvidiaDevice, &powerUsed);
+											
+											// Return power used in correct units
+											return static_cast<double>(powerUsed) / MILLIWATTS_IN_A_WATT;
+										};
+									}
+									
+									// Otherwise
+									else [[unlikely]] {
+									
+										// Shutdown NVIDIA
+										nvmlShutdown();
+										
+										// Set that NVIDIA isn't initialized
+										nvidiaInitialized = false;
+										
+										// Return nothing
+										return nullptr;
 									}
 								}
 							}
 						}
 					}
-					
-					// Shutdown NVIDIA
-					nvmlShutdown();
-					
-					// Set that NVIDIA isn't initialized
-					nvidiaInitialized = false;
 				}
+				
+				// Shutdown NVIDIA
+				nvmlShutdown();
+				
+				// Set that NVIDIA isn't initialized
+				nvidiaInitialized = false;
 			}
 			
 			// Check if not using Windows
@@ -1018,8 +1043,40 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 													// Set AMD device to the AMD GPU
 													amdDevice = amdGpus[j];
 													
-													// Return
-													return;
+													// Check if the GPU supports getting its total energy consumption
+													if(amdsmi_get_energy_count(amdDevice, const_cast<uint64_t *>(&static_cast<const uint64_t &>(static_cast<uint64_t>(0))), const_cast<float *>(&static_cast<const float &>(static_cast<float>(0))), const_cast<uint64_t *>(&static_cast<const uint64_t &>(static_cast<uint64_t>(0)))) == AMDSMI_STATUS_SUCCESS) [[likely]] {
+													
+														// Return nothing
+														return nullptr;
+													}
+													
+													// Otherwise check if the GPU supports getting its power usage
+													else if(amdsmi_get_power_info(amdDevice, const_cast<amdsmi_power_info_t *>(&static_cast<const amdsmi_power_info_t &>(amdsmi_power_info_t()))) == AMDSMI_STATUS_SUCCESS) [[likely]] {
+													
+														// Return how to get the GPU's power used
+														return [this]() __attribute__((always_inline)) noexcept -> double {
+														
+															// Get the GPU's power info
+															amdsmi_power_info_t powerInfo = {};
+															amdsmi_get_power_info(amdDevice, &powerInfo);
+															
+															// Return power used
+															return powerInfo.socket_power;
+														};
+													}
+													
+													// Otherwise
+													else [[unlikely]] {
+													
+														// Shutdown AMD
+														amdsmi_shut_down();
+														
+														// Set that AMD isn't initialized
+														amdInitialized = false;
+														
+														// Return nothing
+														return nullptr;
+													}
 												}
 											}
 										}
@@ -1037,6 +1094,9 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 				}
 			#endif
 		#endif
+		
+		// Return nothing
+		return nullptr;
 	}
 	
 	// Energy consumption get total energy consumption
