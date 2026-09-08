@@ -5881,71 +5881,81 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 				
-				// Go through all OpenCL platforms while a GPU context hasn't been created
+				// Create block
 				bool applicableGpuExists = false;
-				__builtin_assume(numberOfOpenClPlatforms > 0);
-				for(cl_uint i = 0; i < numberOfOpenClPlatforms && !gpuContext; ++i) [[likely]] {
+				{
 				
-					// Check if getting OpenCL platform's number of GPUs was successful and GPUs exist
-					cl_uint numberOfGpus;
-					if(clGetDeviceIDs(openClPlatforms[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &numberOfGpus) == CL_SUCCESS && numberOfGpus) [[likely]] {
+					// Disable cout
+					DisableCout disableCout;
 					
-						// Check if getting OpenCL platform's GPUs was successful
-						cl_device_id gpus[numberOfGpus];
-						if(clGetDeviceIDs(openClPlatforms[i], CL_DEVICE_TYPE_GPU, numberOfGpus, gpus, nullptr) == CL_SUCCESS) [[likely]] {
+					// Go through all OpenCL platforms while a GPU context hasn't been created
+					__builtin_assume(numberOfOpenClPlatforms > 0);
+					for(cl_uint i = 0; i < numberOfOpenClPlatforms && !gpuContext; ++i) [[likely]] {
+					
+						// Check if getting OpenCL platform's number of GPUs was successful and GPUs exist
+						cl_uint numberOfGpus;
+						if(clGetDeviceIDs(openClPlatforms[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &numberOfGpus) == CL_SUCCESS && numberOfGpus) [[likely]] {
 						
-							// Go through all of the GPUs
-							__builtin_assume(numberOfGpus > 0);
-							for(cl_uint j = 0; j < numberOfGpus; ++j) [[likely]] {
+							// Check if getting OpenCL platform's GPUs was successful
+							cl_device_id gpus[numberOfGpus];
+							if(clGetDeviceIDs(openClPlatforms[i], CL_DEVICE_TYPE_GPU, numberOfGpus, gpus, nullptr) == CL_SUCCESS) [[likely]] {
 							
-								// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, and name
-								cl_bool isAvailable;
-								cl_bool isLittleEndian;
-								cl_ulong memorySize;
-								cl_ulong workGroupMemorySize;
-								size_t profileSize;
-								size_t openClVersionSize;
-								size_t nameSize;
-								size_t extensionsSize;
-								if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
+								// Go through all of the GPUs
+								__builtin_assume(numberOfGpus > 0);
+								for(cl_uint j = 0; j < numberOfGpus; ++j) [[likely]] {
 								
-									// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, and it doesn't have a UUID or getting its UUID was successful
-									char profile[profileSize];
-									char openClVersion[openClVersionSize];
-									char name[nameSize];
-									char extensions[extensionsSize];
-									cl_uchar uuid[CL_UUID_SIZE_KHR];
-									if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS) && (!extensionsSize || !__builtin_strstr(extensions, "cl_khr_device_uuid") || clGetDeviceInfo(gpus[j], CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)) [[likely]] {
+									// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, and name
+									cl_bool isAvailable;
+									cl_bool isLittleEndian;
+									cl_ulong memorySize;
+									cl_ulong workGroupMemorySize;
+									size_t profileSize;
+									size_t openClVersionSize;
+									size_t nameSize;
+									size_t extensionsSize;
+									if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
 									
-										// Set applicable GPU exists to true
-										applicableGpuExists = true;
+										// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, and it doesn't have a UUID or getting its UUID was successful
+										char profile[profileSize];
+										char openClVersion[openClVersionSize];
+										char name[nameSize];
+										char extensions[extensionsSize];
+										cl_uchar uuid[CL_UUID_SIZE_KHR];
+										if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS) && (!extensionsSize || !__builtin_strstr(extensions, "cl_khr_device_uuid") || clGetDeviceInfo(gpus[j], CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)) [[likely]] {
 										
-										// Check if creating a context for the current GPU was successful
-										gpuContext = unique_ptr<remove_pointer_t<cl_context>, decltype(&clReleaseContext)>(clCreateContext((const cl_context_properties[]){CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(openClPlatforms[i]), 0}, 1, &gpus[j], nullptr, nullptr, nullptr), clReleaseContext);
-										if(gpuContext) [[likely]] {
-										
-											// Set GPU to the current GPU
-											gpu = gpus[j];
+											// Set applicable GPU exists to true
+											applicableGpuExists = true;
 											
-											// Check if displaying power usage
-											#if DISPLAY_POWER_USAGE
+											// Check if creating a context for the current GPU was successful
+											gpuContext = unique_ptr<remove_pointer_t<cl_context>, decltype(&clReleaseContext)>(clCreateContext((const cl_context_properties[]){CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(openClPlatforms[i]), 0}, 1, &gpus[j], nullptr, nullptr, nullptr), clReleaseContext);
+											if(gpuContext) [[likely]] {
 											
-												// Check if getting GPU's UUID was successful
-												if(extensionsSize && __builtin_strstr(extensions, "cl_khr_device_uuid")) [[likely]] {
+												// Set GPU to the current GPU
+												gpu = gpus[j];
 												
-													// Throw error if UUID sizes are invalid
-													static_assert(sizeof(cl_uchar) == sizeof(uint8_t) && alignof(cl_uchar) == alignof(uint8_t) && CL_UUID_SIZE_KHR == UUID_SIZE, "UUID sizes are invalid");
+												// Check if displaying power usage
+												#if DISPLAY_POWER_USAGE
+												
+													// Check if getting GPU's UUID was successful
+													if(extensionsSize && __builtin_strstr(extensions, "cl_khr_device_uuid")) [[likely]] {
 													
-													// Set energy consumption to monitor the GPU
-													getGpuPowerUsed = energyConsumption.setGpu(uuid);
-												}
-											#endif
-											
-											// Display message
-											cout << "Using the " << name << " GPU" << endl;
-											
-											// Break
-											break;
+														// Throw error if UUID sizes are invalid
+														static_assert(sizeof(cl_uchar) == sizeof(uint8_t) && alignof(cl_uchar) == alignof(uint8_t) && CL_UUID_SIZE_KHR == UUID_SIZE, "UUID sizes are invalid");
+														
+														// Set energy consumption to monitor the GPU
+														getGpuPowerUsed = energyConsumption.setGpu(uuid);
+													}
+												#endif
+												
+												// Enable cout
+												disableCout.enable();
+												
+												// Display message
+												cout << "Using the " << name << " GPU" << endl;
+												
+												// Break
+												break;
+											}
 										}
 									}
 								}

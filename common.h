@@ -79,6 +79,7 @@
 #include <dirent.h>
 #include <functional>
 #include <thread>
+#include <unistd.h>
 
 using namespace std;
 
@@ -476,6 +477,28 @@ template<const string_view *strings, const size_t numberOfStrings> class concate
 		static constexpr const char *value = buffer.data();
 };
 
+// Disable cout class
+class DisableCout final {
+
+	// Public
+	public:
+	
+		// Constructor
+		__attribute__((always_inline)) inline explicit DisableCout() noexcept;
+		
+		// Destructor
+		__attribute__((always_inline)) inline ~DisableCout() noexcept;
+		
+		// Enable
+		__attribute__((always_inline)) inline void enable() noexcept;
+		
+	// Private
+	private:
+	
+		// Original output
+		int originalOutput;
+};
+
 // Check if preventing sleep
 #if PREVENT_SLEEP
 
@@ -657,6 +680,71 @@ __attribute__((always_inline)) static inline unsigned int getNumberOfHighPerform
 
 
 // Supporting function implementation
+
+// Disable cout constructor
+__attribute__((always_inline)) inline DisableCout::DisableCout() noexcept {
+
+	// Flush output
+	fflush(stdout);
+	
+	// Check if using Windows
+	#ifdef _WIN32
+	
+		// Check if saving output was successful
+		originalOutput = _dup(STDOUT_FILENO);
+		if(originalOutput != -1) [[likely]] {
+		
+			// Disable output
+			freopen("nul", "w", stdout);
+		}
+		
+	// Otherwise
+	#else
+	
+		// Check if saving output was successful
+		originalOutput = dup(STDOUT_FILENO);
+		if(originalOutput != -1) [[likely]] {
+		
+			// Disable output
+			freopen("/dev/null", "w", stdout);
+		}
+	#endif
+}
+
+// Disable cout destructor
+__attribute__((always_inline)) inline DisableCout::~DisableCout() noexcept {
+
+	// Enable
+	enable();
+}
+
+// Disable cout enable
+__attribute__((always_inline)) inline void DisableCout::enable() noexcept {
+
+	// Check if output was saved
+	if(originalOutput != -1) [[likely]] {
+	
+		// Flush output
+		fflush(stdout);
+		
+		// Check if using Windows
+		#ifdef _WIN32
+		
+			// Enable output
+			_dup2(originalOutput, STDOUT_FILENO);
+			
+		// Otherwise
+		#else
+		
+			// Enable output
+			dup2(originalOutput, STDOUT_FILENO);
+		#endif
+		
+		// Set that output wasn't saved
+		close(originalOutput);
+		originalOutput = -1;
+	}
+}
 
 // Check if preventing sleep
 #if PREVENT_SLEEP
