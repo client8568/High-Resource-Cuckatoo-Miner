@@ -325,7 +325,7 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./rocm-systems" "./v1.5.tar.gz" "./ADLX-1.5" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./v1.5.tar.gz" "./ADLX-1.5" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
@@ -376,31 +376,34 @@ linuxDependencies:
 	rm -r "./cuda"
 	
 	# AMD System Management Interface (https://github.com/ROCm/rocm-systems/tree/develop/projects/amdsmi)
-	rm -rf "./rocm-systems" "./amdsmi"
-	git clone --filter=blob:none --sparse "https://github.com/ROCm/rocm-systems.git"
-	git -C rocm-systems sparse-checkout set "projects/amdsmi"
-	sed -i 's/add_subdirectory(goamdsmi_shim)//g' "./rocm-systems/projects/amdsmi/CMakeLists.txt"
-	sed -i 's/-msse -msse2//g' "./rocm-systems/projects/amdsmi/CMakeLists.txt"
-	cd "./rocm-systems/projects/amdsmi" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/rocm-systems/projects/amdsmi/dist/linux/x86_64" -DCMAKE_CXX_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
+	rm -rf "./amdsmi.tar.gz" "./therock" "./amdsmi"
+	wget "https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/amdsmi.tar.gz"
+	mkdir "./therock"
+	tar -xf "./amdsmi.tar.gz" -C "./therock" --strip-components=1
+	rm "./amdsmi.tar.gz"
+	sed -i 's/add_subdirectory(goamdsmi_shim)//g' "./therock/CMakeLists.txt"
+	sed -i 's/-msse -msse2//g' "./therock/CMakeLists.txt"
+	sudo apt install -y libc++-dev libdbus-1-dev libnl-3-dev libnl-genl-3-dev libmnl-dev libdrm-dev libdrm-amdgpu1
+	cd "./therock" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/therock/dist/linux/x86_64" -DCMAKE_C_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=x86_64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
 	sudo dpkg --add-architecture arm64
 	sudo apt update
-	sudo apt install -y libc++-dev:arm64
-	cd "./rocm-systems/projects/amdsmi" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/rocm-systems/projects/amdsmi/dist/linux/aarch64" -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
-	sudo apt install -y libc++-dev
+	sudo apt install -y libc++-dev:arm64 libdbus-1-dev:arm64 libnl-3-dev:arm64 libnl-genl-3-dev:arm64 libmnl-dev:arm64 libdrm-dev:arm64 libdrm-amdgpu1:arm64
+	cd "./therock" && rm -f "./CMakeCache.txt" && PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig" PKG_CONFIG_LIBDIR="/usr/lib/aarch64-linux-gnu" PKG_CONFIG_SYSROOT_DIR="/" cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/therock/dist/linux/aarch64" -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_CXX_COMPILER="$(shell echo $(CC))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" -DCMAKE_CXX_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\" -stdlib=libc++" -DENABLE_ESMI_LIB=OFF -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF "./CMakeLists.txt" && make && make install && make clean
 	mkdir -p "./amdsmi/include/amd_smi"
-	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/include/amd_smi/amdsmi.h" "./amdsmi/include/amd_smi"
-	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/share/doc/amd-smi-lib/LICENSE.txt" "./amdsmi/LICENSE"
+	mv "./therock/dist/linux/x86_64/include/amd_smi/amdsmi.h" "./amdsmi/include/amd_smi"
+	mv "./therock/dist/linux/x86_64/share/doc/amd-smi-lib/LICENSE.txt" "./amdsmi/LICENSE"
 	mkdir -p "./amdsmi/dist/linux/x86_64/lib"
-	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/lib/libamd_smi.a" "./amdsmi/dist/linux/x86_64/lib"
+	mv "./therock/dist/linux/x86_64/lib/libamd_smi.a" "./amdsmi/dist/linux/x86_64/lib"
 	x86_64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/x86_64/lib/libamd_smi.a"
-	mv "./rocm-systems/projects/amdsmi/dist/linux/x86_64/lib/libamdsminic.a" "./amdsmi/dist/linux/x86_64/lib"
+	mv "./therock/dist/linux/x86_64/lib/libamdsminic.a" "./amdsmi/dist/linux/x86_64/lib"
 	x86_64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/x86_64/lib/libamdsminic.a"
 	mkdir -p "./amdsmi/dist/linux/aarch64/lib"
-	mv "./rocm-systems/projects/amdsmi/dist/linux/aarch64/lib/libamd_smi.a" "./amdsmi/dist/linux/aarch64/lib"
+	mv "./therock/dist/linux/aarch64/lib/libamd_smi.a" "./amdsmi/dist/linux/aarch64/lib"
 	aarch64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/aarch64/lib/libamd_smi.a"
-	mv "./rocm-systems/projects/amdsmi/dist/linux/aarch64/lib/libamdsminic.a" "./amdsmi/dist/linux/aarch64/lib"
+	mv "./therock/dist/linux/aarch64/lib/libamdsminic.a" "./amdsmi/dist/linux/aarch64/lib"
 	aarch64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/aarch64/lib/libamdsminic.a"
-	rm -rf "./rocm-systems"
+	rm -r "./therock"
+	sudo apt install -y libc++-dev libdbus-1-dev libnl-3-dev libnl-genl-3-dev libmnl-dev libdrm-dev libdrm-amdgpu1
 	
 # Make Apple dependencies (This command works when using macOS: make appleDependencies)
 appleDependencies:
