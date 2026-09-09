@@ -6622,8 +6622,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								return;
 							}
 							
+							// Check if getting the min priority for the thread's scheduling policy failed
+							const int minSchedulingPriority = sched_get_priority_min(schedulingPolicy);
+							if(minSchedulingPriority == -1) [[unlikely]] {
+							
+								// Return
+								return;
+							}
+							
 							// Check if setting thread's scheduling priority to low was successful
-							schedulingParameters.sched_priority = max(schedulingParameters.sched_priority - 1, 0);
+							schedulingParameters.sched_priority = max(schedulingParameters.sched_priority - 1, minSchedulingPriority);
 							if(!pthread_setschedparam(pthread_self(), schedulingPolicy, &schedulingParameters)) [[likely]] {
 						#endif
 						
