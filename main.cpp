@@ -4252,55 +4252,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		setBufferGuaranteed(cpuTrimmingThreadsCompressedLookupTableFirstPartition.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_FIRST_PARTITION);
 		setBufferGuaranteed(cpuTrimmingThreadsCompressedLookupTableSecondPartition.get(), 0, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * CPU_NUMBER_OF_ITEMS_PER_COMPRESSED_LOOKUP_TABLE_SECOND_PARTITION);
 		
-		// Check if using signal handler
-		#if USE_SIGNAL_HANDLER
-		
-			// Check if using Windows
-			#ifdef _WIN32
-			
-				// Check if setting interrupt signal handler failed
-				if(signal(SIGINT, [](const int signal) __attribute__((always_inline)) noexcept {
-				
-					// Check if interrupt signal occurred
-					if(signal == SIGINT) [[likely]] {
-					
-						// Set closing to true
-						closing = true;
-					}
-					
-				}) == SIG_ERR) [[unlikely]] {
-				
-					// Display message
-					cout << "Setting interrupt signal handler failed" << endl;
-					
-					// Break
-					break;
-				}
-				
-			// Otherwise
-			#else
-			
-				// Check if setting interrupt signal handler failed
-				if(sigaction(SIGINT, &signalAction, nullptr) || sigaction(SIGTERM, &signalAction, nullptr)) [[unlikely]] {
-				
-					// Display message
-					cout << "Setting interrupt signal handler failed" << endl;
-					
-					// Break
-					break;
-				}
-			#endif
-		#endif
-		
-		// Check if setting this CPU thread's priority and affinity failed
-		if(!setThreadPriorityAndAffinity(numberOfHighPerformanceCpuCores - 1)) [[unlikely]] {
-		
-			// Display message
-			cout << "Setting thread's priority and affinity failed" << endl;
-			
-			// Break
-			break;
-		}
+		// Display message
+		cout << "Finished creating CPU threads and allocating CPU memory" << endl;
 		
 		// Check if preventing sleep
 		#if PREVENT_SLEEP
@@ -4360,9 +4313,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				function<double()> getGpuPowerUsed;
 			#endif
 		#endif
-		
-		// Display message
-		cout << "Finished creating CPU threads and allocating CPU memory" << endl;
 		
 		// Display message
 		cout << "Acquiring GPU" << endl;
@@ -6664,6 +6614,56 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				});
 			#endif
 		#endif
+		
+		// Check if using signal handler
+		#if USE_SIGNAL_HANDLER
+		
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Check if setting interrupt signal handler failed
+				if(signal(SIGINT, [](const int signal) __attribute__((always_inline)) noexcept {
+				
+					// Check if interrupt signal occurred
+					if(signal == SIGINT) [[likely]] {
+					
+						// Set closing to true
+						closing = true;
+					}
+					
+				}) == SIG_ERR) [[unlikely]] {
+				
+					// Display message
+					cout << "Setting interrupt signal handler failed" << endl;
+					
+					// Break
+					break;
+				}
+				
+			// Otherwise
+			#else
+			
+				// Check if setting interrupt signal handler failed
+				if(sigaction(SIGINT, &signalAction, nullptr) || sigaction(SIGTERM, &signalAction, nullptr)) [[unlikely]] {
+				
+					// Display message
+					cout << "Setting interrupt signal handler failed" << endl;
+					
+					// Break
+					break;
+				}
+			#endif
+		#endif
+		
+		// Check if setting this CPU thread's priority and affinity failed
+		if(!setThreadPriorityAndAffinity(numberOfHighPerformanceCpuCores - 1)) [[unlikely]] {
+		
+			// Display message
+			cout << "Setting thread's priority and affinity failed" << endl;
+			
+			// Break
+			break;
+		}
 		
 		// Loop while not closing and an error hasn't occurred
 		do [[likely]] {
