@@ -296,8 +296,18 @@ static constexpr const double CPU_SEARCHING_THREADS_FIRST_EDGE_PERCENT[][MAX_NUM
 // Trim edges parameters structure
 struct TrimEdgesParameters {
 
-	// SipHash keys
-	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) sipHashKeys;
+	// Check if using an Apple device
+	#ifdef __APPLE__
+	
+		// SipHash keys
+		uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) sipHashKeys;
+		
+	// Otherwise
+	#else
+	
+		// SipHash keys
+		alignas(cl_ulong4) uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) sipHashKeys;
+	#endif
 };
 
 
@@ -3784,8 +3794,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		// Solution node pairs first partition
 		uint32_t solutionNodePairsFirstPartition[SOLUTION_SIZE / 2];
 		
-		// Solution SipHash keys
-		uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) solutionSipHashKeys;
+		// Check if using an Apple device
+		#ifdef __APPLE__
+		
+			// Solution SipHash keys
+			uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) solutionSipHashKeys;
+			
+		// Otherwise
+		#else
+		
+			// Solution SipHash keys
+			alignas(cl_ulong4) uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) solutionSipHashKeys;
+		#endif
 		
 		// Solution nodes
 		alignas(uint64_t) uint32_t solutionNodes[SOLUTION_SIZE * NUMBER_OF_EDGE_COMPONENTS];
@@ -6163,7 +6183,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			}
 			
 			// Throw error if GPU data type's sizes or alignments are invalid
-			static_assert(sizeof(cl_uint) == sizeof(uint32_t) && alignof(cl_uint) == alignof(uint32_t) && sizeof(cl_ulong) == sizeof(uint64_t) && alignof(cl_ulong) == alignof(uint64_t) && sizeof(TrimEdgesParameters) == sizeof(cl_ulong4) && sizeof(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS)))) == sizeof(cl_ulong4) && alignof(TrimEdgesParameters) == alignof(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS)))) && alignof(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS)))) == alignof(cl_ulong4) && sizeof(cl_uint2) == sizeof(uint32_t[2]) && alignof(cl_uint2) == alignof(uint64_t) && sizeof(cl_uint2) == sizeof(cl_ulong) && alignof(cl_uint2) == alignof(cl_ulong), "GPU data type's sizes or alignments are invalid");
+			static_assert(sizeof(cl_uint) == sizeof(uint32_t) && alignof(cl_uint) == alignof(uint32_t) && sizeof(cl_ulong) == sizeof(uint64_t) && alignof(cl_ulong) == alignof(uint64_t) && sizeof(TrimEdgesParameters) == sizeof(cl_ulong4) && sizeof(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS)))) == sizeof(cl_ulong4) && alignof(TrimEdgesParameters) == alignof(cl_ulong4) && alignof(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS)))) <= alignof(cl_ulong4) && sizeof(cl_uint2) == sizeof(uint32_t[2]) && alignof(cl_uint2) == alignof(uint64_t) && sizeof(cl_uint2) == sizeof(cl_ulong) && alignof(cl_uint2) == alignof(cl_ulong), "GPU data type's sizes or alignments are invalid");
 			
 			// Check if allocating memory on the GPU failed
 			const unique_ptr<remove_pointer_t<cl_mem>, decltype(&clReleaseMemObject)> coarseBucketsBuffer(clCreateBuffer(gpuContext.get(), CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_COARSE_BUCKET_ITEM_SIZE * GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET, nullptr, nullptr), clReleaseMemObject);
