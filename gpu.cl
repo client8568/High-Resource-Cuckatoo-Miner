@@ -563,7 +563,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	__kernel void fineBucketSortEdgesInStepsRoundOneStepOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -695,7 +695,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -818,7 +818,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -1146,7 +1146,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	__kernel void fineBucketSortEdgesInStepsRoundOneStepTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -1281,7 +1281,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -1407,7 +1407,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -1750,7 +1750,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -1863,7 +1863,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	__kernel void fineBucketSortEdgesInStepsRoundTwoStepOnePartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -1989,7 +1989,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -2112,7 +2112,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -2170,7 +2170,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -2293,7 +2293,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -2615,7 +2615,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -2731,7 +2731,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	__kernel void fineBucketSortEdgesInStepsRoundTwoStepTwoPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -2860,7 +2860,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -2986,7 +2986,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -3044,7 +3044,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -3170,7 +3170,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * stepCoarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -3507,7 +3507,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 	__kernel void fineBucketSortInitialEdgesInStepsPartOne(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -3620,7 +3620,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 	__kernel void fineBucketSortInitialEdgesInStepsPartTwo(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -3746,7 +3746,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -3869,7 +3869,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -3941,7 +3941,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -4064,7 +4064,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -4130,7 +4130,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 	__kernel void fineBucketSortInitialEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -4262,7 +4262,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 	#endif
 	
 		// Check if work group's edges don't exist
-		if(get_group_id(0) >= *largestCoarseBucketSize) {
+		if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 		
 			// Return
 			return;
@@ -4385,7 +4385,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// Go through all next edge indices as a work group
-		for(ushort i = localId; i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+		for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 		
 			// Get the next edge index in the fine bucket
 			nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -4795,7 +4795,7 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 #endif
 
 	// Check if work group's edges don't exist
-	if(get_group_id(0) >= *largestCoarseBucketSize) {
+	if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 	
 		// Return
 		return;
@@ -4918,7 +4918,7 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
 	// Go through all next edge indices as a work group
-	for(ushort i = localId; i < GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION; i += localSize) {
+	for(ushort i = localId; __builtin_expect(i < GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION, true); i += localSize) {
 	
 		// Get the next edge index in the fine bucket
 		nextEdgeIndex[i] = atomic_add(&numberOfEdgesPerFineBucket[(uint)GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * coarseBucketIndex + i], localNumberOfEdgesPerFineBucket[i]);
@@ -5254,7 +5254,7 @@ __kernel void updateLargestFinalCoarseBucketSize(__global uint *restrict largest
 __kernel void fineBucketSortFinalEdges(__global uint2 *restrict fineBuckets, __global uint *restrict numberOfEdgesPerFineBucket, __global const uint2 *restrict coarseBuckets, __global const uint *restrict numberOfEdgesPerCoarseBucket, __global const uint *restrict largestCoarseBucketSize) {
 
 	// Check if work group's edges don't exist
-	if(get_group_id(0) >= *largestCoarseBucketSize) {
+	if(__builtin_expect(get_group_id(0) >= *largestCoarseBucketSize, false)) {
 	
 		// Return
 		return;
