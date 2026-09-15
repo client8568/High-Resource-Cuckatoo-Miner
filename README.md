@@ -218,6 +218,11 @@ make GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024
 make GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024
 ```
 
+* A `MAX_NUMBER_OF_CPU_CORES_USED` setting can be used to limit the number of CPU cores that this program uses. This setting affects CPU trimming speed, CPU searching speed, and CPU recovering speed. The default value for this setting is `UINT_MAX`.
+```
+make MAX_NUMBER_OF_CPU_CORES_USED=UINT_MAX
+```
+
 * A `CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING` setting can be used to set the number of most significant bits used for fine bucket sorting by the CPU. This settings affects the CPU trimming speed. The default value for this setting is `6`.
 ```
 make CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=6

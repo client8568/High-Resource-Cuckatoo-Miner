@@ -411,6 +411,9 @@ static_assert(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >=
 // Throw error if GPU trim final edges and transfer edges kernel number of work items per work group is invalid
 static_assert(GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION && GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP <= UINT_MAX && has_single_bit(static_cast<unsigned int>(GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)), "GPU trim final edges and transfer edges kernel number of work items per work group is invalid");
 
+// Throw error if max number of CPU cores used is invalid
+static_assert(MAX_NUMBER_OF_CPU_CORES_USED >= 1 && MAX_NUMBER_OF_CPU_CORES_USED <= UINT_MAX, "Max number of CPU cores used is invalid");
+
 // Throw error if CPU number of most significant bits used for fine bucket sorting is invalid
 static_assert(CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING > 0 && CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING < EDGE_BITS / 2, "CPU number of most significant bits used for fine bucket sorting is invalid");
 
@@ -773,7 +776,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	}
 	
 	// Get number of high performance CPU cores
-	const unsigned int numberOfHighPerformanceCpuCores = getNumberOfHighPerformanceCpuCores();
+	const unsigned int numberOfHighPerformanceCpuCores = min(getNumberOfHighPerformanceCpuCores(), static_cast<unsigned int>(MAX_NUMBER_OF_CPU_CORES_USED));
 	
 	// Set number of CPU trimming threads
 	const unsigned int numberOfCpuTrimmingThreads = min(numberOfHighPerformanceCpuCores, static_cast<unsigned int>(CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION));
