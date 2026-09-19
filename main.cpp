@@ -622,7 +622,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		};
 		
 		// Check if mining to a stratum server
-		bool exitAfterOptions = false;
+		bool exitAfterOptions = argc > 1;
 		bool displayHelp = false;
 		bool helpRequested = false;
 		int option;
@@ -645,9 +645,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Version
 				case 'v':
 				
-					// Set exit after options to true
-					exitAfterOptions = true;
-					
 					// Break
 					break;
 					
@@ -657,6 +654,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Stratum server address
 					case 'a':
 					
+						// Set exit after options to false
+						exitAfterOptions = false;
+						
 						// Check if option is invalid
 						if(!optarg || !*optarg) [[unlikely]] {
 						
@@ -748,6 +748,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Stratum server port
 					case 'p': {
 					
+						// Set exit after options to false
+						exitAfterOptions = false;
+						
 						// Check if option is invalid
 						char *end;
 						errno = 0;
@@ -771,6 +774,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Stratum server username
 					case 'u':
 					
+						// Set exit after options to false
+						exitAfterOptions = false;
+						
 						// Check if option is invalid
 						if(!optarg || !*optarg) [[unlikely]] {
 						
@@ -816,6 +822,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Stratum server password
 					case 'w':
 					
+						// Set exit after options to false
+						exitAfterOptions = false;
+						
 						// Check if option is invalid
 						if(!optarg || !*optarg) [[unlikely]] {
 						
@@ -888,6 +897,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 			}
 		}
+		
+		
 		
 		// Check if displaying help
 		if(displayHelp) [[unlikely]] {
