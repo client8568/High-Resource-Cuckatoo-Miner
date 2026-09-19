@@ -290,9 +290,6 @@ static constexpr const double CPU_SEARCHING_THREADS_FIRST_EDGE_PERCENT[][MAX_NUM
 // Node mask
 #define NODE_MASK (UINT32_MAX >> (sizeof(uint32_t) * BITS_IN_A_BYTE - EDGE_BITS))
 
-// Stratum server max number of unrelated messages allowed
-#define STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED 5
-
 
 // Structures
 

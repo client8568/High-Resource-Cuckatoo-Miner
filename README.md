@@ -323,6 +323,11 @@ make STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES=10
 make STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS=10
 ```
 
+* A `STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED` setting can be used to set the max number of unrelated messages allowed from the stratum server while waiting for a specific message from it. The default value for this setting is `5`.
+```
+make STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED=5
+```
+
 * A `DISPLAY_TUNING_TIMES` setting can be used to display the duration and number of edges remaining for some of the CPU stages. This setting is intended to be used by developers. The default value for this setting is `false`.
 ```
 make DISPLAY_TUNING_TIMES=false
