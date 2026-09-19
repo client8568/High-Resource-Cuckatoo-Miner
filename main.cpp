@@ -7562,11 +7562,11 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								if(!getJobTemplateResponseOrJob) [[unlikely]] {
 								
 									// Check if all received data doesn't contain a job
-									getJobTemplateResponseOrJob = __builtin_strstr(currentMessageStart, "\"method\":\"job\"");
+									getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\":\"job\"");
 									if(!getJobTemplateResponseOrJob) [[unlikely]] {
 									
 										// Get if all received data contains a job
-										getJobTemplateResponseOrJob = __builtin_strstr(currentMessageStart, "\"method\": \"job\"");
+										getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\": \"job\"");
 									}
 								}
 							}
