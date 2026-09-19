@@ -579,7 +579,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	
 		// Create stratum server settings
 		const char *stratumServerAddress = TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS);
-		const char *stratumServerPort = TO_STRING(STRATUM_SERVER_DEFAULT_PORT);
+		const char *stratumServerPort = nullptr;
 		const char *stratumServerUsername = nullptr;
 		const char *stratumServerPassword = nullptr;
 		
@@ -924,8 +924,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			}
 		}
 		
-		
-		
 		// Check if displaying help
 		if(displayHelp) [[unlikely]] {
 		
@@ -956,6 +954,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		
 			// Return success
 			return EXIT_SUCCESS;
+		}
+		
+		// Check if stratum server port hasn't been set
+		if(!stratumServerPort) [[unlikely]] {
+		
+			// Set stratum server port to the default port
+			stratumServerPort = TO_STRING(STRATUM_SERVER_DEFAULT_PORT);
 		}
 	}
 	
