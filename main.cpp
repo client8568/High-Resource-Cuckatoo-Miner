@@ -711,6 +711,19 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 										
 											// Set stratum server port to the port
 											stratumServerPort = &endOfAddressIndex[sizeof("]:") - sizeof('\0')];
+											
+											// Check if stratum server port is invalid
+											char *end;
+											errno = 0;
+											const unsigned long stratumServerPortAsNumber = strtoul(stratumServerPort, &end, DECIMAL_NUMBER_BASE);
+											if(end == stratumServerPort || *end || !isdigit(stratumServerPort[0]) || (stratumServerPort[0] == '0' && isdigit(stratumServerPort[1])) || errno || !stratumServerPortAsNumber || stratumServerPortAsNumber > UINT16_MAX) [[unlikely]] {
+											
+												// Display message
+												cout << '"' << argv[0] << "\": invalid stratum server address -- '" << optarg << '\'' << endl;
+												
+												// Set display help to true
+												displayHelp = true;
+											}
 										}
 										
 										// Break
@@ -738,6 +751,19 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								
 									// Set stratum server port to the port
 									stratumServerPort = &endOfAddressIndex[sizeof(':')];
+									
+									// Check if stratum server port is invalid
+									char *end;
+									errno = 0;
+									const unsigned long stratumServerPortAsNumber = strtoul(stratumServerPort, &end, DECIMAL_NUMBER_BASE);
+									if(end == stratumServerPort || *end || !isdigit(stratumServerPort[0]) || (stratumServerPort[0] == '0' && isdigit(stratumServerPort[1])) || errno || !stratumServerPortAsNumber || stratumServerPortAsNumber > UINT16_MAX) [[unlikely]] {
+									
+										// Display message
+										cout << '"' << argv[0] << "\": invalid stratum server address -- '" << optarg << '\'' << endl;
+										
+										// Set display help to true
+										displayHelp = true;
+									}
 								}
 							}
 						}
