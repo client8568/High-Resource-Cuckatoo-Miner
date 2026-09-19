@@ -11022,8 +11022,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Check if not recovering edges for every graph
 				#if !RECOVER_EDGES_FOR_EVERY_GRAPH
 				
-					// Check if a solution was found and a new job with a different height wasn't received
-					if(recoverEdgesParameters.solutionNodes[3] && jobHeight[0] == jobHeight[1]) [[unlikely]] {
+					// Check if mining to a stratum server
+					#if MINE_TO_A_STRATUM_SERVER
+					
+						// Check if a solution was found and a new job with a different height wasn't received
+						if(recoverEdgesParameters.solutionNodes[3] && jobHeight[0] == jobHeight[1]) [[unlikely]] {
+						
+					// Otherwise
+					#else
+					
+						// Check if a solution was found
+						if(recoverEdgesParameters.solutionNodes[3]) [[unlikely]] {
+					#endif
 				#endif
 				
 					// Go through all solution node pairs
