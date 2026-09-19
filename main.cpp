@@ -484,6 +484,9 @@ static_assert(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES > 0 && STRATUM_SERVER
 // Throw error if stratum server send keep alive request interval seconds is invalid
 static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS <= chrono::seconds::max().count(), "Stratum server send keep alive request interval seconds is invalid");
 
+// Throw error if stratum server max number of unrelated messages allowed is invalid
+static_assert(STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED > 0 && STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED <= INT_MAX, "Stratum server max number of unrelated messages allowed is invalid");
+
 // Throw error if starting nonce is invalid
 static_assert(STARTING_NONCE >= 0 && STARTING_NONCE <= numeric_limits<NonceType>::max(), "Starting nonce is invalid");
 
