@@ -581,6 +581,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		const char *stratumServerAddress = TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS);
 		const char *stratumServerPort = TO_STRING(STRATUM_SERVER_DEFAULT_PORT);
 		const char *stratumServerUsername = nullptr;
+		const char *stratumServerPassword = nullptr;
+		
+		// Create stratum server password unique pointer
+		unique_ptr<char, void(*)(char *)> stratumServerPasswordUniquePointer(nullptr, [](char *stratumServerPassword [[maybe_unused]]) __attribute__((always_inline)) noexcept {
+		
+		});
 	#endif
 	
 	// Create block
@@ -604,6 +610,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Stratum server username
 				{"stratum_server_username", required_argument, nullptr, 'u'},
 				
+				// Stratum server password
+				{"stratum_server_password", required_argument, nullptr, 'w'},
 			#endif
 			
 			// Help
@@ -614,6 +622,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		};
 		
 		// Check if mining to a stratum server
+		bool exitAfterOptions = false;
 		bool displayHelp = false;
 		bool helpRequested = false;
 		int option;
@@ -621,7 +630,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		#if MINE_TO_A_STRATUM_SERVER
 		
 			// Go through all options while not displaying help
-			while(argv && (option = getopt_long(argc, argv, "va:p:u:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			while(argv && (option = getopt_long(argc, argv, "va:p:u:w:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 			
 		// Otherwise
 		#else
@@ -636,8 +645,11 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Version
 				case 'v':
 				
-					// Return success
-					return EXIT_SUCCESS;
+					// Set exit after options to true
+					exitAfterOptions = true;
+					
+					// Break
+					break;
 					
 				// Check if mining to a stratum server
 				#if MINE_TO_A_STRATUM_SERVER
@@ -728,6 +740,58 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						
 						// Break
 						break;
+						
+					// Stratum server password
+					case 'w':
+					
+						// Check if option is invalid
+						if(!optarg || !*optarg) [[unlikely]] {
+						
+							// Display message
+							cout << '"' << argv[0] << "\": invalid stratum server password -- '" << (__builtin_expect(optarg != nullptr, true) ? optarg : "") << '\'' << endl;
+							
+							// Set display help to true
+							displayHelp = true;
+						}
+						
+						// Otherwise
+						else [[likely]] {
+						
+							// Automatically clear stratum server password when done
+							stratumServerPasswordUniquePointer = unique_ptr<char, void(*)(char *)>(optarg, [](char *stratumServerPassword) __attribute__((always_inline)) noexcept {
+							
+								// Clear stratum server password
+								setBufferGuaranteed(stratumServerPassword, 0, __builtin_strlen(stratumServerPassword));
+							});
+							
+							// Go through all characters in the option
+							const char *character = optarg;
+							do [[likely]] {
+							
+								// Check if character is invalid
+								__builtin_assume_dereferenceable(character, sizeof(*character));
+								if(!isprint(*character) || *character == '"' || *character == '\\') [[unlikely]] {
+								
+									cout << '"' << argv[0] << "\": invalid stratum server password -- '" << optarg << '\'' << endl;
+									
+									// Set display help to true
+									displayHelp = true;
+									
+									// Break
+									break;
+								}
+								
+								// Go to next character
+								++character;
+								
+							} while(*character);
+						}
+						
+						// Set stratum server password to the option
+						stratumServerPassword = optarg;
+						
+						// Break
+						break;
 				#endif
 				
 				// Help
@@ -768,6 +832,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				cout << "\t-a, --stratum_server_address\tThe address of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS) ")" << endl;
 				cout << "\t-p, --stratum_server_port\tThe port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_PORT) ")" << endl;
 				cout << "\t-u, --stratum_server_username\tThe optional username to use when logging into the stratum server" << endl;
+				cout << "\t-w, --stratum_server_password\tThe optional password to use when logging into the stratum server which is sent as plaintext" << endl;
 			#endif
 			
 			// Display message
@@ -775,6 +840,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			
 			// Return success if help was requested otherwise return failure
 			return __builtin_expect(helpRequested, true) ? EXIT_SUCCESS : EXIT_FAILURE;
+		}
+		
+		// Check if exiting after options
+		if(exitAfterOptions) [[unlikely]] {
+		
+			// Return success
+			return EXIT_SUCCESS;
 		}
 	}
 	
@@ -6938,7 +7010,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					cout << "Logging into the stratum server" << endl;
 					
 					// Check if creating login request failed
-					char loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0')];
+					char loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0) + sizeof("\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0')];
 					
 					// Append start of username parameter to login request
 					__builtin_memcpy_inline(loginRequest, "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"", sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0'));
@@ -6950,8 +7022,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						__builtin_memcpy(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0')], stratumServerUsername, __builtin_strlen(stratumServerUsername));
 					}
 					
-					// Append password and agent to login request
-					__builtin_memcpy_inline(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0)], "\",\"pass\":\"\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n", sizeof("\",\"pass\":\"\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0'));
+					// Append start of password parameter to login request
+					__builtin_memcpy_inline(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0)], "\",\"pass\":\"", sizeof("\",\"pass\":\"") - sizeof('\0'));
+					
+					// Check if stratum server password exists
+					if(stratumServerPassword) [[unlikely]] {
+					
+						// Append password to login request
+						__builtin_memcpy(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0')], stratumServerPassword, __builtin_strlen(stratumServerPassword));
+					}
+					
+					// Append agent to login request
+					__builtin_memcpy_inline(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0)], "\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n", sizeof("\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0'));
 					
 					// Loop until full message is sent
 					size_t totalBytesSent = 0;
