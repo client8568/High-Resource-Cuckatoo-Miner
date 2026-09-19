@@ -7549,15 +7549,25 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							receiveBuffer[totalBytesReceived - 1] = '\0';
 							
 							// Check if all received data doesn't contain a response to the get job template request
-							const char *getJobTemplateResponse = __builtin_strstr(receiveBuffer, "\"method\":\"getjobtemplate\"");
-							if(!getJobTemplateResponse) [[unlikely]] {
+							const char *getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\":\"getjobtemplate\"");
+							if(!getJobTemplateResponseOrJob) [[unlikely]] {
 							
-								// Get if all received data contains a response to the get job template request
-								getJobTemplateResponse = __builtin_strstr(receiveBuffer, "\"method\": \"getjobtemplate\"");
+								// Check if all received data doesn't contain a response to the get job template request
+								getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\": \"getjobtemplate\"");
+								if(!getJobTemplateResponseOrJob) [[unlikely]] {
+								
+									// Check if all received data doesn't contain a job
+									getJobTemplateResponseOrJob = __builtin_strstr(currentMessageStart, "\"method\":\"job\"");
+									if(!getJobTemplateResponseOrJob) [[unlikely]] {
+									
+										// Get if all received data contains a job
+										getJobTemplateResponseOrJob = __builtin_strstr(currentMessageStart, "\"method\": \"job\"");
+									}
+								}
 							}
 							
-							// Set full message received to if all received data contains a full response to the get job template request
-							fullMessageReceived = getJobTemplateResponse && (lastCharacter == '\n' || __builtin_strchr(getJobTemplateResponse, '\n'));
+							// Set full message received to if all received data contains a full response to the get job template request or a job
+							fullMessageReceived = getJobTemplateResponseOrJob && (lastCharacter == '\n' || __builtin_strchr(getJobTemplateResponseOrJob, '\n'));
 							
 							// Undo making all received data a string
 							receiveBuffer[totalBytesReceived - 1] = lastCharacter;
@@ -7629,8 +7639,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							cout << "Received: " << currentMessageStart << endl;
 						#endif
 						
-						// Check if current message is a response to the get job template request
-						if(__builtin_strstr(currentMessageStart, "\"method\":\"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\": \"getjobtemplate\"")) [[likely]] {
+						// Check if current message is a response to the get job template request or it's a job
+						if(__builtin_strstr(currentMessageStart, "\"method\":\"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\": \"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\":\"job\"") || __builtin_strstr(currentMessageStart, "\"method\": \"job\"")) [[likely]] {
 						
 							// Set got job to if the current message contains a job
 							gotJob = (!__builtin_strstr(currentMessageStart, "\"error\":") || __builtin_strstr(currentMessageStart, "\"error\":null") || __builtin_strstr(currentMessageStart, "\"error\": null")) && !__builtin_strstr(currentMessageStart, "\"result\":null") && !__builtin_strstr(currentMessageStart, "\"result\": null");
