@@ -11080,8 +11080,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					cout << "Processing " TO_STRING(STOP_AFTER_NUMBER_OF_GRAPHS) " graphs finished in " << static_cast<chrono::duration<double, milli>>(miningEndTime - miningStartTime) << " and " << solutionsFound << " solutions were found" << endl;
 				}
 				
-				// Otherwise
-				else [[unlikely]] {
+				// Otherwise check if not closing
+				else if(!closing) [[unlikely]] {
 				
 					// Display message
 					cout << "An error occurred before " TO_STRING(STOP_AFTER_NUMBER_OF_GRAPHS) " graphs could be processed" << endl;
