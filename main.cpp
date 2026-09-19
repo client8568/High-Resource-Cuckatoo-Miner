@@ -290,6 +290,9 @@ static constexpr const double CPU_SEARCHING_THREADS_FIRST_EDGE_PERCENT[][MAX_NUM
 // Node mask
 #define NODE_MASK (UINT32_MAX >> (sizeof(uint32_t) * BITS_IN_A_BYTE - EDGE_BITS))
 
+// Stratum server max number of unrelated messages allowed
+#define STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED 5
+
 
 // Structures
 
@@ -7014,6 +7017,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#endif
 					
 					// Loop until full message is received
+					int numberOfUnrelatedMessagesReceived = 0;
 					for(bool fullMessageReceived = false; !fullMessageReceived;) [[unlikely]] {
 					
 						// Check if receiving data from the stratum server failed
@@ -7032,6 +7036,39 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						
 						// Update total bytes received
 						totalBytesReceived += bytesReceived;
+						
+						// Check if full message was received
+						if(fullMessageReceived) [[likely]] {
+						
+							// Make all received data a string
+							const char lastCharacter = receiveBuffer[totalBytesReceived - 1];
+							receiveBuffer[totalBytesReceived - 1] = '\0';
+							
+							// Check if all received data doesn't contain a response to the login request
+							const char *loginResponse = __builtin_strstr(receiveBuffer, "\"method\":\"login\"");
+							if(!loginResponse) [[unlikely]] {
+							
+								// Get if all received data contains a response to the login request
+								loginResponse = __builtin_strstr(receiveBuffer, "\"method\": \"login\"");
+							}
+							
+							// Set full message received to if all received data contains a full response to the login request
+							fullMessageReceived = loginResponse && (lastCharacter == '\n' || __builtin_strchr(loginResponse, '\n'));
+							
+							// Undo making all received data a string
+							receiveBuffer[totalBytesReceived - 1] = lastCharacter;
+							
+							// Check if full response to the login request wasn't received
+							if(!fullMessageReceived) [[unlikely]] {
+							
+								// Check if at the max number of unrelated messages allowed
+								if(++numberOfUnrelatedMessagesReceived == STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED) [[unlikely]] {
+								
+									// Break
+									break;
+								}
+							}
+						}
 						
 						// Check if receive buffer is full and full message hasn't been received
 						if(totalBytesReceived == sizeof(receiveBuffer) && !fullMessageReceived) [[unlikely]] {
@@ -7243,6 +7280,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#endif
 					
 					// Loop until full message is received
+					numberOfUnrelatedMessagesReceived = 0;
 					for(bool fullMessageReceived = false; !fullMessageReceived;) [[unlikely]] {
 					
 						// Check if receiving data from the stratum server failed
@@ -7261,6 +7299,39 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						
 						// Update total bytes received
 						totalBytesReceived += bytesReceived;
+						
+						// Check if full message was received
+						if(fullMessageReceived) [[likely]] {
+						
+							// Make all received data a string
+							const char lastCharacter = receiveBuffer[totalBytesReceived - 1];
+							receiveBuffer[totalBytesReceived - 1] = '\0';
+							
+							// Check if all received data doesn't contain a response to the get job template request
+							const char *getJobTemplateResponse = __builtin_strstr(receiveBuffer, "\"method\":\"getjobtemplate\"");
+							if(!getJobTemplateResponse) [[unlikely]] {
+							
+								// Get if all received data contains a response to the get job template request
+								getJobTemplateResponse = __builtin_strstr(receiveBuffer, "\"method\": \"getjobtemplate\"");
+							}
+							
+							// Set full message received to if all received data contains a full response to the get job template request
+							fullMessageReceived = getJobTemplateResponse && (lastCharacter == '\n' || __builtin_strchr(getJobTemplateResponse, '\n'));
+							
+							// Undo making all received data a string
+							receiveBuffer[totalBytesReceived - 1] = lastCharacter;
+							
+							// Check if full response to the get job template request wasn't received
+							if(!fullMessageReceived) [[unlikely]] {
+							
+								// Check if at the max number of unrelated messages allowed
+								if(++numberOfUnrelatedMessagesReceived == STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED) [[unlikely]] {
+								
+									// Break
+									break;
+								}
+							}
+						}
 						
 						// Check if receive buffer is full and full message hasn't been received
 						if(totalBytesReceived == sizeof(receiveBuffer) && !fullMessageReceived) [[unlikely]] {
