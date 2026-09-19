@@ -7132,8 +7132,41 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				size_t totalBytesReceived = 0;
 				{
 				
-					// Display message
-					cout << "Logging into the stratum server" << endl;
+					// Check if stratum server username exists
+					if(stratumServerUsername) [[likely]] {
+					
+						// Check if stratum server password exists
+						if(stratumServerPassword) [[unlikely]] {
+						
+							// Display message
+							cout << "Logging into the stratum server as " << stratumServerUsername << " using the provided password" << endl;
+						}
+						
+						// Otherwise
+						else [[likely]] {
+						
+							// Display message
+							cout << "Logging into the stratum server as " << stratumServerUsername << " without using a password" << endl;
+						}
+					}
+					
+					// Otherwise
+					else [[unlikely]] {
+					
+						// Check if stratum server password exists
+						if(stratumServerPassword) [[unlikely]] {
+						
+							// Display message
+							cout << "Logging into the stratum server without a username using the provided password" << endl;
+						}
+						
+						// Otherwise
+						else [[likely]] {
+						
+							// Display message
+							cout << "Logging into the stratum server without a username and password" << endl;
+						}
+					}
 					
 					// Check if creating login request failed
 					char loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0) + sizeof("\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0')];
