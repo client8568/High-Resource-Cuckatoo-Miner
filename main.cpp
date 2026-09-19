@@ -667,8 +667,80 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							displayHelp = true;
 						}
 						
-						// Set stratum server address to the option
-						stratumServerAddress = optarg;
+						// Otherwise check if option is for a secure connection
+						else if(!__builtin_strncmp(optarg, "stratum+ssl://", sizeof("stratum+ssl://") - sizeof('\0'))) [[unlikely]] {
+						
+							// Display message
+							cout << '"' << argv[0] << "\": secure stratum server addresses aren't supported -- '" << optarg << '\'' << endl;
+							
+							// Set display help to true
+							displayHelp = true;
+						}
+						
+						// Otherwise
+						else {
+						
+							// Set stratum server address to the option
+							stratumServerAddress = optarg;
+							
+							// Check if stratum server address has a protocol
+							if(!__builtin_strncmp(stratumServerAddress, "stratum+tcp://", sizeof("stratum+tcp://") - sizeof('\0'))) [[unlikely]] {
+							
+								// Remove stratum server address's protocol
+								stratumServerAddress = &stratumServerAddress[sizeof("stratum+tcp://") - sizeof('\0')];
+							}
+							
+							// Check if stratum server address might be an IPv6 address
+							if(stratumServerAddress[0] == '[') [[unlikely]] {
+							
+								// Check if stratum server address contains a closing bracket
+								char *endOfAddressIndex = __builtin_strchr(stratumServerAddress, ']');
+								if(endOfAddressIndex) [[likely]] {
+								
+									// End stratum server address before the closing bracket
+									*endOfAddressIndex = '\0';
+									
+									// Check if stratum server address is an IPv6 address and is followed by nothing or a port
+									if(inet_pton(AF_INET6, &stratumServerAddress[sizeof('[')], const_cast<in6_addr *>(&static_cast<const in6_addr &>(in6_addr()))) == 1 && (!endOfAddressIndex[sizeof(']')] || endOfAddressIndex[sizeof(']')] == ':')) [[likely]] {
+									
+										// Remove opening bracket from stratum server address
+										stratumServerAddress = &stratumServerAddress[sizeof('[')];
+										
+										// Check if stratum server port hasn't been set and there's a port after the stratum server address
+										if(!stratumServerPort && endOfAddressIndex[sizeof(']')] == ':') [[likely]] {
+										
+											// Set stratum server port to the port
+											stratumServerPort = &endOfAddressIndex[sizeof("]:") - sizeof('\0')];
+										}
+										
+										// Break
+										break;
+									}
+									
+									// Otherwise
+									else [[unlikely]] {
+									
+										// Restore stratum server address's ending
+										*endOfAddressIndex = ']';
+									}
+								}
+							}
+							
+							// Check if stratum server address contains a port
+							char *endOfAddressIndex = __builtin_strchr(stratumServerAddress, ':');
+							if(endOfAddressIndex) [[unlikely]] {
+							
+								// End stratum server address before the port
+								*endOfAddressIndex = '\0';
+								
+								// Check if stratum server port hasn't been set
+								if(!stratumServerPort) [[likely]] {
+								
+									// Set stratum server port to the port
+									stratumServerPort = &endOfAddressIndex[sizeof(':')];
+								}
+							}
+						}
 						
 						// Break
 						break;

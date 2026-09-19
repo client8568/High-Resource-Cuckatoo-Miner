@@ -44,6 +44,7 @@
 	#define NS_PRIVATE_IMPLEMENTATION
 	
 	// Header files
+	#include <arpa/inet.h>
 	#include <IOKit/IOKitLib.h>
 	#include <IOKit/pwr_mgt/IOPMLib.h>
 	#include <mach/thread_act.h>
@@ -55,6 +56,7 @@
 #else
 
 	// Header files
+	#include <arpa/inet.h>
 	#include <netdb.h>
 	#include <netinet/tcp.h>
 	
