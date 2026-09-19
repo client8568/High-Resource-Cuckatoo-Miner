@@ -6880,7 +6880,24 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				{
 				
 					// Display message
-					cout << "Connecting to the stratum server" << endl;
+					cout << "Connecting to the stratum server stratum+tcp://";
+					
+					// Check if the stratum server address is an IPv6 address
+					if(inet_pton(AF_INET6, stratumServerAddress, const_cast<in6_addr *>(&static_cast<const in6_addr &>(in6_addr()))) == 1) [[unlikely]] {
+					
+						// Display message
+						cout << '[' << stratumServerAddress << ']';
+					}
+					
+					// Otherwise
+					else [[likely]] {
+					
+						// Display message
+						cout << stratumServerAddress;
+					}
+					
+					// Display message
+					cout << ':' << stratumServerPort << endl;
 					
 					// Check if getting address info for the stratum server failed
 					const addrinfo addressInfoHints = {
