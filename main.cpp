@@ -684,7 +684,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						}
 						
 						// Otherwise
-						else {
+						else [[likely]] {
 						
 							// Set stratum server address to the option
 							stratumServerAddress = optarg;
@@ -823,8 +823,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						else [[likely]] {
 						
 							// Go through all characters in the option
-							const char *character = optarg;
-							do [[likely]] {
+							for(const char *character = optarg; *character; ++character) [[likely]] {
 							
 								// Check if character is invalid
 								__builtin_assume_dereferenceable(character, sizeof(*character));
@@ -838,11 +837,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									// Break
 									break;
 								}
-								
-								// Go to next character
-								++character;
-								
-							} while(*character);
+							}
 						}
 						
 						// Set stratum server username to the option
@@ -878,8 +873,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							});
 							
 							// Go through all characters in the option
-							const char *character = optarg;
-							do [[likely]] {
+							for(const char *character = optarg; *character; ++character) [[likely]] {
 							
 								// Check if character is invalid
 								__builtin_assume_dereferenceable(character, sizeof(*character));
@@ -893,11 +887,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									// Break
 									break;
 								}
-								
-								// Go to next character
-								++character;
-								
-							} while(*character);
+							}
 						}
 						
 						// Set stratum server password to the option
@@ -942,7 +932,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#if MINE_TO_A_STRATUM_SERVER
 			
 				// Display message
-				cout << "\t-a, --stratum_server_address\tThe address of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS) ")" << endl;
+				cout << "\t-a, --stratum_server_address\tThe address with an optional protocol and optional port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS) ")" << endl;
 				cout << "\t-p, --stratum_server_port\tThe port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_PORT) ")" << endl;
 				cout << "\t-u, --stratum_server_username\tThe optional username to use when logging into the stratum server" << endl;
 				cout << "\t-w, --stratum_server_password\tThe optional password to use when logging into the stratum server which is sent as plaintext" << endl;
@@ -962,12 +952,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			return EXIT_SUCCESS;
 		}
 		
-		// Check if stratum server port hasn't been set
-		if(!stratumServerPort) [[unlikely]] {
+		// Check if mining to a stratum server
+		#if MINE_TO_A_STRATUM_SERVER
 		
-			// Set stratum server port to the default port
-			stratumServerPort = TO_STRING(STRATUM_SERVER_DEFAULT_PORT);
-		}
+			// Check if stratum server port hasn't been set
+			if(!stratumServerPort) [[unlikely]] {
+			
+				// Set stratum server port to the default port
+				stratumServerPort = TO_STRING(STRATUM_SERVER_DEFAULT_PORT);
+			}
+		#endif
 	}
 	
 	// Get number of high performance CPU cores
