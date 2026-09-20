@@ -826,7 +826,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							for(const char *character = optarg; *character; ++character) [[likely]] {
 							
 								// Check if character is invalid
-								__builtin_assume_dereferenceable(character, sizeof(*character));
 								if(!isprint(*character) || *character == '"' || *character == '\\') [[unlikely]] {
 								
 									cout << '"' << argv[0] << "\": invalid stratum server username -- '" << optarg << '\'' << endl;
@@ -876,7 +875,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							for(const char *character = optarg; *character; ++character) [[likely]] {
 							
 								// Check if character is invalid
-								__builtin_assume_dereferenceable(character, sizeof(*character));
 								if(!isprint(*character) || *character == '"' || *character == '\\') [[unlikely]] {
 								
 									cout << '"' << argv[0] << "\": invalid stratum server password -- '" << optarg << '\'' << endl;
