@@ -1,7 +1,7 @@
 # High Resource Cuckatoo Miner
 
 ### Description
-Cuckatoo miner for Windows, macOS, and Linux based on [Nicolas Flamel's work](https://github.com/NicolasFlamel1) optimized for the [Clang compiler](https://clang.llvm.org/) that supports cuckatoo10 to cuckatoo32.
+Cuckatoo miner for Windows, macOS, and Linux based on [Nicolas Flamel's work](https://github.com/NicolasFlamel1) optimized for the [Clang compiler](https://clang.llvm.org) that supports cuckatoo10 to cuckatoo32.
 
 This program utilizes a system's CPU and GPU together during the mining process to maximize its mining rate. This is done in a pipelined approach where the GPU performs the initial edge trimming rounds and transfers the remaining edges to the CPU for the next graph while the CPU performs the remaining edge trimming rounds and searches the remaining edges for a solution for the current graph. If a solution is found then the CPU and GPU work together to recover the edges for that solution. This pipelined approach is visualized in the following table. The CPU and GPU stages in a single column in the table ideally take the same amount of time to complete so that neither the CPU or GPU has to wait very long for the other to complete its current stage. The CPU edge searching stage only scales up to four CPU cores in terms of speed, so most of the additional CPU tasks, like socket I/O and BLAKE2b hashing, are performed during that stage since at least one CPU core is unutilized at that time.
 
@@ -328,6 +328,21 @@ make STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS=10
 make STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED=5
 ```
 
+* A `STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM` setting can be used to allow this program to mine cryptocurrencies that have more than one mining algorithm. The default value for this setting is `false`.
+```
+make STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=false
+```
+
+* A `STRATUM_SERVER_MINING_ALGORITHM_NAME` setting can be used to set the mining algorithm that jobs must have for this program to mine them. The default value for this setting is `Cuckoo`.
+```
+make STRATUM_SERVER_MINING_ALGORITHM_NAME=Cuckoo
+```
+
+* A `STRATUM_SERVER_AGENT_PREFIX` setting can be used to prepend text to this program's agent that it sends to the stratum server. The default value for this setting is nothing.
+```
+make STRATUM_SERVER_AGENT_PREFIX=
+```
+
 * A `DISPLAY_TUNING_TIMES` setting can be used to display the duration and number of edges remaining for some of the CPU stages. This setting is intended to be used by developers. The default value for this setting is `false`.
 ```
 make DISPLAY_TUNING_TIMES=false
@@ -389,6 +404,21 @@ make STOP_AFTER_NUMBER_OF_GRAPHS=0
 ```
 
 ### Preconfigured Settings
+* These are the bare minimum settings that must be used when using this program to mine Epic Cash (EPIC). With these settings, this program can mine to an [Epic Cash node](https://github.com/EpicCash/epic), the [Epicmine mining pool](https://epicmine.io), or the [IniAku Epic Pool mining pool](https://epic.iniaku.my.id).
+```
+make EDGE_BITS=31 STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=true HEADER_SIZE_EXCLUDING_NONCE=274 STRATUM_SERVER_AGENT_PREFIX=epic-miner/
+```
+
+* These are the bare minimum settings that must be used when using this program to mine Grin (GRIN). With these settings, this program can mine to a [Grin node](https://github.com/mimblewimble/grin), the [2Miners GRIN Pool mining pool](https://grin.2miners.com), the [Easygrin Pool mining pool](https://pool.easygrin.org), the [GAEA Pool mining pool](https://gaeapool.com), the [GRIN Solo Mining mining pool](https://solo.grin.money), the [Grinmint mining pool](https://grinmint.com), or the [VIP Mining Pool mining pool](https://pool.always.vip).
+```
+make
+```
+
+* These are the bare minimum settings that must be used when using this program to mine MimbleWimble Coin (MWC). With these settings, this program can mine to a [MimbleWimble Coin node](https://github.com/mwcproject/mwc-node), the [2Miners MimbleWimbleCoin Pool mining pool](https://mwc.2miners.com), the [Grand Pool MimbleWimbleCoin (MWC) Mining Pool mining pool](https://grandpool.io/pools/mimblewimble), the [MWC Monitor mining pool](https://pool.mwcmonitor.com), the [Pacific Pool mining pool](https://pacificpool.ws), or the [WoolyPooly MimbleWimbleCoin Mining Pool mining pool](https://woolypooly.com/en/coin/mwc).
+```
+make EDGE_BITS=31
+```
+
 * Mac Studio M1 Ultra (64 GB unified memory, 48 GPU cores) performing cuckatoo31 targeting fast speed (≈2.31 g/s and ≈183W of power per graph):
 ```
 make EDGE_BITS=31 GPU_TRIMMING_ROUNDS=5 CPU_TRIMMING_ROUNDS=275 GPU_TRIMMING_USE_MAX_RAM=true GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=7 GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=1024 CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=8 CPU_TRIMMING_USE_MORE_RAM=true CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=15 CPU_RECOVERING_PERCENT=0.143

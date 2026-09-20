@@ -358,7 +358,7 @@ static_assert(SOLUTION_SIZE > 0 && SOLUTION_SIZE <= INT_MAX && SOLUTION_SIZE % 2
 static_assert(NONCE_SIZE == sizeof(uint8_t) || NONCE_SIZE == sizeof(uint16_t) || NONCE_SIZE == sizeof(uint32_t) || NONCE_SIZE == sizeof(uint64_t), "Nonce size is invalid");
 
 // Throw error if header size excluding nonce is invalid
-static_assert(HEADER_SIZE_EXCLUDING_NONCE > 0 && HEADER_SIZE_EXCLUDING_NONCE <= BLAKE2B_BUFFER_SIZE * 2 - NONCE_SIZE, "Header size excluding nonce is invalid");
+static_assert(HEADER_SIZE_EXCLUDING_NONCE > 0 && HEADER_SIZE_EXCLUDING_NONCE <= BLAKE2B_BUFFER_SIZE * 3 - NONCE_SIZE, "Header size excluding nonce is invalid");
 
 // Throw error if GPU number of most significant bits used for coarse bucket sorting is invalid
 static_assert(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING > 0 && GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING < EDGE_BITS / 2, "GPU number of most significant bits used for coarse bucket sorting is invalid");
@@ -486,6 +486,12 @@ static_assert(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS > 0 && STR
 
 // Throw error if stratum server max number of unrelated messages allowed is invalid
 static_assert(STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED > 0 && STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED <= INT_MAX, "Stratum server max number of unrelated messages allowed is invalid");
+
+// Throw error if stratum server mining algorithm name is invalid
+static_assert(TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) && sizeof(TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME)) >= sizeof('\0') && !TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME)[sizeof(TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME)) - sizeof('\0')] && __builtin_strlen(TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME)) == sizeof(TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME)) - sizeof('\0'), "Stratum server mining algorithm name is invalid");
+
+// Throw error if stratum server agent prefix is invalid
+static_assert(TO_STRING(STRATUM_SERVER_AGENT_PREFIX) && sizeof(TO_STRING(STRATUM_SERVER_AGENT_PREFIX)) >= sizeof('\0') && !TO_STRING(STRATUM_SERVER_AGENT_PREFIX)[sizeof(TO_STRING(STRATUM_SERVER_AGENT_PREFIX)) - sizeof('\0')] && __builtin_strlen(TO_STRING(STRATUM_SERVER_AGENT_PREFIX)) == sizeof(TO_STRING(STRATUM_SERVER_AGENT_PREFIX)) - sizeof('\0'), "Stratum server agent prefix is invalid");
 
 // Throw error if starting nonce is invalid
 static_assert(STARTING_NONCE >= 0 && STARTING_NONCE <= numeric_limits<NonceType>::max(), "Starting nonce is invalid");
@@ -7174,7 +7180,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Check if creating login request failed
-					char loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0) + sizeof("\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0')];
+					char loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0) + sizeof("\",\"agent\":\"" TO_STRING(STRATUM_SERVER_AGENT_PREFIX) TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0')];
 					
 					// Append start of username parameter to login request
 					__builtin_memcpy_inline(loginRequest, "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"", sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0'));
@@ -7197,7 +7203,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Append agent to login request
-					__builtin_memcpy_inline(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0)], "\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n", sizeof("\",\"agent\":\"" TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0'));
+					__builtin_memcpy_inline(&loginRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{\"login\":\"") - sizeof('\0') + (__builtin_expect(stratumServerUsername != nullptr, true) ? __builtin_strlen(stratumServerUsername) : 0) + sizeof("\",\"pass\":\"") - sizeof('\0') + (__builtin_expect(stratumServerPassword != nullptr, false) ? __builtin_strlen(stratumServerPassword) : 0)], "\",\"agent\":\"" TO_STRING(STRATUM_SERVER_AGENT_PREFIX) TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n", sizeof("\",\"agent\":\"" TO_STRING(STRATUM_SERVER_AGENT_PREFIX) TO_STRING(NAME) "/v" TO_STRING(VERSION) "\"}}\n") - sizeof('\0'));
 					
 					// Loop until full message is sent
 					size_t totalBytesSent = 0;
@@ -7262,9 +7268,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						cout << "Sent: " << string_view(loginRequest, sizeof(loginRequest));
 					#endif
 					
-					// Loop until full message is received
+					// Loop until full message is received while not closing
 					int numberOfUnrelatedMessagesReceived = 0;
-					for(bool fullMessageReceived = false; !fullMessageReceived;) [[unlikely]] {
+					for(bool fullMessageReceived = false; !fullMessageReceived && !closing;) [[unlikely]] {
 					
 						// Check if receiving data from the stratum server failed
 						const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
@@ -7327,8 +7333,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						}
 					};
 					
-					// Check if receiving data from the stratum server failed
-					if(!totalBytesReceived) [[unlikely]] {
+					// Check if receiving data from the stratum server failed or closing
+					if(!totalBytesReceived || closing) [[unlikely]] {
 					
 						// Display message
 						cout << "Receiving data from the stratum server failed" << endl;
@@ -7459,8 +7465,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Display message
 					cout << "Getting job from the stratum server" << endl;
 					
-					// Create get job template request
-					const char getJobTemplateRequest[] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"getjobtemplate\",\"params\":null}\n";
+					// Check if stratum server uses more than one mining algorithm
+					#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+					
+						// Create get job template request
+						const char getJobTemplateRequest[] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"getjobtemplate\",\"params\":{\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"}}\n";
+						
+					// Otherwise
+					#else
+					
+						// Create get job template request
+						const char getJobTemplateRequest[] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"getjobtemplate\",\"params\":null}\n";
+					#endif
 					
 					// Loop until full message is sent
 					totalBytesSent = 0;
@@ -7525,211 +7541,292 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						cout << "Sent: " << getJobTemplateRequest;
 					#endif
 					
-					// Loop until full message is received
-					numberOfUnrelatedMessagesReceived = 0;
-					for(bool fullMessageReceived = false; !fullMessageReceived;) [[unlikely]] {
+					// Update last keep alive time
+					chrono::steady_clock::time_point lastKeepAliveTime = chrono::steady_clock::now();
 					
-						// Check if receiving data from the stratum server failed
-						const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
-						if(bytesReceived <= 0) [[unlikely]] {
+					// Loop until an applicable job is received while not closing
+					bool gotJob = false;
+					for(bool nonApplicableJobReceived = true; nonApplicableJobReceived && !gotJob && !closing;) [[unlikely]] {
+					
+						// Loop until full message is received while not closing
+						numberOfUnrelatedMessagesReceived = 0;
+						for(bool fullMessageReceived = false; !fullMessageReceived && !closing;) [[unlikely]] {
 						
-							// Set that receiving data from the stratum server failed
-							totalBytesReceived = 0;
+							// Check if receiving data from the stratum server failed
+							const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
+							if(bytesReceived <= 0) [[unlikely]] {
 							
-							// Break
-							break;
-						}
-						
-						// Set full message received to if the received data contains the end of a message
-						fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
-						
-						// Update total bytes received
-						totalBytesReceived += bytesReceived;
-						
-						// Check if full message was received
-						if(fullMessageReceived) [[likely]] {
-						
-							// Make all received data a string
-							const char lastCharacter = receiveBuffer[totalBytesReceived - 1];
-							receiveBuffer[totalBytesReceived - 1] = '\0';
+								// Set that receiving data from the stratum server failed
+								totalBytesReceived = 0;
+								
+								// Break
+								break;
+							}
 							
-							// Check if all received data doesn't contain a response to the get job template request
-							const char *getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\":\"getjobtemplate\"");
-							if(!getJobTemplateResponseOrJob) [[unlikely]] {
+							// Set full message received to if the received data contains the end of a message
+							fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
 							
+							// Update total bytes received
+							totalBytesReceived += bytesReceived;
+							
+							// Check if full message was received
+							if(fullMessageReceived) [[likely]] {
+							
+								// Make all received data a string
+								const char lastCharacter = receiveBuffer[totalBytesReceived - 1];
+								receiveBuffer[totalBytesReceived - 1] = '\0';
+								
 								// Check if all received data doesn't contain a response to the get job template request
-								getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\": \"getjobtemplate\"");
+								const char *getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\":\"getjobtemplate\"");
 								if(!getJobTemplateResponseOrJob) [[unlikely]] {
 								
-									// Check if all received data doesn't contain a job
-									getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\":\"job\"");
+									// Check if all received data doesn't contain a response to the get job template request
+									getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\": \"getjobtemplate\"");
 									if(!getJobTemplateResponseOrJob) [[unlikely]] {
 									
-										// Get if all received data contains a job
-										getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\": \"job\"");
+										// Check if all received data doesn't contain a job
+										getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\":\"job\"");
+										if(!getJobTemplateResponseOrJob) [[unlikely]] {
+										
+											// Get if all received data contains a job
+											getJobTemplateResponseOrJob = __builtin_strstr(receiveBuffer, "\"method\": \"job\"");
+										}
+									}
+								}
+								
+								// Set full message received to if all received data contains a full response to the get job template request or a job
+								fullMessageReceived = getJobTemplateResponseOrJob && (lastCharacter == '\n' || __builtin_strchr(getJobTemplateResponseOrJob, '\n'));
+								
+								// Undo making all received data a string
+								receiveBuffer[totalBytesReceived - 1] = lastCharacter;
+								
+								// Check if full response to the get job template request wasn't received
+								if(!fullMessageReceived) [[unlikely]] {
+								
+									// Check if at the max number of unrelated messages allowed
+									if(++numberOfUnrelatedMessagesReceived == STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED) [[unlikely]] {
+									
+										// Break
+										break;
 									}
 								}
 							}
 							
-							// Set full message received to if all received data contains a full response to the get job template request or a job
-							fullMessageReceived = getJobTemplateResponseOrJob && (lastCharacter == '\n' || __builtin_strchr(getJobTemplateResponseOrJob, '\n'));
+							// Check if receive buffer is full and full message hasn't been received
+							if(totalBytesReceived == sizeof(receiveBuffer) && !fullMessageReceived) [[unlikely]] {
 							
-							// Undo making all received data a string
-							receiveBuffer[totalBytesReceived - 1] = lastCharacter;
-							
-							// Check if full response to the get job template request wasn't received
-							if(!fullMessageReceived) [[unlikely]] {
-							
-								// Check if at the max number of unrelated messages allowed
-								if(++numberOfUnrelatedMessagesReceived == STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED) [[unlikely]] {
+								// Set that receiving data from the stratum server failed
+								totalBytesReceived = 0;
 								
-									// Break
-									break;
-								}
+								// Break
+								break;
 							}
-						}
+						};
 						
-						// Check if receive buffer is full and full message hasn't been received
-						if(totalBytesReceived == sizeof(receiveBuffer) && !fullMessageReceived) [[unlikely]] {
+						// Check if receiving data from the stratum server failed or closing
+						if(!totalBytesReceived || closing) [[unlikely]] {
 						
-							// Set that receiving data from the stratum server failed
-							totalBytesReceived = 0;
+							// Set got job to false
+							gotJob = false;
+							
+							// Display message
+							cout << "Receiving data from the stratum server failed" << endl;
 							
 							// Break
 							break;
 						}
-					};
-					
-					// Check if receiving data from the stratum server failed
-					if(!totalBytesReceived) [[unlikely]] {
-					
-						// Display message
-						cout << "Receiving data from the stratum server failed" << endl;
 						
-						// Check if previously connected to the stratum server
-						if(returnStatus == EXIT_SUCCESS) [[likely]] {
+						// Go through all received messages
+						currentMessageStart = receiveBuffer;
+						currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
+						nonApplicableJobReceived = false;
 						
-							// Check if using Windows
-							#ifdef _WIN32
+						do [[unlikely]] {
+						
+							// Make current message a string
+							*currentMessageEnd = '\0';
 							
-								// Wait before trying again
-								Sleep(STRATUM_SERVER_RECONNECT_AFTER_FAILURE_DELAY_SECONDS * MILLISECONDS_IN_A_SECOND);
-								
-							// Otherwise
-							#else
+							// Check if displaying stratum server messages
+							#if DISPLAY_STRATUM_SERVER_MESSAGES
 							
-								// Wait before trying again
-								sleep(STRATUM_SERVER_RECONNECT_AFTER_FAILURE_DELAY_SECONDS);
+								// Display message
+								cout << "Received: " << currentMessageStart << endl;
 							#endif
-						}
-						
-						// Continue
-						continue;
-					}
-					
-					// Go through all received messages
-					bool gotJob = false;
-					currentMessageStart = receiveBuffer;
-					currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
-					
-					do [[unlikely]] {
-					
-						// Make current message a string
-						*currentMessageEnd = '\0';
-						
-						// Check if displaying stratum server messages
-						#if DISPLAY_STRATUM_SERVER_MESSAGES
-						
-							// Display message
-							cout << "Received: " << currentMessageStart << endl;
-						#endif
-						
-						// Check if current message is a response to the get job template request or it's a job
-						if(__builtin_strstr(currentMessageStart, "\"method\":\"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\": \"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\":\"job\"") || __builtin_strstr(currentMessageStart, "\"method\": \"job\"")) [[likely]] {
-						
-							// Set got job to if the current message contains a job
-							gotJob = (!__builtin_strstr(currentMessageStart, "\"error\":") || __builtin_strstr(currentMessageStart, "\"error\":null") || __builtin_strstr(currentMessageStart, "\"error\": null")) && !__builtin_strstr(currentMessageStart, "\"result\":null") && !__builtin_strstr(currentMessageStart, "\"result\": null");
 							
-							// Check if current message doesn't contain a job
-							if(!gotJob) [[unlikely]] {
+							// Check if current message is a response to the get job template request or it's a job
+							if(__builtin_strstr(currentMessageStart, "\"method\":\"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\": \"getjobtemplate\"") || __builtin_strstr(currentMessageStart, "\"method\":\"job\"") || __builtin_strstr(currentMessageStart, "\"method\": \"job\"")) [[likely]] {
 							
-								// Check if current message contains a message
-								const char *message = __builtin_strstr(currentMessageStart, "\"message\":");
-								if(message) [[likely]] {
+								// Set got job to if the current message contains a job
+								gotJob = (!__builtin_strstr(currentMessageStart, "\"error\":") || __builtin_strstr(currentMessageStart, "\"error\":null") || __builtin_strstr(currentMessageStart, "\"error\": null")) && !__builtin_strstr(currentMessageStart, "\"result\":null") && !__builtin_strstr(currentMessageStart, "\"result\": null");
 								
-									// Check if message contains a value
-									message = __builtin_strchr(&message[sizeof("\"message\":") - sizeof('\0')], '"');
+								// Check if current message doesn't contain a job
+								if(!gotJob) [[unlikely]] {
+								
+									// Check if current message contains a message
+									const char *message = __builtin_strstr(currentMessageStart, "\"message\":");
 									if(message) [[likely]] {
 									
-										// Display message
-										cout << "Message from the stratum server: ";
+										// Check if message contains a value
+										message = __builtin_strchr(&message[sizeof("\"message\":") - sizeof('\0')], '"');
+										if(message) [[likely]] {
 										
-										// Go through all characters in the message
-										for(++message; *message && *message != '"'; ++message) [[likely]] {
-										
-											// Check if character is an escaped double quote or backslash
-											if(*message == '\\' && (message[sizeof('\\')] == '"' || message[sizeof('\\')] == '\\')) [[unlikely]] {
+											// Display message
+											cout << "Message from the stratum server: ";
 											
-												// Go to next character
-												++message;
+											// Go through all characters in the message
+											for(++message; *message && *message != '"'; ++message) [[likely]] {
+											
+												// Check if character is an escaped double quote or backslash
+												if(*message == '\\' && (message[sizeof('\\')] == '"' || message[sizeof('\\')] == '\\')) [[unlikely]] {
+												
+													// Go to next character
+													++message;
+												}
+												
+												// Check if character is printable
+												if(isprint(*message)) [[likely]] {
+												
+													// Display character
+													cout << *message;
+												}
 											}
 											
-											// Check if character is printable
-											if(isprint(*message)) [[likely]] {
-											
-												// Display character
-												cout << *message;
-											}
+											// Display new line
+											cout << endl;
 										}
-										
-										// Display new line
-										cout << endl;
 									}
-								}
-							}
-							
-							// Otherwise
-							else [[likely]] {
-							
-								// Check if reading the job message failed
-								if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[0], jobId[0])) [[unlikely]] {
-								
-									// Set got job to false
-									gotJob = false;
-									
-									// Display message
-									cout << "Received invalid job from the stratum server" << endl;
 								}
 								
 								// Otherwise
 								else [[likely]] {
 								
-									// Create random job nonce
-									jobNonce[0] = randomNumberGenerator();
+									// Check if reading the job message failed
+									if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[0], jobId[0])) [[unlikely]] {
 									
-									// Set next job nonce, job height, and job ID
-									jobNonce[1] = jobNonce[0] + 1;
-									jobHeight[1] = jobHeight[0];
-									jobId[1] = jobId[0];
+										// Set got job to false
+										gotJob = false;
+										
+										// Display message
+										cout << "Received invalid job from the stratum server" << endl;
+									}
+									
+									// Otherwise
+									else [[likely]] {
+									
+										// Check if stratum server uses more than one mining algorithm
+										#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+										
+											// Check if using Windows
+											#ifdef _WIN32
+											
+												// Check if job's algorithm isn't applicable
+												if(!StrStrIA(currentMessageStart, "\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"") && !StrStrIA(currentMessageStart, "\"algorithm\": \"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"")) [[unlikely]] {
+												
+											// Otherwise
+											#else
+											
+												// Check if job's algorithm isn't applicable
+												if(!strcasestr(currentMessageStart, "\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"") && !strcasestr(currentMessageStart, "\"algorithm\": \"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"")) [[unlikely]] {
+											#endif
+											
+												// Set got job to false
+												gotJob = false;
+												
+												// Set non-applicable job received to true
+												nonApplicableJobReceived = true;
+											}
+										#endif
+										
+										// Create random job nonce
+										jobNonce[0] = randomNumberGenerator();
+										
+										// Set next job nonce, job height, and job ID
+										jobNonce[1] = jobNonce[0] + 1;
+										jobHeight[1] = jobHeight[0];
+										jobId[1] = jobId[0];
+									}
 								}
 							}
+							
+							// Get the start and end of the next message
+							totalBytesReceived -= currentMessageEnd + sizeof('\n') - currentMessageStart;
+							currentMessageStart = currentMessageEnd + sizeof('\n');
+							currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
+							
+						} while(currentMessageEnd);
+						
+						// Remove received messages that were processed
+						__builtin_memmove(receiveBuffer, currentMessageStart, totalBytesReceived);
+						
+						// Check if its time to send a keep alive request
+						if(chrono::steady_clock::now() - lastKeepAliveTime >= static_cast<chrono::seconds>(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS)) [[unlikely]] {
+						
+							// Create keep alive request
+							const char keepAliveRequest[] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"keepalive\",\"params\":null}\n";
+							
+							// Loop until full message is sent
+							totalBytesSent = 0;
+							do [[unlikely]] {
+							
+								// Check if using Windows
+								#ifdef _WIN32
+								
+									// Send data to the stratum server
+									const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+									
+								// Otherwise
+								#else
+								
+									// Send data to the stratum server
+									const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+								#endif
+								
+								// Check if sending data to the stratum server failed
+								if(bytesSent <= 0) [[unlikely]] {
+								
+									// Break
+									break;
+								}
+								
+								// Update total bytes sent
+								totalBytesSent += bytesSent;
+								
+							} while(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0'));
+							
+							// Check if sending data to the stratum server failed
+							if(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0')) [[unlikely]] {
+							
+								// Set got job to false
+								gotJob = false;
+								
+								// Display message
+								cout << "Sending data to the stratum server failed" << endl;
+								
+								// Break
+								break;
+							}
+							
+							// Check if displaying stratum server messages
+							#if DISPLAY_STRATUM_SERVER_MESSAGES
+							
+								// Display message
+								cout << "Sent: " << keepAliveRequest;
+							#endif
+							
+							// Update last keep alive time
+							lastKeepAliveTime = chrono::steady_clock::now();
 						}
 						
-						// Get the start and end of the next message
-						totalBytesReceived -= currentMessageEnd + sizeof('\n') - currentMessageStart;
-						currentMessageStart = currentMessageEnd + sizeof('\n');
-						currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
+						// Check if getting a job from the stratum server failed
+						if(!nonApplicableJobReceived && !gotJob) [[unlikely]] {
 						
-					} while(currentMessageEnd);
+							// Display message
+							cout << "Getting job from the stratum server failed" << endl;
+						}
+					}
 					
-					// Remove received messages that were processed
-					__builtin_memmove(receiveBuffer, currentMessageStart, totalBytesReceived);
-					
-					// Check if getting job from the stratum server failed
-					if(!gotJob) [[unlikely]] {
-					
-						// Display message
-						cout << "Getting job from the stratum server failed" << endl;
+					// Check if getting job from the stratum server failed or closing
+					if(!gotJob || closing) [[unlikely]] {
 						
 						// Check if previously connected to the stratum server
 						if(returnStatus == EXIT_SUCCESS) [[likely]] {
@@ -10021,11 +10118,24 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Check if mining to a stratum server
 				#if MINE_TO_A_STRATUM_SERVER
 				
-					// Create submit request
-					char submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"job_id\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"nonce\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"pow\":[") - sizeof('\0') + (MAX_UINT32_STRING_SIZE + sizeof(',')) * SOLUTION_SIZE - sizeof(',') + sizeof("]}}\n") - sizeof('\0')] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":";
+					// Check if stratum server uses more than one mining algorithm
+					#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
 					
-					// Append previous job height to submit request
-					to_chars_result appendResult = to_chars(&submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":") - sizeof('\0')], &submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":") - sizeof('\0')] + MAX_UINT64_STRING_SIZE, jobHeight[1 - currentJobIndex]);
+						// Create submit request failed
+						char submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"height\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"job_id\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"nonce\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0') + (MAX_UINT32_STRING_SIZE + sizeof(',')) * SOLUTION_SIZE - sizeof(',') + sizeof("]]}}}\n") - sizeof('\0')] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"height\":";
+						
+						// Append previous job height to submit request
+						to_chars_result appendResult = to_chars(&submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"height\":") - sizeof('\0')], &submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"height\":") - sizeof('\0')] + MAX_UINT64_STRING_SIZE, jobHeight[1 - currentJobIndex]);
+						
+					// Otherwise
+					#else
+					
+						// Create submit request
+						char submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"job_id\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"nonce\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE + sizeof(",\"pow\":[") - sizeof('\0') + (MAX_UINT32_STRING_SIZE + sizeof(',')) * SOLUTION_SIZE - sizeof(',') + sizeof("]}}\n") - sizeof('\0')] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":";
+						
+						// Append previous job height to submit request
+						to_chars_result appendResult = to_chars(&submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":") - sizeof('\0')], &submitRequest[sizeof("{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"edge_bits\":" TO_STRING(EDGE_BITS) ",\"height\":") - sizeof('\0')] + MAX_UINT64_STRING_SIZE, jobHeight[1 - currentJobIndex]);
+					#endif
 					
 					// Append start of job ID to submit request
 					__builtin_memcpy(appendResult.ptr, ",\"job_id\":", sizeof(",\"job_id\":") - sizeof('\0'));
@@ -10039,8 +10149,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Append previous job nonce to submit request
 					appendResult = to_chars(appendResult.ptr + sizeof(",\"nonce\":") - sizeof('\0'), appendResult.ptr + sizeof(",\"nonce\":") - sizeof('\0') + MAX_UINT64_STRING_SIZE, jobNonce[1 - currentJobIndex]);
 					
-					// Append start of job proof of work to submit request
-					__builtin_memcpy(appendResult.ptr, ",\"pow\":[", sizeof(",\"pow\":[") - sizeof('\0'));
+					// Check if stratum server uses more than one mining algorithm
+					#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+					
+						// Append start of job proof of work to submit request
+						__builtin_memcpy(appendResult.ptr, ",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[", sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0'));
+						
+					// Otherwise
+					#else
+					
+						// Append start of job proof of work to submit request
+						__builtin_memcpy(appendResult.ptr, ",\"pow\":[", sizeof(",\"pow\":[") - sizeof('\0'));
+					#endif
 				#endif
 				
 				// Update next job nonce
@@ -10168,7 +10288,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					jobHeight[1 - currentJobIndex] = jobHeight[currentJobIndex];
 					jobId[1 - currentJobIndex] = jobId[currentJobIndex];
 					
-					// Loop while there's data from the stratum server to receive
+					// Loop while there's data from the stratum server to receive and not closing
+					bool jobIsApplicable = true;
 					bool receiveBufferFull;
 					do [[unlikely]] {
 					
@@ -10237,7 +10358,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							char *currentMessageStart = receiveBuffer;
 							char *currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
 							
-							do [[likely]] {
+							do [[unlikely]] {
 							
 								// Make current message a string
 								*currentMessageEnd = '\0';
@@ -10286,6 +10407,23 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									// Otherwise
 									else [[likely]] {
 									
+										// Check if stratum server uses more than one mining algorithm
+										#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+										
+											// Check if using Windows
+											#ifdef _WIN32
+											
+												// Set job is applicable to if the job's algorithm is applicable
+												jobIsApplicable = StrStrIA(currentMessageStart, "\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"") || StrStrIA(currentMessageStart, "\"algorithm\": \"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"");
+												
+											// Otherwise
+											#else
+											
+												// Set job is applicable to if the job's algorithm is applicable
+												jobIsApplicable = strcasestr(currentMessageStart, "\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"") || strcasestr(currentMessageStart, "\"algorithm\": \"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"");
+											#endif
+										#endif
+										
 										// Create random next job nonce
 										jobNonce[1 - currentJobIndex] = randomNumberGenerator();
 									}
@@ -10309,10 +10447,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							break;
 						}
 						
-					} while(receiveBufferFull);
+					} while(receiveBufferFull && !closing);
 					
-					// Check if receiving data from the stratum server failed
-					if(receiveBufferFull) [[unlikely]] {
+					// Check if receiving data from the stratum server failed or closing
+					if(receiveBufferFull || closing) [[unlikely]] {
 					
 						// Check if not performing CPU searching during GPU trimming
 						#if !CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
@@ -10365,6 +10503,328 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						
 						// Break
 						break;
+					}
+					
+					// Check if job isn't applicable
+					if(!jobIsApplicable) [[unlikely]] {
+					
+						// Check if performing CPU searching during GPU trimming
+						#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+						
+							// Display message
+							cout << "Getting job from the stratum server" << endl;
+							
+						// Otherwise
+						#else
+						
+							// Display message
+							cpuSearchingThreadsLock.lock();
+							cout << "Getting job from the stratum server" << endl;
+							cpuSearchingThreadsLock.unlock();
+						#endif
+						
+						// Loop while job isn't applicable and not closing
+						do [[unlikely]] {
+						
+							// Loop until full message is received and not closing
+							for(bool fullMessageReceived = false; !fullMessageReceived && !closing;) [[unlikely]] {
+							
+								// Check if receiving data from the stratum server failed
+								const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
+								if(bytesReceived <= 0) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed
+									totalBytesReceived = 0;
+									
+									// Break
+									break;
+								}
+								
+								// Set full message received to if the received data contains the end of a message
+								fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+								
+								// Update total bytes received
+								totalBytesReceived += bytesReceived;
+								
+								// Check if full message was received
+								if(fullMessageReceived) [[likely]] {
+								
+									// Make all received data a string
+									const char lastCharacter = receiveBuffer[totalBytesReceived - 1];
+									receiveBuffer[totalBytesReceived - 1] = '\0';
+									
+									// Check if all received data doesn't contain a job
+									const char *job = __builtin_strstr(receiveBuffer, "\"method\":\"job\"");
+									if(!job) [[unlikely]] {
+									
+										// Get if all received data contains a job
+										job = __builtin_strstr(receiveBuffer, "\"method\": \"job\"");
+									}
+									
+									// Set full message received to if all received data contains a full job
+									fullMessageReceived = job && (lastCharacter == '\n' || __builtin_strchr(job, '\n'));
+									
+									// Undo making all received data a string
+									receiveBuffer[totalBytesReceived - 1] = lastCharacter;
+								}
+								
+								// Check if receive buffer is full and full message hasn't been received
+								if(totalBytesReceived == sizeof(receiveBuffer) && !fullMessageReceived) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed
+									totalBytesReceived = 0;
+									
+									// Break
+									break;
+								}
+							};
+							
+							// Check if receiving data from the stratum server failed or closing
+							if(!totalBytesReceived || closing) [[unlikely]] {
+							
+								// Set that received buffer is full
+								receiveBufferFull = true;
+								
+								// Break
+								break;
+							}
+							
+							// Go through all received messages
+							char *currentMessageStart = receiveBuffer;
+							char *currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
+							
+							do [[unlikely]] {
+							
+								// Make current message a string
+								*currentMessageEnd = '\0';
+								
+								// Check if displaying stratum server messages
+								#if DISPLAY_STRATUM_SERVER_MESSAGES
+								
+									// Check if performing CPU searching during GPU trimming
+									#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+									
+										// Display message
+										cout << "Received: " << currentMessageStart << endl;
+										
+									// Otherwise
+									#else
+									
+										// Display message
+										cpuSearchingThreadsLock.lock();
+										cout << "Received: " << currentMessageStart << endl;
+										cpuSearchingThreadsLock.unlock();
+									#endif
+								#endif
+								
+								// Check if current message is a job
+								if(__builtin_strstr(currentMessageStart, "\"method\":\"job\"") || __builtin_strstr(currentMessageStart, "\"method\": \"job\"")) [[likely]] {
+								
+									// Check if reading the job message failed
+									if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[1 - currentJobIndex], jobId[1 - currentJobIndex])) [[unlikely]] {
+									
+										// Check if performing CPU searching during GPU trimming
+										#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+										
+											// Display message
+											cout << "Received invalid job from the stratum server" << endl;
+											
+										// Otherwise
+										#else
+										
+											// Display message
+											cpuSearchingThreadsLock.lock();
+											cout << "Received invalid job from the stratum server" << endl;
+											cpuSearchingThreadsLock.unlock();
+										#endif
+									}
+									
+									// Otherwise
+									else [[likely]] {
+									
+										// Check if stratum server uses more than one mining algorithm
+										#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+										
+											// Check if using Windows
+											#ifdef _WIN32
+											
+												// Set job is applicable to if the job's algorithm is applicable
+												jobIsApplicable = StrStrIA(currentMessageStart, "\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"") || StrStrIA(currentMessageStart, "\"algorithm\": \"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"");
+												
+											// Otherwise
+											#else
+											
+												// Set job is applicable to if the job's algorithm is applicable
+												jobIsApplicable = strcasestr(currentMessageStart, "\"algorithm\":\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"") || strcasestr(currentMessageStart, "\"algorithm\": \"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\"");
+											#endif
+										#endif
+										
+										// Create random next job nonce
+										jobNonce[1 - currentJobIndex] = randomNumberGenerator();
+									}
+								}
+								
+								// Get the start and end of the next message
+								totalBytesReceived -= currentMessageEnd + sizeof('\n') - currentMessageStart;
+								currentMessageStart = currentMessageEnd + sizeof('\n');
+								currentMessageEnd = reinterpret_cast<char *>(__builtin_memchr(currentMessageStart, '\n', totalBytesReceived));
+								
+							} while(currentMessageEnd);
+							
+							// Remove received messages that were processed
+							__builtin_memmove(receiveBuffer, currentMessageStart, totalBytesReceived);
+							
+							// Check if its time to send a keep alive request
+							if(chrono::steady_clock::now() - lastKeepAliveTime >= static_cast<chrono::seconds>(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS)) [[unlikely]] {
+							
+								// Create keep alive request
+								const char keepAliveRequest[] = "{\"id\":\"1\",\"jsonrpc\":\"2.0\",\"method\":\"keepalive\",\"params\":null}\n";
+								
+								// Loop until full message is sent
+								size_t totalBytesSent = 0;
+								do [[unlikely]] {
+								
+									// Check if using Windows
+									#ifdef _WIN32
+									
+										// Send data to the stratum server
+										const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+										
+									// Otherwise
+									#else
+									
+										// Send data to the stratum server
+										const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+									#endif
+									
+									// Check if sending data to the stratum server failed
+									if(bytesSent <= 0) [[unlikely]] {
+									
+										// Break
+										break;
+									}
+									
+									// Update total bytes sent
+									totalBytesSent += bytesSent;
+									
+								} while(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0'));
+								
+								// Check if sending data to the stratum server failed
+								if(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0')) [[unlikely]] {
+								
+									// Set that job isn't applicable
+									jobIsApplicable = false;
+									
+									// Break
+									break;
+								}
+								
+								// Check if displaying stratum server messages
+								#if DISPLAY_STRATUM_SERVER_MESSAGES
+								
+									// Check if performing CPU searching during GPU trimming
+									#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+									
+										// Display message
+										cout << "Sent: " << keepAliveRequest;
+										
+									// Otherwise
+									#else
+									
+										// Display message
+										cpuSearchingThreadsLock.lock();
+										cout << "Sent: " << keepAliveRequest;
+										cpuSearchingThreadsLock.unlock();
+									#endif
+								#endif
+								
+								// Update last keep alive time
+								lastKeepAliveTime = chrono::steady_clock::now();
+							}
+							
+						} while(!jobIsApplicable && !closing);
+						
+						// Check if job isn't applicable or closing
+						if(!jobIsApplicable || closing) [[unlikely]] {
+						
+							// Check if not performing CPU searching during GPU trimming
+							#if !CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+							
+								// Wait for CPU searching to finish
+								cpuSearchingThreadsLock.lock();
+								cpuSearchingThreadsFinishedConditionalVariable.wait(cpuSearchingThreadsLock, [&cpuSearchingThreadsFinished]() __attribute__((always_inline)) noexcept -> bool {
+								
+									// Return if CPU searching threads have finished
+									return cpuSearchingThreadsFinished;
+								});
+							#endif
+							
+							// Check if using an Apple device
+							#ifdef __APPLE__
+							
+								// Check if waiting for GPU transferring to finish
+								commandQueueFinishedSemaphore.acquire();
+								if(gpuError) [[unlikely]] {
+								
+									// Display message
+									cout << "Waiting for GPU transferring to finish failed" << endl;
+									
+									// Set return status to failure
+									returnStatus = EXIT_FAILURE;
+									
+									// Break
+									break;
+								}
+								
+							// Otherwise
+							#else
+							
+								// Check if waiting for GPU transferring to finish
+								if(clWaitForEvents(1, &gpuLastEvent) != CL_SUCCESS || clReleaseEvent(gpuFirstEvent) != CL_SUCCESS || (gpuFirstEvent = nullptr) || clReleaseEvent(gpuLastEvent) != CL_SUCCESS || (gpuLastEvent = nullptr)) [[unlikely]] {
+								
+									// Display message
+									cout << "Waiting for GPU transferring to finish failed" << endl;
+									
+									// Set return status to failure
+									returnStatus = EXIT_FAILURE;
+									
+									// Break
+									break;
+								}
+							#endif
+							
+							// Check if received buffer is full or closing
+							if(receiveBufferFull || closing) [[likely]] {
+							
+								// Display message
+								cout << "Receiving data from the stratum server failed" << endl;
+							}
+							
+							// Otherwise
+							else [[unlikely]] {
+							
+								// Display message
+								cout << "Sending data to the stratum server failed" << endl;
+							}
+							
+							// Break
+							break;
+						}
+						
+						// Check if performing CPU searching during GPU trimming
+						#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
+						
+							// Display message
+							cout << "Got job from the stratum server" << endl;
+							
+						// Otherwise
+						#else
+						
+							// Display message
+							cpuSearchingThreadsLock.lock();
+							cout << "Got job from the stratum server" << endl;
+							cpuSearchingThreadsLock.unlock();
+						#endif
 					}
 				#endif
 				
@@ -11212,8 +11672,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if mining to a stratum server
 							#if MINE_TO_A_STRATUM_SERVER
 							
-								// Append first solution edge to submit request
-								appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
+								// Check if stratum server uses more than one mining algorithm
+								#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+								
+									// Append first solution edge to submit request
+									appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
+									
+								// Otherwise
+								#else
+								
+									// Append first solution edge to submit request
+									appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
+								#endif
 								
 								// Go through all remaining solution edges
 								for(int i = 1; i < SOLUTION_SIZE; ++i) [[likely]] {
@@ -11225,11 +11695,24 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									appendResult = to_chars(appendResult.ptr + sizeof(','), appendResult.ptr + sizeof(',') + MAX_UINT32_STRING_SIZE, solutionEdges[i]);
 								}
 								
-								// Append ending to submit request
-								__builtin_memcpy(appendResult.ptr, "]}}\n", sizeof("]}}\n") - sizeof('\0'));
+								// Check if stratum server uses more than one mining algorithm
+								#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
 								
-								// Get submit request's size
-								const size_t submitRequestSize = appendResult.ptr + sizeof("]}}\n") - sizeof('\0') - submitRequest;
+									// Append ending to submit request
+									__builtin_memcpy(appendResult.ptr, "]]}}}\n", sizeof("]]}}}\n") - sizeof('\0'));
+									
+									// Get submit request's size
+									const size_t submitRequestSize = appendResult.ptr + sizeof("]]}}}\n") - sizeof('\0') - submitRequest;
+								
+								// Otherwise
+								#else
+								
+									// Append ending to submit request
+									__builtin_memcpy(appendResult.ptr, "]}}\n", sizeof("]}}\n") - sizeof('\0'));
+									
+									// Get submit request's size
+									const size_t submitRequestSize = appendResult.ptr + sizeof("]}}\n") - sizeof('\0') - submitRequest;
+								#endif
 								
 								// Loop until full message is sent
 								size_t totalBytesSent = 0;
