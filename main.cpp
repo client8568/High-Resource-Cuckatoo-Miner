@@ -10164,6 +10164,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					}
 					
 					// Update next job height and job ID
+					const uint64_t previousJobHeight = jobHeight[1 - currentJobIndex];
 					jobHeight[1 - currentJobIndex] = jobHeight[currentJobIndex];
 					jobId[1 - currentJobIndex] = jobId[currentJobIndex];
 					
@@ -11041,7 +11042,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					#if MINE_TO_A_STRATUM_SERVER
 					
 						// Check if a solution was found and a new job with a different height wasn't received
-						if(recoverEdgesParameters.solutionNodes[3] && jobHeight[0] == jobHeight[1]) [[unlikely]] {
+						if(recoverEdgesParameters.solutionNodes[3] && jobHeight[currentJobIndex] == previousJobHeight) [[unlikely]] {
 						
 					// Otherwise
 					#else
