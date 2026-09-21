@@ -70,6 +70,16 @@ A stratum server address, port, username, and password can be provided when runn
 "./High Resource Cuckatoo Miner" -a 127.0.0.1 -p 3416 -u username -w password
 ```
 
+You can display all your GPUs and their indices that this program can use by running it with the `-d` command line argument.
+```
+"./High Resource Cuckatoo Miner" -d
+```
+
+This program will attempt to use the first applicable GPU that it finds. However you can make it use a specific GPU by running it with the `-g` command line argument with the index of the GPU. For example, the following command will use the GPU with the index `1`.
+```
+"./High Resource Cuckatoo Miner" -g 1
+```
+
 ### Tuning
 All of this programs tuning related settings are provided at build time and they are hard coded into the program. The values for all the settings are verified at build time, so this program will fail to build if you attempt to use a setting that is invalid or outside of its expected range. Here are all the settings available:
 

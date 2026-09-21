@@ -595,6 +595,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		});
 	#endif
 	
+	// Create GPU index
+	uint64_t gpuIndex = 0;
+	
 	// Create block
 	{
 	
@@ -620,6 +623,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				{"stratum_server_password", required_argument, nullptr, 'w'},
 			#endif
 			
+			// Display GPUs
+			{"display_gpus", no_argument, nullptr, 'd'},
+			
+			// GPU
+			{"gpu", required_argument, nullptr, 'g'},
+			
 			// Help
 			{"help", no_argument, nullptr, 'h'},
 			
@@ -636,13 +645,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		#if MINE_TO_A_STRATUM_SERVER
 		
 			// Go through all options while not displaying help
-			while(argv && (option = getopt_long(argc, argv, "va:p:u:w:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 			
 		// Otherwise
 		#else
 		
 			// Go through all options while not displaying help
-			while(argv && (option = getopt_long(argc, argv, "vh", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			while(argv && (option = getopt_long(argc, argv, "vdg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 		#endif
 		
 			// Check option
@@ -823,6 +832,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						else [[likely]] {
 						
 							// Go through all characters in the option
+							__builtin_assume(*optarg);
 							for(const char *character = optarg; *character; ++character) [[likely]] {
 							
 								// Check if character is invalid
@@ -872,6 +882,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							});
 							
 							// Go through all characters in the option
+							__builtin_assume(*optarg);
 							for(const char *character = optarg; *character; ++character) [[likely]] {
 							
 								// Check if character is invalid
@@ -894,6 +905,223 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						// Break
 						break;
 				#endif
+				
+				// Display GPUs
+				case 'd': {
+				
+					// Check if using an Apple device
+					#ifdef __APPLE__
+					
+						// Check if creating autorelease pool failed
+						const unique_ptr<NS::AutoreleasePool, void(*)(NS::AutoreleasePool *)> autoreleasePool(NS::AutoreleasePool::alloc()->init(), [](NS::AutoreleasePool *autoreleasePool) __attribute__((always_inline)) noexcept {
+						
+							// Free autorelease pool
+							__builtin_assume_dereferenceable(autoreleasePool, sizeof(*autoreleasePool));
+							autoreleasePool->release();
+						});
+						if(!autoreleasePool) [[unlikely]] {
+						
+							// Display message
+							cout << "Creating autorelease pool failed" << endl;
+							
+							// Return failure
+							return EXIT_FAILURE;
+						}
+						
+						// Check if getting GPUs failed or no GPUs exist
+						unique_ptr<NS::Array, void(*)(NS::Array *)> gpus(MTL::CopyAllDevices(), [](NS::Array *gpus) __attribute__((always_inline)) noexcept {
+						
+							// Free GPUs
+							__builtin_assume_dereferenceable(gpus, sizeof(*gpus));
+							gpus->release();
+						});
+						if(!gpus || !gpus->count()) [[unlikely]] {
+						
+							// Check if setting GPUs to include only the system's default GPU failed
+							gpus = unique_ptr<NS::Array, void(*)(NS::Array *)>(NS::Array::alloc()->init((const NS::Object *[]){
+							
+								// System's default GPU
+								unique_ptr<MTL::Device, void(*)(MTL::Device *)>(MTL::CreateSystemDefaultDevice(), [](MTL::Device *systemsDefaultGpu) __attribute__((always_inline)) noexcept {
+								
+									// Free system's default GPU
+									__builtin_assume_dereferenceable(systemsDefaultGpu, sizeof(*systemsDefaultGpu));
+									systemsDefaultGpu->release();
+									
+								}).get()
+								
+							}, 1), [](NS::Array *gpus) __attribute__((always_inline)) noexcept {
+							
+								// Free GPUs
+								__builtin_assume_dereferenceable(gpus, sizeof(*gpus));
+								gpus->release();
+							});
+							if(!gpus) [[unlikely]] {
+							
+								// Display message
+								cout << "Getting GPUs failed" << endl;
+								
+								// Return failure
+								return EXIT_FAILURE;
+							}
+						}
+						
+						// Go through all GPUs
+						uint64_t gpuNumber = 0;
+						const NS::UInteger numberOfGpus = gpus->count();
+						__builtin_assume(numberOfGpus > 0);
+						for(NS::UInteger i = 0; i < numberOfGpus; ++i) [[likely]] {
+						
+							// Check if current GPU exists
+							const MTL::Device *currentGpu = gpus->object<MTL::Device>(i);
+							if(currentGpu) [[likely]] {
+							
+								// Check if current GPU has a name
+								const NS::String *name = currentGpu->name();
+								const char *nameAsUtf8String;
+								if(name && (nameAsUtf8String = name->utf8String())) [[likely]] {
+								
+									// Check if first GPU
+									if(!gpuNumber) [[unlikely]] {
+									
+										// Display message
+										cout << "GPUs:" << endl;
+									}
+									
+									// Check if not at the max GPU number
+									if(gpuNumber != UINT64_MAX) [[likely]] {
+									
+										// Display message
+										cout << ++gpuNumber << ": " << nameAsUtf8String << endl;
+									}
+								}
+							}
+						}
+						
+						// Check if no GPUs exist
+						if(!gpuNumber) [[unlikely]] {
+						
+							// Display message
+							cout << "No GPUs exist" << endl;
+						}
+						
+					// Otherwise
+					#else
+					
+						// Check if getting number of OpenCL platforms failed
+						cl_uint numberOfOpenClPlatforms;
+						if(clGetPlatformIDs(0, nullptr, &numberOfOpenClPlatforms) != CL_SUCCESS) [[unlikely]] {
+						
+							// Display message
+							cout << "Getting number of OpenCL platforms failed" << endl;
+							
+							// Return failure
+							return EXIT_FAILURE;
+						}
+						
+						// Check if no OpenCL platforms exist
+						if(!numberOfOpenClPlatforms) [[unlikely]] {
+						
+							// Display message
+							cout << "No OpenCL platforms exist" << endl;
+						}
+						
+						// Otherwise
+						else [[likely]] {
+						
+							// Check if getting OpenCL platforms failed
+							cl_platform_id openClPlatforms[numberOfOpenClPlatforms];
+							if(clGetPlatformIDs(numberOfOpenClPlatforms, openClPlatforms, nullptr) != CL_SUCCESS) [[unlikely]] {
+							
+								// Display message
+								cout << "Getting OpenCL platforms failed" << endl;
+								
+								// Return failure
+								return EXIT_FAILURE;
+							}
+							
+							// Go through all OpenCL platforms
+							uint64_t gpuNumber = 0;
+							__builtin_assume(numberOfOpenClPlatforms > 0);
+							for(cl_uint i = 0; i < numberOfOpenClPlatforms; ++i) [[likely]] {
+							
+								// Check if getting OpenCL platform's number of GPUs was successful and GPUs exist
+								cl_uint numberOfGpus;
+								if(clGetDeviceIDs(openClPlatforms[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &numberOfGpus) == CL_SUCCESS && numberOfGpus) [[likely]] {
+								
+									// Check if getting OpenCL platform's GPUs was successful
+									cl_device_id gpus[numberOfGpus];
+									if(clGetDeviceIDs(openClPlatforms[i], CL_DEVICE_TYPE_GPU, numberOfGpus, gpus, nullptr) == CL_SUCCESS) [[likely]] {
+									
+										// Go through all of the GPUs
+										__builtin_assume(numberOfGpus > 0);
+										for(cl_uint j = 0; j < numberOfGpus; ++j) [[likely]] {
+										
+											// Check if current GPU has a name
+											size_t nameSize;
+											if(clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize) [[likely]] {
+											
+												// Check if getting current GPU's name was successful
+												char name[nameSize];
+												if(clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS) [[likely]] {
+												
+													// Check if first GPU
+													if(!gpuNumber) [[unlikely]] {
+													
+														// Display message
+														cout << "GPUs:" << endl;
+													}
+													
+													// Check if not at the max GPU number
+													if(gpuNumber != UINT64_MAX) [[likely]] {
+													
+														// Display message
+														cout << ++gpuNumber << ": " << name << endl;
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							
+							// Check if no GPUs exist
+							if(!gpuNumber) [[unlikely]] {
+							
+								// Display message
+								cout << "No GPUs exist" << endl;
+							}
+						}
+					#endif
+					
+					// Break
+					break;
+				}
+				
+				// GPU
+				case 'g': {
+				
+					// Set exit after options to false
+					exitAfterOptions = false;
+					
+					// Check if option is invalid
+					char *end;
+					errno = 0;
+					const unsigned long long optionAsNumber = __builtin_expect(optarg != nullptr, true) ? strtoull(optarg, &end, DECIMAL_NUMBER_BASE) : 0;
+					if(!optarg || end == optarg || *end || !isdigit(optarg[0]) || (optarg[0] == '0' && isdigit(optarg[1])) || errno || !optionAsNumber || optionAsNumber > UINT64_MAX) [[unlikely]] {
+					
+						// Display message
+						cout << '"' << argv[0] << "\": invalid GPU index -- '" << (__builtin_expect(optarg != nullptr, true) ? optarg : "") << '\'' << endl;
+						
+						// Set display help to true
+						displayHelp = true;
+					}
+					
+					// Set GPU index to the option as number
+					gpuIndex = optionAsNumber;
+					
+					// Break
+					break;
+				}
 				
 				// Help
 				case 'h':
@@ -937,6 +1165,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#endif
 			
 			// Display message
+			cout << "\t-d, --display_gpus\t\tDisplay all GPUs and their indices" << endl;
+			cout << "\t-g, --gpu\t\t\tThe optional index of the GPU to use" << endl;
 			cout << "\t-h, --help\t\t\tDisplay help information" << endl;
 			
 			// Return success if help was requested otherwise return failure
@@ -4524,8 +4754,19 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#endif
 		#endif
 		
-		// Display message
-		cout << "Acquiring GPU" << endl;
+		// Check if a GPU was selected
+		if(gpuIndex) [[unlikely]] {
+		
+			// Display message
+			cout << "Acquiring the GPU with index " << gpuIndex << endl;
+		}
+		
+		// Otherwise
+		else {
+		
+			// Display message
+			cout << "Acquiring GPU" << endl;
+		}
 		
 		// Check if using an Apple device
 		#ifdef __APPLE__
@@ -4763,7 +5004,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						__builtin_assume_dereferenceable(gpus, sizeof(*gpus));
 						gpus->release();
 					});
-					if(!gpus || !gpus->object(0)) [[unlikely]] {
+					if(!gpus) [[unlikely]] {
 					
 						// Display message
 						cout << "Getting GPUs failed" << endl;
@@ -4774,6 +5015,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				}
 				
 				// Go through all GPUs
+				uint64_t gpuNumber = 0;
 				const NS::UInteger numberOfGpus = gpus->count();
 				__builtin_assume(numberOfGpus > 0);
 				for(NS::UInteger i = 0; i < numberOfGpus; ++i) [[likely]] {
@@ -4782,98 +5024,128 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					MTL::Device *currentGpu = gpus->object<MTL::Device>(i);
 					if(currentGpu) [[likely]] {
 					
-						// Check if current GPU supports the Metal version, has enough work group memory, and has a name
+						// Check if current GPU has a name
 						const NS::String *name = currentGpu->name();
 						const char *nameAsUtf8String;
-						if(currentGpu->supportsFamily(MTL::GPUFamilyMetal4) && currentGpu->maxThreadgroupMemoryLength() >= maxGpuWorkGroupMemorySize && name && (nameAsUtf8String = name->utf8String())) [[likely]] {
+						if(name && (nameAsUtf8String = name->utf8String())) [[likely]] {
 						
-							// Check if GPU is built in
-							int setGpuMemorySizeResult = -1;
-							if(gpu->location() == MTL::DeviceLocationBuiltIn) [[likely]] {
+							// Check if no GPU is selected or current GPU is selected
+							if(!gpuIndex || (gpuNumber != UINT64_MAX && ++gpuNumber == gpuIndex)) [[likely]] {
 							
-								// Check if getting the GPU's memory size was successful
-								gpuMemorySize = 0;
-								size_t gpuMemorySizeSize = sizeof(gpuMemorySize);
-								if(!sysctlbyname("iogpu.wired_limit_mb", &gpuMemorySize, &gpuMemorySizeSize, nullptr, 0)) [[likely]] {
+								// Check if current GPU supports the Metal version and has enough work group memory
+								if(currentGpu->supportsFamily(MTL::GPUFamilyMetal4) && currentGpu->maxThreadgroupMemoryLength() >= maxGpuWorkGroupMemorySize) [[likely]] {
 								
-									// Get new GPU memory size
-									decltype(gpuMemorySize) newGpuMemorySize = (totalGpuMemoryAllocated + BYTES_IN_A_GIGABYTE - 1) / BYTES_IN_A_GIGABYTE * MEGABYTES_IN_A_GIGABYTE;
+									// Check if GPU is built in
+									int setGpuMemorySizeResult = -1;
+									if(gpu->location() == MTL::DeviceLocationBuiltIn) [[likely]] {
 									
-									// Check if new GPU memory size including additional space will overflow
-									if(GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES > numeric_limits<decltype(newGpuMemorySize)>::max() - newGpuMemorySize) [[unlikely]] {
-									
-										// Set new GPU memory size to its max value
-										newGpuMemorySize = numeric_limits<decltype(newGpuMemorySize)>::max();
-									}
-									
-									// Otherwise
-									else [[likely]] {
-									
-										// Add additional space to new GPU memory size
-										newGpuMemorySize += GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES;
-									}
-									
-									// Check if setting the GPU's memory size failed
-									setGpuMemorySizeResult = sysctlbyname("iogpu.wired_limit_mb", nullptr, 0, &newGpuMemorySize, sizeof(newGpuMemorySize));
-									if(setGpuMemorySizeResult) [[unlikely]] {
-									
-										// Display message
-										cout << "Setting the " << nameAsUtf8String << " GPU's memory size to " << newGpuMemorySize << "MB failed" << endl;
+										// Check if getting the GPU's memory size was successful
+										gpuMemorySize = 0;
+										size_t gpuMemorySizeSize = sizeof(gpuMemorySize);
+										if(!sysctlbyname("iogpu.wired_limit_mb", &gpuMemorySize, &gpuMemorySizeSize, nullptr, 0)) [[likely]] {
 										
-										// Check if failed due to lacking privileges
-										if(errno == EPERM) [[likely]] {
-										
-											// Display message
-											cout << "If this program fails to run then run this program as root so that it can set the GPU's memory size by running the following command in a terminal: sudo \"" << (__builtin_expect(argv != nullptr, true) ? argv[0] : "") << '"' << endl;
+											// Get new GPU memory size
+											decltype(gpuMemorySize) newGpuMemorySize = (totalGpuMemoryAllocated + BYTES_IN_A_GIGABYTE - 1) / BYTES_IN_A_GIGABYTE * MEGABYTES_IN_A_GIGABYTE;
+											
+											// Check if new GPU memory size including additional space will overflow
+											if(GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES > numeric_limits<decltype(newGpuMemorySize)>::max() - newGpuMemorySize) [[unlikely]] {
+											
+												// Set new GPU memory size to its max value
+												newGpuMemorySize = numeric_limits<decltype(newGpuMemorySize)>::max();
+											}
+											
+											// Otherwise
+											else [[likely]] {
+											
+												// Add additional space to new GPU memory size
+												newGpuMemorySize += GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES;
+											}
+											
+											// Check if setting the GPU's memory size failed
+											setGpuMemorySizeResult = sysctlbyname("iogpu.wired_limit_mb", nullptr, 0, &newGpuMemorySize, sizeof(newGpuMemorySize));
+											if(setGpuMemorySizeResult) [[unlikely]] {
+											
+												// Display message
+												cout << "Setting the " << nameAsUtf8String << " GPU's memory size to " << newGpuMemorySize << "MB failed" << endl;
+												
+												// Check if failed due to lacking privileges
+												if(errno == EPERM) [[likely]] {
+												
+													// Display message
+													cout << "If this program fails to run then run this program as root so that it can set the GPU's memory size by running the following command in a terminal: sudo \"" << (__builtin_expect(argv != nullptr, true) ? argv[0] : "") << '"' << endl;
+												}
+											}
 										}
 									}
-								}
-							}
-							
-							// Check if GPU has enough memory or its memory size was successfully set
-							if(currentGpu->recommendedMaxWorkingSetSize() >= totalGpuMemoryAllocated || !setGpuMemorySizeResult) [[likely]] {
-							
-								// Set GPU to the current GPU and don't free it when GPUs is freed
-								gpu = unique_ptr<MTL::Device, void(*)(MTL::Device *)>(currentGpu->retain(), [](MTL::Device *gpu) __attribute__((always_inline)) noexcept {
-								
-									// Free GPU
-									__builtin_assume_dereferenceable(gpu, sizeof(*gpu));
-									gpu->release();
-								});
-								
-								// Automatically reset the GPU's memory size when done if it successfully set it
-								gpuMemorySizeUniquePointer = unique_ptr<decltype(gpuMemorySize), void(*)(decltype(gpuMemorySize) *)>(__builtin_expect(setGpuMemorySizeResult, false) ? nullptr : &gpuMemorySize, [](decltype(gpuMemorySize) *gpuMemorySize) __attribute__((always_inline)) noexcept {
-								
-									// Reset the GPU's memory size
-									sysctlbyname("iogpu.wired_limit_mb", nullptr, 0, gpuMemorySize, sizeof(*gpuMemorySize));
-								});
-								
-								// Display message
-								cout << "Using the " << nameAsUtf8String << " GPU" << endl;
-								
-								// Break
-								break;
-							}
-							
-							// Otherwise check if GPU's memory size was successfully set
-							else if(!setGpuMemorySizeResult) [[unlikely]] {
-								
-								// Check if resetting the GPU's memory size failed
-								if(sysctlbyname("iogpu.wired_limit_mb", nullptr, 0, &gpuMemorySize, sizeof(gpuMemorySize))) [[unlikely]] {
-								
-									// Display message
-									cout << "Resetting the " << nameAsUtf8String << " GPU's memory size failed" << endl;
+									
+									// Check if GPU has enough memory or its memory size was successfully set
+									if(currentGpu->recommendedMaxWorkingSetSize() >= totalGpuMemoryAllocated || !setGpuMemorySizeResult) [[likely]] {
+									
+										// Set GPU to the current GPU and don't free it when GPUs is freed
+										gpu = unique_ptr<MTL::Device, void(*)(MTL::Device *)>(currentGpu->retain(), [](MTL::Device *gpu) __attribute__((always_inline)) noexcept {
+										
+											// Free GPU
+											__builtin_assume_dereferenceable(gpu, sizeof(*gpu));
+											gpu->release();
+										});
+										
+										// Automatically reset the GPU's memory size when done if it successfully set it
+										gpuMemorySizeUniquePointer = unique_ptr<decltype(gpuMemorySize), void(*)(decltype(gpuMemorySize) *)>(__builtin_expect(setGpuMemorySizeResult, false) ? nullptr : &gpuMemorySize, [](decltype(gpuMemorySize) *gpuMemorySize) __attribute__((always_inline)) noexcept {
+										
+											// Reset the GPU's memory size
+											sysctlbyname("iogpu.wired_limit_mb", nullptr, 0, gpuMemorySize, sizeof(*gpuMemorySize));
+										});
+										
+										// Display message
+										cout << "Using the " << nameAsUtf8String << " GPU" << endl;
+										
+										// Break
+										break;
+									}
+									
+									// Otherwise check if GPU's memory size was successfully set
+									else if(!setGpuMemorySizeResult) [[unlikely]] {
+										
+										// Check if resetting the GPU's memory size failed
+										if(sysctlbyname("iogpu.wired_limit_mb", nullptr, 0, &gpuMemorySize, sizeof(gpuMemorySize))) [[unlikely]] {
+										
+											// Display message
+											cout << "Resetting the " << nameAsUtf8String << " GPU's memory size failed" << endl;
+										}
+									}
 								}
 							}
 						}
 					}
 				}
 				
-				// Check if no applicable GPU exists
+				// Check if no GPU is applicable
 				if(!gpu) [[unlikely]] {
 				
-					// Display message
-					cout << "No applicable GPU exists" << endl;
+					// Check if a GPU was selected
+					if(gpuIndex) [[unlikely]] {
+					
+						// Check if GPU exists
+						if(gpuNumber >= gpuIndex) [[likely]] {
+						
+							// Display message
+							cout << "GPU isn't applicable" << endl;
+						}
+						
+						// Otherwise
+						else [[unlikely]] {
+						
+							// Display message
+							cout << "GPU doesn't exist" << endl;
+						}
+					}
+					
+					// Otherwise
+					else [[likely]] {
+					
+						// Display message
+						cout << "No applicable GPU exists" << endl;
+					}
 					
 					// Break
 					break;
@@ -6043,6 +6315,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				
 				// Create block
 				bool applicableGpuExists = false;
+				uint64_t gpuNumber = 0;
 				{
 				
 					// Disable cout
@@ -6064,64 +6337,76 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								__builtin_assume(numberOfGpus > 0);
 								for(cl_uint j = 0; j < numberOfGpus; ++j) [[likely]] {
 								
-									// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, OpenCL version, and name
-									cl_bool isAvailable;
-									cl_bool isLittleEndian;
-									cl_ulong memorySize;
-									cl_ulong workGroupMemorySize;
-									size_t profileSize;
-									size_t openClVersionSize;
+									// Check if current GPU has a name
 									size_t nameSize;
-									size_t extensionsSize;
-									if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
+									if(clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, 0, nullptr, &nameSize) == CL_SUCCESS && nameSize) [[likely]] {
 									
-										// Check if current GPU supports full profile, its OpenCL version is compatible, getting its name, and getting its extensions if they exist was successful
-										char profile[profileSize];
-										char openClVersion[openClVersionSize];
+										// Check if getting current GPU's name was successful
 										char name[nameSize];
-										char extensions[extensionsSize];
-										if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS)) [[likely]] {
+										if(clGetDeviceInfo(gpus[j], CL_DEVICE_NAME, nameSize, name, nullptr) == CL_SUCCESS) [[likely]] {
 										
-											// Set applicable GPU exists to true
-											applicableGpuExists = true;
+											// Check if no GPU is selected or current GPU is selected
+											if(!gpuIndex || (gpuNumber != UINT64_MAX && ++gpuNumber == gpuIndex)) [[likely]] {
 											
-											// Check if creating a context for the current GPU was successful
-											gpuContext = unique_ptr<remove_pointer_t<cl_context>, decltype(&clReleaseContext)>(clCreateContext((const cl_context_properties[]){CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(openClPlatforms[i]), 0}, 1, &gpus[j], nullptr, nullptr, nullptr), clReleaseContext);
-											if(gpuContext) [[likely]] {
-											
-												// Set GPU to the current GPU
-												gpu = gpus[j];
+												// Check if current GPU is available, is little endian, has enough memory, has enough work group memory, and has a profile, and OpenCL version
+												cl_bool isAvailable;
+												cl_bool isLittleEndian;
+												cl_ulong memorySize;
+												cl_ulong workGroupMemorySize;
+												size_t profileSize;
+												size_t openClVersionSize;
+												size_t extensionsSize;
+												if(clGetDeviceInfo(gpus[j], CL_DEVICE_AVAILABLE, sizeof(isAvailable), &isAvailable, nullptr) == CL_SUCCESS && isAvailable == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_ENDIAN_LITTLE, sizeof(isLittleEndian), &isLittleEndian, nullptr) == CL_SUCCESS && isLittleEndian == CL_TRUE && clGetDeviceInfo(gpus[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memorySize), &memorySize, nullptr) == CL_SUCCESS && memorySize >= totalGpuMemoryAllocated && clGetDeviceInfo(gpus[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(workGroupMemorySize), &workGroupMemorySize, nullptr) == CL_SUCCESS && workGroupMemorySize >= maxGpuWorkGroupMemorySize && clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, 0, nullptr, &profileSize) == CL_SUCCESS && profileSize && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, 0, nullptr, &openClVersionSize) == CL_SUCCESS && openClVersionSize && clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, 0, nullptr, &extensionsSize) == CL_SUCCESS) [[likely]] {
 												
-												// Check if displaying power usage
-												#if DISPLAY_POWER_USAGE
-												
-													// Get GPU's UUID if it exists
-													cl_uchar uuid[CL_UUID_SIZE_KHR];
-													const bool uuidExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_DEVICE_UUID_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS;
+													// Check if current GPU supports full profile, its OpenCL version is compatible, and getting its extensions if they exist was successful
+													char profile[profileSize];
+													char openClVersion[openClVersionSize];
+													char extensions[extensionsSize];
+													if(clGetDeviceInfo(gpus[j], CL_DEVICE_PROFILE, profileSize, profile, nullptr) == CL_SUCCESS && !__builtin_strcmp(profile, "FULL_PROFILE") && clGetDeviceInfo(gpus[j], CL_DEVICE_OPENCL_C_VERSION, openClVersionSize, openClVersion, nullptr) == CL_SUCCESS && !__builtin_strncmp(openClVersion, "OpenCL C ", sizeof("OpenCL C ") - sizeof('\0')) && strtod(&openClVersion[sizeof("OpenCL C ") - sizeof('\0')], nullptr) >= 1.2 && (!extensionsSize || clGetDeviceInfo(gpus[j], CL_DEVICE_EXTENSIONS, extensionsSize, extensions, nullptr) == CL_SUCCESS)) [[likely]] {
 													
-													// Get GPU's PCI bus info if it exists
-													cl_device_pci_bus_info_khr pciBusInfo;
-													const bool pciBusInfoExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_PCI_BUS_INFO_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pciBusInfo), &pciBusInfo, nullptr) == CL_SUCCESS;
-													
-													// Check if GPU's UUID or PCI bus info exist
-													if(uuidExists || pciBusInfoExists) [[likely]] {
-													
-														// Throw error if UUID sizes are invalid
-														static_assert(sizeof(cl_uchar) == sizeof(uint8_t) && alignof(cl_uchar) == alignof(uint8_t) && CL_UUID_SIZE_KHR == UUID_SIZE, "UUID sizes are invalid");
+														// Set applicable GPU exists to true
+														applicableGpuExists = true;
 														
-														// Set energy consumption to monitor the GPU
-														getGpuPowerUsed = energyConsumption.setGpu(uuidExists, uuid, pciBusInfoExists, pciBusInfo.pci_domain, pciBusInfo.pci_bus, pciBusInfo.pci_device, pciBusInfo.pci_function);
+														// Check if creating a context for the current GPU was successful
+														gpuContext = unique_ptr<remove_pointer_t<cl_context>, decltype(&clReleaseContext)>(clCreateContext((const cl_context_properties[]){CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(openClPlatforms[i]), 0}, 1, &gpus[j], nullptr, nullptr, nullptr), clReleaseContext);
+														if(gpuContext) [[likely]] {
+														
+															// Set GPU to the current GPU
+															gpu = gpus[j];
+															
+															// Check if displaying power usage
+															#if DISPLAY_POWER_USAGE
+															
+																// Get GPU's UUID if it exists
+																cl_uchar uuid[CL_UUID_SIZE_KHR];
+																const bool uuidExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_DEVICE_UUID_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS;
+																
+																// Get GPU's PCI bus info if it exists
+																cl_device_pci_bus_info_khr pciBusInfo;
+																const bool pciBusInfoExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_PCI_BUS_INFO_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pciBusInfo), &pciBusInfo, nullptr) == CL_SUCCESS;
+																
+																// Check if GPU's UUID or PCI bus info exist
+																if(uuidExists || pciBusInfoExists) [[likely]] {
+																
+																	// Throw error if UUID sizes are invalid
+																	static_assert(sizeof(cl_uchar) == sizeof(uint8_t) && alignof(cl_uchar) == alignof(uint8_t) && CL_UUID_SIZE_KHR == UUID_SIZE, "UUID sizes are invalid");
+																	
+																	// Set energy consumption to monitor the GPU
+																	getGpuPowerUsed = energyConsumption.setGpu(uuidExists, uuid, pciBusInfoExists, pciBusInfo.pci_domain, pciBusInfo.pci_bus, pciBusInfo.pci_device, pciBusInfo.pci_function);
+																}
+															#endif
+															
+															// Enable cout
+															disableCout.enable();
+															
+															// Display message
+															cout << "Using the " << name << " GPU" << endl;
+															
+															// Break
+															break;
+														}
 													}
-												#endif
-												
-												// Enable cout
-												disableCout.enable();
-												
-												// Display message
-												cout << "Using the " << name << " GPU" << endl;
-												
-												// Break
-												break;
+												}
 											}
 										}
 									}
@@ -6134,8 +6419,30 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Check if no applicable GPU exists
 				if(!applicableGpuExists) [[unlikely]] {
 				
-					// Display message
-					cout << "No applicable GPU exists" << endl;
+					// Check if a GPU was selected
+					if(gpuIndex) [[unlikely]] {
+					
+						// Check if GPU exists
+						if(gpuNumber >= gpuIndex) [[likely]] {
+						
+							// Display message
+							cout << "GPU isn't applicable" << endl;
+						}
+						
+						// Otherwise
+						else [[unlikely]] {
+						
+							// Display message
+							cout << "GPU doesn't exist" << endl;
+						}
+					}
+					
+					// Otherwise
+					else [[likely]] {
+					
+						// Display message
+						cout << "No applicable GPU exists" << endl;
+					}
 					
 					// Break
 					break;
@@ -6144,8 +6451,19 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				// Check if creating a context for an OpenCL platform's GPU failed
 				if(!gpuContext) [[unlikely]] {
 				
-					// Display message
-					cout << "Creating a context for an OpenCL platform's GPU failed" << endl;
+					// Check if a GPU was selected
+					if(gpuIndex) [[unlikely]] {
+					
+						// Display message
+						cout << "Creating a context for the GPU failed" << endl;
+					}
+					
+					// Otherwise
+					else [[likely]] {
+					
+						// Display message
+						cout << "Creating a context for an OpenCL platform's GPU failed" << endl;
+					}
 					
 					// Break
 					break;
@@ -7323,7 +7641,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Break
 							break;
 						}
-					};
+					}
 					
 					// Check if receiving data from the stratum server failed or closing
 					if(!totalBytesReceived || closing) [[unlikely]] {
@@ -7613,7 +7931,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								// Break
 								break;
 							}
-						};
+						}
 						
 						// Check if receiving data from the stratum server failed or closing
 						if(!totalBytesReceived || closing) [[unlikely]] {
@@ -10569,7 +10887,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 									// Break
 									break;
 								}
-							};
+							}
 							
 							// Check if receiving data from the stratum server failed or closing
 							if(!totalBytesReceived || closing) [[unlikely]] {
