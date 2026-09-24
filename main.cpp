@@ -2608,7 +2608,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
 							
 							// Put edge's nodes in the coarse bucket at the index
-							*nextEdgeIndex[coarseBucketIndex] = (((nodes & (static_cast<uint32_t>(CPU_COARSE_BUCKET_INDEX_MASK) << CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING)) | compressedValue) << (sizeof(uint32_t) * BITS_IN_A_BYTE)) | (nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE));
+							*nextEdgeIndex[coarseBucketIndex] = ((((nodes & (static_cast<uint32_t>(CPU_COARSE_BUCKET_INDEX_MASK) << CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING)) << (__builtin_expect(CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING < CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE, false) ? CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE - CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING : 0)) | compressedValue) << (sizeof(uint32_t) * BITS_IN_A_BYTE)) | (nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE));
 							
 							// Increment the coarse bucket's next edge index if the edge's node in the first partition has a pair in the bitmap
 							nextEdgeIndex[coarseBucketIndex] += bitmapCurrentPairValue >= 0x0101;
@@ -2877,7 +2877,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							#if !CPU_TRIMMING_USE_MAX_RAM && !CPU_TRIMMING_USE_MORE_RAM
 							
 								// Get coarse bucket's index from the edge's node in the first partition
-								const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
+								const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING + (__builtin_expect(CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING < CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE, false) ? CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE - CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING : 0));
 							#endif
 							
 							// Get location of the bitmap value for the edge's node in the second partition and its pair
@@ -2944,7 +2944,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							#if CPU_TRIMMING_USE_MAX_RAM || CPU_TRIMMING_USE_MORE_RAM
 							
 								// Get coarse bucket's index from the edge's node in the first partition
-								const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING);
+								const int coarseBucketIndex = nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE + CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING + (__builtin_expect(CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING < CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE, false) ? CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE - CPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_COARSE_BUCKET_SORTING : 0));
 								
 								// Put edge's nodes in the coarse bucket at the index
 								*reinterpret_cast<uint32_t **>(nextEdgeIndex)[coarseBucketIndex] = (static_cast<uint32_t>(compressedValue) << (CPU_COMPRESSED_ITEM_SIZE * BITS_IN_A_BYTE)) | ((nodes >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) & CPU_COMPRESSED_ITEM_MASK);
