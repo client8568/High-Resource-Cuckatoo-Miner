@@ -419,7 +419,7 @@ make STOP_AFTER_NUMBER_OF_GRAPHS=0
 make EDGE_BITS=31 STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=true HEADER_SIZE_EXCLUDING_NONCE=274 STRATUM_SERVER_AGENT_PREFIX=epic-miner/
 ```
 
-* These are the bare minimum settings that must be used when using this program to mine Grin (GRIN). With these settings, this program can mine to a [Grin node](https://github.com/mimblewimble/grin), the [2Miners GRIN Pool mining pool](https://grin.2miners.com), the [Easygrin Pool mining pool](https://pool.easygrin.org), the [GAEA Pool mining pool](https://gaeapool.com), the [GRIN Solo Mining mining pool](https://solo.grin.money), the [Grinmint mining pool](https://grinmint.com), or the [VIP Mining Pool mining pool](https://pool.always.vip).
+* These are the bare minimum settings that must be used when using this program to mine Grin (GRIN). With these settings, this program can mine to a [Grin node](https://github.com/mimblewimble/grin), the [2Miners GRIN Pool mining pool](https://grin.2miners.com), the [Easygrin Pool mining pool](https://pool.easygrin.org), the [GAEA Pool mining pool](https://gaeapool.com), the [GRIN Solo Mining mining pool](https://solo.grin.money), the [Grinmint mining pool](https://grinmint.com), the [Le Pool Grin pool mining pool](https://grin.lepool.lol), or the [VIP Mining Pool mining pool](https://pool.always.vip).
 ```
 make
 ```
