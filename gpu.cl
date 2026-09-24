@@ -888,13 +888,13 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(ushort i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -1000,7 +1000,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
@@ -1022,7 +1022,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(uint i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -1477,13 +1477,13 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(ushort i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -1589,7 +1589,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
@@ -1611,7 +1611,7 @@ __kernel void updateLargestInitialCoarseBucketSize(__global uint *restrict large
 		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], (uint)GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET);
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(uint i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -2357,13 +2357,13 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(ushort i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -2469,7 +2469,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
@@ -2491,7 +2491,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(uint i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -3234,13 +3234,13 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(ushort i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -3346,7 +3346,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
@@ -3368,7 +3368,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundOne(__global uint *restri
 		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(uint i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -4469,13 +4469,13 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(ushort i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -4604,7 +4604,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 		__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		__local uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		__local uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = get_group_id(0);
@@ -4649,7 +4649,7 @@ __kernel void updateLargestCoarseBucketSizeInStepsRoundTwo(__global uint *restri
 		#endif
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; __builtin_expect(i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+		for(uint i = localId; __builtin_expect(i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 		
 			// Set bitmap part to zero
 			bitmap[i] = 0;
@@ -5049,7 +5049,7 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 	
 	// Declare bitmap
-	__local uint bitmap[GPU_BITMAP_SIZE / sizeof(uint)];
+	__local uint bitmap[(GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 	
 	// Get this work group's fine bucket index
 	const ushort fineBucketIndex = get_group_id(0);
@@ -5103,7 +5103,7 @@ __kernel void updateLargestIntermediateCoarseBucketSize(__global uint *restrict 
 	const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 	
 	// Go through all bitmap parts as a work group
-	for(ushort i = localId; __builtin_expect(i < GPU_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+	for(ushort i = localId; __builtin_expect(i < (GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 	
 		// Set bitmap part to zero
 		bitmap[i] = 0;
@@ -5459,13 +5459,13 @@ __kernel void trimFinalEdges(__global uint2 *restrict coarseBuckets, __global ui
 	__local uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 	
 	// Declare bitmap
-	__local uint bitmap[GPU_BITMAP_SIZE / sizeof(uint)];
+	__local uint bitmap[(GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 	
 	// Get this work group's fine bucket index
 	const uint fineBucketIndex = groupId;
 	
 	// Go through all bitmap parts as a work group
-	for(ushort i = localId; __builtin_expect(i < GPU_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+	for(ushort i = localId; __builtin_expect(i < (GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 	
 		// Set bitmap part to zero
 		bitmap[i] = 0;
@@ -5601,7 +5601,7 @@ __kernel void trimFinalEdgesAndTransferEdges(__global uint2 *restrict cpuBuckets
 	__local uint nextEdgeIndex[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 	
 	// Declare bitmap
-	__local uint bitmap[GPU_BITMAP_SIZE / sizeof(uint)];
+	__local uint bitmap[(GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 	
 	// Get this work group's fine bucket index
 	const uint fineBucketIndex = groupId;
@@ -5610,7 +5610,7 @@ __kernel void trimFinalEdgesAndTransferEdges(__global uint2 *restrict cpuBuckets
 	const ushort coarseBucketIndex = fineBucketIndex >> GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING;
 	
 	// Go through all bitmap parts as a work group
-	for(ushort i = localId; __builtin_expect(i < GPU_BITMAP_SIZE / sizeof(uint), true); i += GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
+	for(ushort i = localId; __builtin_expect(i < (GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint), true); i += GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) {
 	
 		// Set bitmap part to zero
 		bitmap[i] = 0;

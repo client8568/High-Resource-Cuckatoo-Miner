@@ -128,8 +128,14 @@ static constexpr const array GPU_MAX_NUMBER_OF_EDGES_PER_COARSE_BUCKET_AFTER_TRI
 	#define GPU_MAX_NUMBER_OF_EDGES_PER_FINE_BUCKET static_cast<uint32_t>((ceilAsUint32(static_cast<double>(maxNumberOfEdgesRemainingAfterTimmingRounds(0)) / (GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION)) + (hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1)) & ~(hardware_destructive_interference_size / GPU_FINE_BUCKET_ITEM_SIZE - 1))
 #endif
 
+// GPU number of least significant bits ignored during initial fine bucket sorting
+#define GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING (EDGE_BITS - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING)
+
 // GPU number of least significant bits ignored during fine bucket sorting
-#define GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING (EDGE_BITS - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING - min(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING, GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING))
+#define GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING (EDGE_BITS - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING - GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING)
+
+// GPU initial bitmap size
+#define GPU_INITIAL_BITMAP_SIZE ((1 << GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_INITIAL_FINE_BUCKET_SORTING) / BITS_IN_A_BYTE)
 
 // GPU bitmap size
 #define GPU_BITMAP_SIZE ((1 << GPU_NUMBER_OF_LEAST_SIGNIFICANT_BITS_IGNORED_DURING_FINE_BUCKET_SORTING) / BITS_IN_A_BYTE)
@@ -4972,7 +4978,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#endif
 				
 				// Set max GPU work group memory size
-				const size_t maxGpuWorkGroupMemorySize = max(max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + GPU_BITMAP_SIZE, max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t));
+				const size_t maxGpuWorkGroupMemorySize = max({GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2, GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2 + (GPU_INITIAL_BITMAP_SIZE + sizeof(uint32_t) - 1) / sizeof(uint32_t) * sizeof(uint32_t), GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2 + (GPU_BITMAP_SIZE + sizeof(uint32_t) - 1) / sizeof(uint32_t) * sizeof(uint32_t), CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2 + (GPU_BITMAP_SIZE + sizeof(uint32_t) - 1) / sizeof(uint32_t) * sizeof(uint32_t)});
 				
 				// Display message
 				cout << "Allocating " << (static_cast<double>(totalGpuMemoryAllocated) / BYTES_IN_A_GIGABYTE) << " GB of GPU memory and using at most " << (static_cast<double>(maxGpuWorkGroupMemorySize) / BYTES_IN_A_KILOBYTE) << " KB of GPU local memory" << endl;
@@ -6276,7 +6282,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				#endif
 				
 				// Set max GPU work group memory size
-				const size_t maxGpuWorkGroupMemorySize = max(max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION, CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + GPU_BITMAP_SIZE, max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t) + max(GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION) * sizeof(uint32_t));
+				const size_t maxGpuWorkGroupMemorySize = max({GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2, GPU_NUMBER_OF_INITIAL_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2, GPU_NUMBER_OF_FINE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2, GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2 + (GPU_INITIAL_BITMAP_SIZE + sizeof(uint32_t) - 1) / sizeof(uint32_t) * sizeof(uint32_t), GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2 + (GPU_BITMAP_SIZE + sizeof(uint32_t) - 1) / sizeof(uint32_t) * sizeof(uint32_t), CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION * sizeof(uint32_t) * 2 + (GPU_BITMAP_SIZE + sizeof(uint32_t) - 1) / sizeof(uint32_t) * sizeof(uint32_t)});
 				
 				// Display message
 				cout << "Allocating " << (static_cast<double>(totalGpuMemoryAllocated) / BYTES_IN_A_GIGABYTE) << " GB of GPU memory and using at most " << (static_cast<double>(maxGpuWorkGroupMemorySize) / BYTES_IN_A_KILOBYTE) << " KB of GPU local memory" << endl;

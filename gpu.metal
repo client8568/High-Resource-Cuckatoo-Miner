@@ -858,13 +858,13 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(ushort i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -967,7 +967,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = groupId;
@@ -989,7 +989,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], static_cast<uint>(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET));
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(uint i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -1409,13 +1409,13 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(ushort i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -1518,7 +1518,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = groupId;
@@ -1540,7 +1540,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		const uint numberOfEdges = min(numberOfEdgesPerFineBucket[fineBucketIndex], static_cast<uint>(GPU_MAX_NUMBER_OF_EDGES_PER_INITIAL_FINE_BUCKET));
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(uint i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -2226,13 +2226,13 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(ushort i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -2335,7 +2335,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = groupId;
@@ -2357,7 +2357,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(uint i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -3036,13 +3036,13 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(ushort i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -3145,7 +3145,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const ushort fineBucketIndex = groupId;
@@ -3167,7 +3167,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(uint i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -4180,13 +4180,13 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		const uint fineBucketIndex = groupId;
 		
 		// Go through all bitmap parts as a work group
-		for(ushort i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(ushort i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -4312,7 +4312,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 		
 		// Declare bitmap
-		threadgroup atomic_uint bitmap[GPU_INITIAL_BITMAP_SIZE / sizeof(uint)];
+		threadgroup atomic_uint bitmap[(GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 		
 		// Get this work group's fine bucket index
 		thread const ushort &fineBucketIndex = groupId;
@@ -4357,7 +4357,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 		#endif
 		
 		// Go through all bitmap parts as a work group
-		for(uint i = localId; i < GPU_INITIAL_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+		for(uint i = localId; i < (GPU_INITIAL_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 		
 			// Set bitmap part to zero
 			atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -4742,7 +4742,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 	
 	// Declare bitmap
-	threadgroup atomic_uint bitmap[GPU_BITMAP_SIZE / sizeof(uint)];
+	threadgroup atomic_uint bitmap[(GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 	
 	// Get this work group's fine bucket index
 	thread const ushort &fineBucketIndex = groupId;
@@ -4796,7 +4796,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	const uint numberOfEdges = numberOfEdgesPerFineBucket[fineBucketIndex];
 	
 	// Go through all bitmap parts as a work group
-	for(ushort i = localId; i < GPU_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+	for(ushort i = localId; i < (GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 	
 		// Set bitmap part to zero
 		atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -5137,13 +5137,13 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	threadgroup uint nextEdgeIndex[GPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 	
 	// Declare bitmap
-	threadgroup atomic_uint bitmap[GPU_BITMAP_SIZE / sizeof(uint)];
+	threadgroup atomic_uint bitmap[(GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 	
 	// Get this work group's fine bucket index
 	const uint fineBucketIndex = groupId;
 	
 	// Go through all bitmap parts as a work group
-	for(ushort i = localId; i < GPU_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+	for(ushort i = localId; i < (GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 	
 		// Set bitmap part to zero
 		atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
@@ -5273,7 +5273,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	threadgroup uint nextEdgeIndex[CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION];
 	
 	// Declare bitmap
-	threadgroup atomic_uint bitmap[GPU_BITMAP_SIZE / sizeof(uint)];
+	threadgroup atomic_uint bitmap[(GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint)];
 	
 	// Get this work group's fine bucket index
 	const uint fineBucketIndex = groupId;
@@ -5282,7 +5282,7 @@ static inline bool isBitSetInBitmap(threadgroup const atomic_uint *bitmap, const
 	const ushort coarseBucketIndex = fineBucketIndex >> GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING;
 	
 	// Go through all bitmap parts as a work group
-	for(ushort i = localId; i < GPU_BITMAP_SIZE / sizeof(uint); i += GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
+	for(ushort i = localId; i < (GPU_BITMAP_SIZE + sizeof(uint) - 1) / sizeof(uint); i += GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) [[likely]] {
 	
 		// Set bitmap part to zero
 		atomic_store_explicit(&bitmap[i], 0, memory_order_relaxed);
