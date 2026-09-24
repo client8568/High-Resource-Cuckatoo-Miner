@@ -163,7 +163,7 @@ make GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=7
 make GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
 ```
 
-* A `GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket edges in steps round one kernels. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+* A `GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket sort edges in steps round one kernels. This settings affects the GPU trimming speed. The default value for this setting is `512`.
 ```
 make GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
 ```
@@ -178,7 +178,7 @@ make GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_
 make GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
 ```
 
-* A `GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket edges in steps round two kernels. This settings affects the GPU trimming speed. The default value for this setting is `512`.
+* A `GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP` setting can be used to set the number of work items per work group for the GPU fine bucket sort edges in steps round two kernels. This settings affects the GPU trimming speed. The default value for this setting is `512`.
 ```
 make GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=512
 ```

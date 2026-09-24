@@ -48,7 +48,7 @@ GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING = 7
 # GPU coarse bucket sort edges kernel number of work items per work group
 GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP = 512
 
-# GPU fine bucket edges in steps round one kernels number of work items per work group
+# GPU fine bucket sort edges in steps round one kernels number of work items per work group
 GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP = 512
 
 # GPU trim edges in steps round one step one kernel number of work items per work group
@@ -57,7 +57,7 @@ GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_
 # GPU trim edges in steps round one step two kernel number of work items per work group
 GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP = 512
 
-# GPU fine bucket edges in steps round two kernels number of work items per work group
+# GPU fine bucket sort edges in steps round two kernels number of work items per work group
 GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP = 512
 
 # GPU trim edges in steps round two step one kernel number of work items per work group
