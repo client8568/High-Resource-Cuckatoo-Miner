@@ -375,7 +375,7 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./v1.5.tar.gz" "./ADLX-1.5" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./v2.0.tar.gz" "./ADLX-2.0" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
@@ -399,10 +399,8 @@ linuxDependencies:
 	cd "./OpenCL-ICD-Loader-2026.05.29" && rm -f "./CMakeCache.txt" && cmake -DCMAKE_INSTALL_PREFIX="$(CURDIR)/OpenCL-ICD-Loader-2026.05.29/dist/linux/aarch64" -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DOPENCL_ICD_LOADER_HEADERS_DIR="$(CURDIR)/opencl/include" -DCMAKE_C_COMPILER="$(shell echo $(subst ++,,$(CC)))" -DCMAKE_C_FLAGS="-fmacro-prefix-map=\"$(shell pwd)\"=\".\"" "./CMakeLists.txt" && make && make install && make clean
 	mkdir -p "./opencl/dist/linux/x86_64/lib"
 	mv "./OpenCL-ICD-Loader-2026.05.29/dist/linux/x86_64/lib/libOpenCL.a" "./opencl/dist/linux/x86_64/lib"
-	x86_64-linux-gnu-strip --strip-unneeded "./opencl/dist/linux/x86_64/lib/libOpenCL.a"
 	mkdir -p "./opencl/dist/linux/aarch64/lib"
 	mv "./OpenCL-ICD-Loader-2026.05.29/dist/linux/aarch64/lib/libOpenCL.a" "./opencl/dist/linux/aarch64/lib"
-	aarch64-linux-gnu-strip --strip-unneeded "./opencl/dist/linux/aarch64/lib/libOpenCL.a"
 	rm -r "./OpenCL-ICD-Loader-2026.05.29"
 	
 	# NVIDIA Management Library (https://packages.nvidia.com/components/cuda_nvml_dev)
@@ -415,14 +413,12 @@ linuxDependencies:
 	mv "./cuda/usr/share/doc/cuda-nvml-dev-13-4/copyright" "./nvml/LICENSE"
 	mkdir -p "./nvml/dist/linux/x86_64/lib"
 	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/x86_64/lib"
-	x86_64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/x86_64/lib/libnvidia-ml.a"
 	rm -r "./cuda"
 	wget "https://packages.nvidia.com/resolute/pool/arm64/5B515474-7E78-11F1-8656-C51E4F4B317F/cuda-nvml-dev-13-4_13.4.46-1_arm64.deb"
 	dpkg-deb -x "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda"
 	rm "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb"
 	mkdir -p "./nvml/dist/linux/aarch64/lib"
 	mv "./cuda/usr/local/cuda-13.4/lib64/stubs/libnvidia-ml.a" "./nvml/dist/linux/aarch64/lib"
-	aarch64-linux-gnu-strip --strip-unneeded "./nvml/dist/linux/aarch64/lib/libnvidia-ml.a"
 	rm -r "./cuda"
 	
 	# AMD System Management Interface (https://github.com/ROCm/rocm-systems/tree/develop/projects/amdsmi)
@@ -443,15 +439,9 @@ linuxDependencies:
 	mv "./therock/dist/linux/x86_64/include/amd_smi/amdsmi.h" "./amdsmi/include/amd_smi"
 	mv "./therock/dist/linux/x86_64/share/doc/amd-smi-lib/LICENSE.txt" "./amdsmi/LICENSE"
 	mkdir -p "./amdsmi/dist/linux/x86_64/lib"
-	mv "./therock/dist/linux/x86_64/lib/libamd_smi.a" "./amdsmi/dist/linux/x86_64/lib"
-	x86_64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/x86_64/lib/libamd_smi.a"
-	mv "./therock/dist/linux/x86_64/lib/libamdsminic.a" "./amdsmi/dist/linux/x86_64/lib"
-	x86_64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/x86_64/lib/libamdsminic.a"
+	mv "./therock/dist/linux/x86_64/lib/libamd_smi.a" "./therock/dist/linux/x86_64/lib/libamdsminic.a" "./amdsmi/dist/linux/x86_64/lib"
 	mkdir -p "./amdsmi/dist/linux/aarch64/lib"
-	mv "./therock/dist/linux/aarch64/lib/libamd_smi.a" "./amdsmi/dist/linux/aarch64/lib"
-	aarch64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/aarch64/lib/libamd_smi.a"
-	mv "./therock/dist/linux/aarch64/lib/libamdsminic.a" "./amdsmi/dist/linux/aarch64/lib"
-	aarch64-linux-gnu-strip --strip-unneeded "./amdsmi/dist/linux/aarch64/lib/libamdsminic.a"
+	mv "./therock/dist/linux/aarch64/lib/libamd_smi.a" "./therock/dist/linux/aarch64/lib/libamdsminic.a" "./amdsmi/dist/linux/aarch64/lib"
 	rm -r "./therock"
 	sudo apt install -y libc++-dev libdbus-1-dev libnl-3-dev libnl-genl-3-dev libmnl-dev libdrm-dev libdrm-amdgpu1
 	
@@ -523,13 +513,13 @@ windowsDependencies:
 	move "./OpenCL-Headers-2026.05.29\CL" "./opencl/include"
 	rd /q /s "./OpenCL-Headers-2026.05.29"
 	
-	rem NVIDIA Management Library (https://packages.nvidia.com/windows/x86_64/archive)
+	rem NVIDIA Management Library (https://packages.nvidia.com/win11/x86_64/archive)
 	del /q "./cuda_13.4.0_windows_x86_64.exe" > "nul" 2>&1
 	del /q "./7zr.exe" > "nul" 2>&1
 	if exist "./cuda" rd /q /s "./cuda" > "nul"
 	if exist "./nvml" rd /q /s "./nvml" > "nul"
 	curl -LO "https://packages.nvidia.com/prerelease/cuda/13.4.0/local_installers/cuda_13.4.0_windows_x86_64.exe"
-	curl -LO "https://github.com/ip7z/7zip/releases/download/26.02/7zr.exe"
+	curl -LO "https://github.com/ip7z/7zip/releases/download/26.03/7zr.exe"
 	"./7zr.exe" x "./cuda_13.4.0_windows_x86_64.exe" -o"./cuda"
 	del /q "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe"
 	mkdir "./nvml\include"
@@ -542,16 +532,16 @@ windowsDependencies:
 	rd /q /s "./cuda"
 	
 	rem AMD Device Library eXtra (https://github.com/GPUOpen-LibrariesAndSDKs/ADLX)
-	del /q "./v1.5.tar.gz" > "nul" 2>&1
-	if exist "./ADLX-1.5" rd /q /s "./ADLX-1.5" > "nul"
+	del /q "./v2.0.tar.gz" > "nul" 2>&1
+	if exist "./ADLX-2.0" rd /q /s "./ADLX-2.0" > "nul"
 	if exist "./adlx" rd /q /s "./adlx" > "nul"
-	curl -LO "https://github.com/GPUOpen-LibrariesAndSDKs/ADLX/archive/refs/tags/v1.5.tar.gz"
-	tar -xf "./v1.5.tar.gz"
-	del "./v1.5.tar.gz"
+	curl -LO "https://github.com/GPUOpen-LibrariesAndSDKs/ADLX/archive/refs/tags/v2.0.tar.gz"
+	tar -xf "./v2.0.tar.gz"
+	del "./v2.0.tar.gz"
 	mkdir "./adlx"
-	move "./ADLX-1.5\ADLX SDK License Agreement.pdf" "./adlx/LICENSE"
-	move "./ADLX-1.5\SDK" "./adlx/include"
-	rd /q /s "./ADLX-1.5"
+	move "./ADLX-2.0\ADLX SDK License Agreement.pdf" "./adlx/LICENSE"
+	move "./ADLX-2.0\SDK" "./adlx/include"
+	rd /q /s "./ADLX-2.0"
 	
 # Make Windows dependencies OpenSSL (This command works when using an MSYS shell on Windows: mingw32-make windowsDependenciesOpenssl)
 windowsDependenciesOpenssl:
