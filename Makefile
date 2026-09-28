@@ -198,6 +198,9 @@ STARTING_HEADER =
 # Stop after number of graphs
 STOP_AFTER_NUMBER_OF_GRAPHS = 0
 
+# Allow TLS
+ALLOW_TLS = true
+
 
 # Constants
 
@@ -214,7 +217,7 @@ CC = clang++
 STRIP = strip
 
 # Flags
-CFLAGS = -stdlib=libc++ -fexperimental-library -std=c++23 -mtune=native -march=native -fno-rtti -fno-exceptions -O3 -ffast-math -flto=full -Wall -Wextra -Wpedantic -Wshadow -Wno-unused-value -Wno-vla-cxx-extension -Wno-missing-designated-field-initializers -Wno-gnu-anonymous-struct -Wno-c99-extensions -Wno-tautological-constant-out-of-range-compare -Wno-overlength-strings -Wno-nonnull -Wno-unknown-attributes -Wno-unused-variable -D NAME="$(NAME)" -D VERSION=$(VERSION) -D EDGE_BITS=$(EDGE_BITS) -D GPU_TRIMMING_ROUNDS=$(GPU_TRIMMING_ROUNDS) -D CPU_TRIMMING_ROUNDS=$(CPU_TRIMMING_ROUNDS) -D SOLUTION_SIZE=$(SOLUTION_SIZE) -D NONCE_SIZE=$(NONCE_SIZE) -D NONCE_IN_HEADER_IS_BIG_ENDIAN=$(NONCE_IN_HEADER_IS_BIG_ENDIAN) -D HEADER_SIZE_EXCLUDING_NONCE=$(HEADER_SIZE_EXCLUDING_NONCE) -D GPU_TRIMMING_USE_MAX_RAM=$(GPU_TRIMMING_USE_MAX_RAM) -D GPU_TRIMMING_USE_MORE_RAM=$(GPU_TRIMMING_USE_MORE_RAM) -D GPU_TRIMMING_USE_LESS_RAM=$(GPU_TRIMMING_USE_LESS_RAM) -D GPU_TRIMMING_USE_MIN_RAM=$(GPU_TRIMMING_USE_MIN_RAM) -D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=$(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING) -D GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=$(GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS) -D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=$(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING) -D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=$(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING) -D GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D MAX_NUMBER_OF_CPU_CORES_USED=$(MAX_NUMBER_OF_CPU_CORES_USED) -D CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=$(CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING) -D CPU_TRIMMING_USE_MAX_RAM=$(CPU_TRIMMING_USE_MAX_RAM) -D CPU_TRIMMING_USE_MORE_RAM=$(CPU_TRIMMING_USE_MORE_RAM) -D CPU_TRIMMING_VECTOR_SCALE_FACTOR=$(CPU_TRIMMING_VECTOR_SCALE_FACTOR) -D CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=$(CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING) -D CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING=$(CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING) -D GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM=$(GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM) -D GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_RECOVERED_EDGE_CANDIDATES_PER_WORK_ITEM=$(GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_RECOVERED_EDGE_CANDIDATES_PER_WORK_ITEM) -D CPU_RECOVERING_PERCENT=$(CPU_RECOVERING_PERCENT) -D CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_RECOVERING_BITMAP=$(CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_RECOVERING_BITMAP) -D CPU_RECOVERING_VECTOR_SCALE_FACTOR=$(CPU_RECOVERING_VECTOR_SCALE_FACTOR) -D GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES=$(GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES) -D STRATUM_SERVER_DEFAULT_ADDRESS="$(STRATUM_SERVER_DEFAULT_ADDRESS)" -D STRATUM_SERVER_DEFAULT_PORT="$(STRATUM_SERVER_DEFAULT_PORT)" -D STRATUM_SERVER_READ_TIMEOUT_SECONDS=$(STRATUM_SERVER_READ_TIMEOUT_SECONDS) -D STRATUM_SERVER_WRITE_TIMEOUT_SECONDS=$(STRATUM_SERVER_WRITE_TIMEOUT_SECONDS) -D STRATUM_SERVER_RECONNECT_AFTER_FAILURE_DELAY_SECONDS=$(STRATUM_SERVER_RECONNECT_AFTER_FAILURE_DELAY_SECONDS) -D STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES=$(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES) -D STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS=$(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS) -D STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED=$(STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED) -D STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=$(STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM) -D STRATUM_SERVER_MINING_ALGORITHM_NAME="$(STRATUM_SERVER_MINING_ALGORITHM_NAME)" -D STRATUM_SERVER_AGENT_PREFIX="$(STRATUM_SERVER_AGENT_PREFIX)" -D DISPLAY_TUNING_TIMES=$(DISPLAY_TUNING_TIMES) -D RECOVER_EDGES_FOR_EVERY_GRAPH=$(RECOVER_EDGES_FOR_EVERY_GRAPH) -D MINE_TO_A_STRATUM_SERVER=$(MINE_TO_A_STRATUM_SERVER) -D DISPLAY_POWER_USAGE=$(DISPLAY_POWER_USAGE) -D PREVENT_SLEEP=$(PREVENT_SLEEP) -D DISPLAY_STRATUM_SERVER_MESSAGES=$(DISPLAY_STRATUM_SERVER_MESSAGES) -D EMBED_GPU_CODE=$(EMBED_GPU_CODE) -D USE_SIGNAL_HANDLER=$(USE_SIGNAL_HANDLER) -D CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS=$(CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS) -D STARTING_NONCE=$(STARTING_NONCE) -D STARTING_HEADER_SIZE=$(words $(subst A,A ,$(subst B,B ,$(subst C,C ,$(subst D,D ,$(subst E,E ,$(subst F,F ,$(subst G,G ,$(subst H,H ,$(subst I,I ,$(subst J,J ,$(subst K,K ,$(subst L,L ,$(subst M,M ,$(subst N,N ,$(subst O,O ,$(subst P,P ,$(subst Q,Q ,$(subst R,R ,$(subst S,S ,$(subst T,T ,$(subst U,U ,$(subst V,V ,$(subst W,W ,$(subst X,X ,$(subst Y,Y ,$(subst Z,Z, $(subst a,a ,$(subst b,b ,$(subst c,c ,$(subst d,d ,$(subst e,e ,$(subst f,f ,$(subst g,g ,$(subst h,h ,$(subst i,i ,$(subst j,j ,$(subst k,k ,$(subst l,l ,$(subst m,m ,$(subst n,n ,$(subst o,o ,$(subst p,p ,$(subst q,q ,$(subst r,r ,$(subst s,s ,$(subst t,t ,$(subst u,u ,$(subst v,v ,$(subst w,w ,$(subst x,x ,$(subst y,y ,$(subst z,z ,$(subst $() $(),a,$(STARTING_HEADER))))))))))))))))))))))))))))))))))))))))))))))))))))))) -D STARTING_HEADER="$(STARTING_HEADER)" -D STOP_AFTER_NUMBER_OF_GRAPHS=$(STOP_AFTER_NUMBER_OF_GRAPHS)
+CFLAGS = -stdlib=libc++ -fexperimental-library -std=c++23 -mtune=native -march=native -fno-rtti -fno-exceptions -O3 -ffast-math -flto=full -Wall -Wextra -Wpedantic -Wshadow -Wno-unused-value -Wno-vla-cxx-extension -Wno-missing-designated-field-initializers -Wno-gnu-anonymous-struct -Wno-c99-extensions -Wno-tautological-constant-out-of-range-compare -Wno-overlength-strings -Wno-nonnull -Wno-unknown-attributes -Wno-unused-variable -D NAME="$(NAME)" -D VERSION=$(VERSION) -D EDGE_BITS=$(EDGE_BITS) -D GPU_TRIMMING_ROUNDS=$(GPU_TRIMMING_ROUNDS) -D CPU_TRIMMING_ROUNDS=$(CPU_TRIMMING_ROUNDS) -D SOLUTION_SIZE=$(SOLUTION_SIZE) -D NONCE_SIZE=$(NONCE_SIZE) -D NONCE_IN_HEADER_IS_BIG_ENDIAN=$(NONCE_IN_HEADER_IS_BIG_ENDIAN) -D HEADER_SIZE_EXCLUDING_NONCE=$(HEADER_SIZE_EXCLUDING_NONCE) -D GPU_TRIMMING_USE_MAX_RAM=$(GPU_TRIMMING_USE_MAX_RAM) -D GPU_TRIMMING_USE_MORE_RAM=$(GPU_TRIMMING_USE_MORE_RAM) -D GPU_TRIMMING_USE_LESS_RAM=$(GPU_TRIMMING_USE_LESS_RAM) -D GPU_TRIMMING_USE_MIN_RAM=$(GPU_TRIMMING_USE_MIN_RAM) -D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING=$(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_COARSE_BUCKET_SORTING) -D GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS=$(GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS) -D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING=$(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING) -D GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=$(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING) -D GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_COARSE_BUCKET_SORT_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_ONE_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_ONE_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_EDGES_IN_STEPS_ROUND_TWO_KERNELS_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_ONE_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_EDGES_IN_STEPS_ROUND_TWO_STEP_TWO_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_INITIAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_INTERMEDIATE_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_FINE_BUCKET_SORT_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D MAX_NUMBER_OF_CPU_CORES_USED=$(MAX_NUMBER_OF_CPU_CORES_USED) -D CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING=$(CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING) -D CPU_TRIMMING_USE_MAX_RAM=$(CPU_TRIMMING_USE_MAX_RAM) -D CPU_TRIMMING_USE_MORE_RAM=$(CPU_TRIMMING_USE_MORE_RAM) -D CPU_TRIMMING_VECTOR_SCALE_FACTOR=$(CPU_TRIMMING_VECTOR_SCALE_FACTOR) -D CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING=$(CPU_TRIMMING_ROUNDS_BEFORE_COMPRESSING) -D CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING=$(CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING) -D GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM=$(GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_EDGES_PER_WORK_ITEM) -D GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP=$(GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP) -D GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_RECOVERED_EDGE_CANDIDATES_PER_WORK_ITEM=$(GPU_RECOVER_EDGES_KERNEL_NUMBER_OF_RECOVERED_EDGE_CANDIDATES_PER_WORK_ITEM) -D CPU_RECOVERING_PERCENT=$(CPU_RECOVERING_PERCENT) -D CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_RECOVERING_BITMAP=$(CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_RECOVERING_BITMAP) -D CPU_RECOVERING_VECTOR_SCALE_FACTOR=$(CPU_RECOVERING_VECTOR_SCALE_FACTOR) -D GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES=$(GPU_SET_MEMORY_SIZE_ADDITIONAL_SPACE_MEGABYTES) -D STRATUM_SERVER_DEFAULT_ADDRESS="$(STRATUM_SERVER_DEFAULT_ADDRESS)" -D STRATUM_SERVER_DEFAULT_PORT="$(STRATUM_SERVER_DEFAULT_PORT)" -D STRATUM_SERVER_READ_TIMEOUT_SECONDS=$(STRATUM_SERVER_READ_TIMEOUT_SECONDS) -D STRATUM_SERVER_WRITE_TIMEOUT_SECONDS=$(STRATUM_SERVER_WRITE_TIMEOUT_SECONDS) -D STRATUM_SERVER_RECONNECT_AFTER_FAILURE_DELAY_SECONDS=$(STRATUM_SERVER_RECONNECT_AFTER_FAILURE_DELAY_SECONDS) -D STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES=$(STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES) -D STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS=$(STRATUM_SERVER_SEND_KEEP_ALIVE_REQUEST_INTERVAL_SECONDS) -D STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED=$(STRATUM_SERVER_MAX_NUMBER_OF_UNRELATED_MESSAGES_ALLOWED) -D STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=$(STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM) -D STRATUM_SERVER_MINING_ALGORITHM_NAME="$(STRATUM_SERVER_MINING_ALGORITHM_NAME)" -D STRATUM_SERVER_AGENT_PREFIX="$(STRATUM_SERVER_AGENT_PREFIX)" -D DISPLAY_TUNING_TIMES=$(DISPLAY_TUNING_TIMES) -D RECOVER_EDGES_FOR_EVERY_GRAPH=$(RECOVER_EDGES_FOR_EVERY_GRAPH) -D MINE_TO_A_STRATUM_SERVER=$(MINE_TO_A_STRATUM_SERVER) -D DISPLAY_POWER_USAGE=$(DISPLAY_POWER_USAGE) -D PREVENT_SLEEP=$(PREVENT_SLEEP) -D DISPLAY_STRATUM_SERVER_MESSAGES=$(DISPLAY_STRATUM_SERVER_MESSAGES) -D EMBED_GPU_CODE=$(EMBED_GPU_CODE) -D USE_SIGNAL_HANDLER=$(USE_SIGNAL_HANDLER) -D CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS=$(CPU_TRIMMING_BOUNDS_CHECKING_AVOIDS_CONDITIONAL_STATEMENTS) -D STARTING_NONCE=$(STARTING_NONCE) -D STARTING_HEADER_SIZE=$(words $(subst A,A ,$(subst B,B ,$(subst C,C ,$(subst D,D ,$(subst E,E ,$(subst F,F ,$(subst G,G ,$(subst H,H ,$(subst I,I ,$(subst J,J ,$(subst K,K ,$(subst L,L ,$(subst M,M ,$(subst N,N ,$(subst O,O ,$(subst P,P ,$(subst Q,Q ,$(subst R,R ,$(subst S,S ,$(subst T,T ,$(subst U,U ,$(subst V,V ,$(subst W,W ,$(subst X,X ,$(subst Y,Y ,$(subst Z,Z, $(subst a,a ,$(subst b,b ,$(subst c,c ,$(subst d,d ,$(subst e,e ,$(subst f,f ,$(subst g,g ,$(subst h,h ,$(subst i,i ,$(subst j,j ,$(subst k,k ,$(subst l,l ,$(subst m,m ,$(subst n,n ,$(subst o,o ,$(subst p,p ,$(subst q,q ,$(subst r,r ,$(subst s,s ,$(subst t,t ,$(subst u,u ,$(subst v,v ,$(subst w,w ,$(subst x,x ,$(subst y,y ,$(subst z,z ,$(subst $() $(),a,$(STARTING_HEADER))))))))))))))))))))))))))))))))))))))))))))))))))))))) -D STARTING_HEADER="$(STARTING_HEADER)" -D STOP_AFTER_NUMBER_OF_GRAPHS=$(STOP_AFTER_NUMBER_OF_GRAPHS) -D ALLOW_TLS=$(ALLOW_TLS)
 
 # Libraries
 LIBS =
@@ -243,6 +246,14 @@ ifeq ($(OS),Windows_NT)
 			LIBS += -Wl,-Bstatic -L"./nvml/dist/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)/lib" -lnvml -Wl,-Bdynamic -Wl,--delayload=nvml.dll
 		endif
 		
+		# Check if allowing TLS
+		ifeq ($(ALLOW_TLS),true)
+		
+			# Set flags and link libraries
+			CFLAGS += -I"./openssl/include/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)"
+			LIBS += -Wl,-Bstatic -L"./openssl/dist/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)/lib" -lssl -lcrypto -Wl,-Bdynamic -lcrypt32
+		endif
+		
 		# Delete command
 		DELETE_COMMAND = rm -rf
 		
@@ -261,6 +272,14 @@ ifeq ($(OS),Windows_NT)
 			# Set flags and link libraries
 			CFLAGS += -I"./nvml/include" -I"./adlx/include" "./adlx/include/ADLXHelper/Windows/Cpp/ADLXHelper.cpp" "./adlx/include/Platform/Windows/WinAPIs.cpp"
 			LIBS += -Wl,-Bstatic -L"./nvml/dist/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)/lib" -lnvml -Wl,-Bdynamic -Wl,--delayload=nvml.dll
+		endif
+		
+		# Check if allowing TLS
+		ifeq ($(ALLOW_TLS),true)
+		
+			# Set flags and link libraries
+			CFLAGS += -I"./openssl/include/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)"
+			LIBS += -Wl,-Bstatic -L"./openssl/dist/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)/lib" -lssl -lcrypto -Wl,-Bdynamic -lcrypt32
 		endif
 		
 		# Delete command
@@ -287,6 +306,14 @@ else ifeq ($(shell uname),Darwin)
 		LIBS += -lIOReport
 	endif
 	
+	# Check if allowing TLS
+	ifeq ($(ALLOW_TLS),true)
+	
+		# Set flags and link libraries
+		CFLAGS += -I"./openssl/include/macos/$(shell uname -m)"
+		LIBS += -L"./openssl/dist/macos/$(shell uname -m)/lib" -lssl -lcrypto
+	endif
+	
 	# Delete command
 	DELETE_COMMAND = rm -rf
 	
@@ -309,6 +336,14 @@ else
 		# Set flags and link libraries
 		CFLAGS += -I"./nvml/include" -I"./amdsmi/include"
 		LIBS += -Wl,-Bstatic -L"./nvml/dist/linux/$(shell uname -m)/lib" -lnvidia-ml -L"./amdsmi/dist/linux/$(shell uname -m)/lib" -lamd_smi -lamdsminic -lnl-3 -lnl-genl-3 -lmnl -Wl,-Bdynamic
+	endif
+	
+	# Check if allowing TLS
+	ifeq ($(ALLOW_TLS),true)
+	
+		# Set flags and link libraries
+		CFLAGS += -I"./openssl/include/linux/$(shell uname -m)"
+		LIBS += -Wl,-Bstatic -L"./openssl/dist/linux/$(shell uname -m)/lib" -lssl -lcrypto -Wl,-Bdynamic
 	endif
 	
 	# Check if preventing sleep
@@ -340,7 +375,7 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./v1.5.tar.gz" "./ADLX-1.5" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./v1.5.tar.gz" "./ADLX-1.5" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
@@ -420,6 +455,26 @@ linuxDependencies:
 	rm -r "./therock"
 	sudo apt install -y libc++-dev libdbus-1-dev libnl-3-dev libnl-genl-3-dev libmnl-dev libdrm-dev libdrm-amdgpu1
 	
+	# OpenSSL (https://github.com/openssl/openssl)
+	rm -rf "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./openssl"
+	wget "https://github.com/openssl/openssl/releases/download/openssl-4.0.2/openssl-4.0.2.tar.gz"
+	tar -xf "./openssl-4.0.2.tar.gz"
+	cd "./openssl-4.0.2" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=x86_64-linux-gnu" "./Configure" linux-x86_64 --prefix="$(CURDIR)/openssl-4.0.2/dist/linux/x86_64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	mkdir -p "./openssl/include/linux/x86_64"
+	mv "./openssl-4.0.2/dist/linux/x86_64/include/openssl" "./openssl/include/linux/x86_64"
+	mv "./openssl-4.0.2/LICENSE.txt" "./openssl/LICENSE"
+	mkdir -p "./openssl/dist/linux/x86_64/lib"
+	mv "./openssl-4.0.2/dist/linux/x86_64/lib/libcrypto.a" "./openssl-4.0.2/dist/linux/x86_64/lib/libssl.a" "./openssl/dist/linux/x86_64/lib"
+	rm -rf "./openssl-4.0.2"
+	tar -xf "./openssl-4.0.2.tar.gz"
+	rm "./openssl-4.0.2.tar.gz"
+	cd "./openssl-4.0.2" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=aarch64-linux-gnu" "./Configure" linux-aarch64 --prefix="$(CURDIR)/openssl-4.0.2/dist/linux/aarch64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	mkdir -p "./openssl/include/linux/aarch64"
+	mv "./openssl-4.0.2/dist/linux/aarch64/include/openssl" "./openssl/include/linux/aarch64"
+	mkdir -p "./openssl/dist/linux/aarch64/lib"
+	mv "./openssl-4.0.2/dist/linux/aarch64/lib/libcrypto.a" "./openssl-4.0.2/dist/linux/aarch64/lib/libssl.a" "./openssl/dist/linux/aarch64/lib"
+	rm -rf "./openssl-4.0.2"
+	
 # Make Apple dependencies (This command works when using macOS: make appleDependencies)
 appleDependencies:
 	
@@ -433,7 +488,27 @@ appleDependencies:
 	mv "./metal-cpp-release-metal-cpp_macOS27_iOS27/LICENSE.txt" "./metal/LICENSE"
 	rm -r "./metal-cpp-release-metal-cpp_macOS27_iOS27"
 	
-# Make Windows dependencies (This command works when using Windows: mingw32-make windowsDependencies)
+	# OpenSSL (https://github.com/openssl/openssl)
+	rm -rf "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./openssl"
+	curl -LO "https://github.com/openssl/openssl/releases/download/openssl-4.0.2/openssl-4.0.2.tar.gz"
+	tar -xf "./openssl-4.0.2.tar.gz"
+	cd "./openssl-4.0.2" && CC="$(shell echo $(subst ++,,$(CC)))" "./Configure" darwin64-x86_64 --prefix="$(CURDIR)/openssl-4.0.2/dist/macos/x86_64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	mkdir -p "./openssl/include/macos/x86_64"
+	mv "./openssl-4.0.2/dist/macos/x86_64/include/openssl" "./openssl/include/macos/x86_64"
+	mv "./openssl-4.0.2/LICENSE.txt" "./openssl/LICENSE"
+	mkdir -p "./openssl/dist/macos/x86_64/lib"
+	mv "./openssl-4.0.2/dist/macos/x86_64/lib/libcrypto.a" "./openssl-4.0.2/dist/macos/x86_64/lib/libssl.a" "./openssl/dist/macos/x86_64/lib"
+	rm -rf "./openssl-4.0.2"
+	tar -xf "./openssl-4.0.2.tar.gz"
+	rm "./openssl-4.0.2.tar.gz"
+	cd "./openssl-4.0.2" && CC="$(shell echo $(subst ++,,$(CC)))" "./Configure" darwin64-arm64 --prefix="$(CURDIR)/openssl-4.0.2/dist/macos/arm64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	mkdir -p "./openssl/include/macos/arm64"
+	mv "./openssl-4.0.2/dist/macos/arm64/include/openssl" "./openssl/include/macos/arm64"
+	mkdir -p "./openssl/dist/macos/arm64/lib"
+	mv "./openssl-4.0.2/dist/macos/arm64/lib/libcrypto.a" "./openssl-4.0.2/dist/macos/arm64/lib/libssl.a" "./openssl/dist/macos/arm64/lib"
+	rm -rf "./openssl-4.0.2"
+	
+# Make Windows dependencies (This command works when using a command prompt on Windows: mingw32-make windowsDependencies)
 windowsDependencies:
 	
 	rem OpenCL Headers (https://github.com/KhronosGroup/OpenCL-Headers)
@@ -477,3 +552,28 @@ windowsDependencies:
 	move "./ADLX-1.5\ADLX SDK License Agreement.pdf" "./adlx/LICENSE"
 	move "./ADLX-1.5\SDK" "./adlx/include"
 	rd /q /s "./ADLX-1.5"
+	
+# Make Windows dependencies OpenSSL (This command works when using an MSYS shell on Windows: mingw32-make windowsDependenciesOpenssl)
+windowsDependenciesOpenssl:
+	
+	# OpenSSL (https://github.com/openssl/openssl)
+	rm -rf "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./openssl"
+	curl -LO "https://github.com/openssl/openssl/releases/download/openssl-4.0.2/openssl-4.0.2.tar.gz"
+	tar -xf "./openssl-4.0.2.tar.gz"
+	cd "./openssl-4.0.2" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=x86_64-windows-gnu" "./Configure" mingw64 --prefix="$(CURDIR)/openssl-4.0.2/dist/windows/AMD64" --libdir=lib --release no-shared no-apps no-module no-asm && mingw32-make MODULESDIR="./ossl-modules" OPENSSLDIR="./ssl" && mingw32-make install || true
+	mkdir -p "./openssl/include/windows/AMD64"
+	mv "./openssl-4.0.2/dist/windows/AMD64/include/openssl" "./openssl/include/windows/AMD64"
+	mv "./openssl-4.0.2/LICENSE.txt" "./openssl/LICENSE"
+	mkdir -p "./openssl/dist/windows/AMD64/lib"
+	mv "./openssl-4.0.2/dist/windows/AMD64/lib/libcrypto.a" "./openssl/dist/windows/AMD64/lib/crypto.lib"
+	mv "./openssl-4.0.2/dist/windows/AMD64/lib/libssl.a" "./openssl/dist/windows/AMD64/lib/ssl.lib"
+	rm -rf "./openssl-4.0.2"
+	tar -xf "./openssl-4.0.2.tar.gz"
+	rm "./openssl-4.0.2.tar.gz"
+	cd "./openssl-4.0.2" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=aarch64-windows-gnu" "./Configure" mingwarm64 --prefix="$(CURDIR)/openssl-4.0.2/dist/windows/ARM64" --libdir=lib --release no-shared no-apps no-module no-asm && mingw32-make MODULESDIR="./ossl-modules" OPENSSLDIR="./ssl" && mingw32-make install || true
+	mkdir -p "./openssl/include/windows/ARM64"
+	mv "./openssl-4.0.2/dist/windows/ARM64/include/openssl" "./openssl/include/windows/ARM64"
+	mkdir -p "./openssl/dist/windows/ARM64/lib"
+	mv "./openssl-4.0.2/dist/windows/ARM64/lib/libcrypto.a" "./openssl/dist/windows/ARM64/lib/crypto.lib"
+	mv "./openssl-4.0.2/dist/windows/ARM64/lib/libssl.a" "./openssl/dist/windows/ARM64/lib/ssl.lib"
+	rm -rf "./openssl-4.0.2"

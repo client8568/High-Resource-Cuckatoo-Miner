@@ -39,6 +39,16 @@
 	#include <CL/cl_ext.h>
 #endif
 
+// Check if allowing TLS
+#if ALLOW_TLS
+
+	// Minimum TLS version (TLS 1.2)
+	#define MINIMUM_TLS_VERSION TLS1_2_VERSION
+	
+	// Header files
+	#include <openssl/ssl.h>
+#endif
+
 using namespace std;
 
 
@@ -599,6 +609,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		unique_ptr<char, void(*)(char *)> stratumServerPasswordUniquePointer(nullptr, [](char *stratumServerPassword [[maybe_unused]]) __attribute__((always_inline)) noexcept {
 		
 		});
+		
+		// Check if allowing TLS
+		#if ALLOW_TLS
+		
+			// Create stratum server use TLS
+			bool stratumServerUseTls = false;
+		#endif
 	#endif
 	
 	// Create GPU index
@@ -627,6 +644,13 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				
 				// Stratum server password
 				{"stratum_server_password", required_argument, nullptr, 'w'},
+				
+				// Check if allowing TLS
+				#if ALLOW_TLS
+				
+					// Stratum server secure connection
+					{"stratum_server_secure_connection", no_argument, nullptr, 's'},
+				#endif
 			#endif
 			
 			// Display GPUs
@@ -650,8 +674,18 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		optind = 0;
 		#if MINE_TO_A_STRATUM_SERVER
 		
-			// Go through all options while not displaying help
-			while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			// Check if allowing TLS
+			#if ALLOW_TLS
+			
+				// Go through all options while not displaying help
+				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:sdg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+				
+			// Otherwise
+			#else
+			
+				// Go through all options while not displaying help
+				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			#endif
 			
 		// Otherwise
 		#else
@@ -688,15 +722,19 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							displayHelp = true;
 						}
 						
-						// Otherwise check if option is for a secure connection
-						else if(!__builtin_strncmp(optarg, "stratum+ssl://", sizeof("stratum+ssl://") - sizeof('\0'))) [[unlikely]] {
+						// Check if not allowing TLS
+						#if !ALLOW_TLS
 						
-							// Display message
-							cout << '"' << argv[0] << "\": secure stratum server addresses aren't supported -- '" << optarg << '\'' << endl;
+							// Otherwise check if option is for a secure connection
+							else if(!__builtin_strncmp(optarg, "stratum+ssl://", sizeof("stratum+ssl://") - sizeof('\0'))) [[unlikely]] {
 							
-							// Set display help to true
-							displayHelp = true;
-						}
+								// Display message
+								cout << '"' << argv[0] << "\": secure stratum server addresses aren't supported -- '" << optarg << '\'' << endl;
+								
+								// Set display help to true
+								displayHelp = true;
+							}
+						#endif
 						
 						// Otherwise
 						else [[likely]] {
@@ -704,12 +742,26 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Set stratum server address to the option
 							stratumServerAddress = optarg;
 							
-							// Check if stratum server address has a protocol
+							// Check if stratum server address has an insecure protocol
 							if(!__builtin_strncmp(stratumServerAddress, "stratum+tcp://", sizeof("stratum+tcp://") - sizeof('\0'))) [[unlikely]] {
 							
 								// Remove stratum server address's protocol
 								stratumServerAddress = &stratumServerAddress[sizeof("stratum+tcp://") - sizeof('\0')];
 							}
+							
+							// Check if allowing TLS
+							#if ALLOW_TLS
+							
+								// Otherwise check if stratum server address has a secure protocol
+								else if(!__builtin_strncmp(stratumServerAddress, "stratum+ssl://", sizeof("stratum+ssl://") - sizeof('\0'))) [[unlikely]] {
+								
+									// Remove stratum server address's protocol
+									stratumServerAddress = &stratumServerAddress[sizeof("stratum+ssl://") - sizeof('\0')];
+									
+									// Set stratum server use TLS to true
+									stratumServerUseTls = true;
+								}
+							#endif
 							
 							// Check if stratum server address might be an IPv6 address
 							if(stratumServerAddress[0] == '[') [[unlikely]] {
@@ -910,6 +962,22 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						
 						// Break
 						break;
+						
+					// Check if allowing TLS
+					#if ALLOW_TLS
+					
+						// Stratum server secure connection
+						case 's':
+						
+							// Set exit after options to false
+							exitAfterOptions = false;
+							
+							// Set stratum server use TLS to true
+							stratumServerUseTls = true;
+							
+							// Break
+							break;
+					#endif
 				#endif
 				
 				// Display GPUs
@@ -1172,22 +1240,29 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// Display message
 			cout << endl << "Usage:" << endl << "\t\"" << (__builtin_expect(argv != nullptr, true) ? argv[0] : "") << "\" [options]" << endl << endl;
 			cout << "Options:" << endl;
-			cout << "\t-v, --version\t\t\tDisplay version and build information" << endl;
+			cout << "\t-v, --version\t\t\t\tDisplay version and build information" << endl;
 			
 			// Check if mining to a stratum server
 			#if MINE_TO_A_STRATUM_SERVER
 			
 				// Display message
-				cout << "\t-a, --stratum_server_address\tThe address with an optional protocol and optional port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS) ")" << endl;
-				cout << "\t-p, --stratum_server_port\tThe port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_PORT) ")" << endl;
-				cout << "\t-u, --stratum_server_username\tThe optional username to use when logging into the stratum server" << endl;
-				cout << "\t-w, --stratum_server_password\tThe optional password to use when logging into the stratum server which is sent as plaintext" << endl;
+				cout << "\t-a, --stratum_server_address\t\tThe address with an optional protocol and optional port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_ADDRESS) ")" << endl;
+				cout << "\t-p, --stratum_server_port\t\tThe port of the stratum server to connect to (default: " TO_STRING(STRATUM_SERVER_DEFAULT_PORT) ")" << endl;
+				cout << "\t-u, --stratum_server_username\t\tThe optional username to use when logging into the stratum server" << endl;
+				cout << "\t-w, --stratum_server_password\t\tThe optional password to use when logging into the stratum server" << endl;
+				
+				// Check if allowing TLS
+				#if ALLOW_TLS
+				
+					// Display message
+					cout << "\t-s, --stratum_server_secure_connection\tConnect to the stratum server securely using Transport Layer Security (TLS)" << endl;
+				#endif
 			#endif
 			
 			// Display message
-			cout << "\t-d, --display_gpus\t\tDisplay all GPUs and their indices" << endl;
-			cout << "\t-g, --gpu\t\t\tThe optional index of the GPU to use" << endl;
-			cout << "\t-h, --help\t\t\tDisplay help information" << endl;
+			cout << "\t-d, --display_gpus\t\t\tDisplay all GPUs and their indices" << endl;
+			cout << "\t-g, --gpu\t\t\t\tThe optional index of the GPU to use" << endl;
+			cout << "\t-h, --help\t\t\t\tDisplay help information" << endl;
 			
 			// Return success if help was requested otherwise return failure
 			return __builtin_expect(helpRequested, true) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -4750,6 +4825,83 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 			#endif
+			
+			// Check if allowing TLS
+			#if ALLOW_TLS
+			
+				// Check if stratum server uses TLS
+				unique_ptr<SSL_CTX, decltype(&SSL_CTX_free)> tlsContext(nullptr, SSL_CTX_free);
+				if(stratumServerUseTls) [[unlikely]] {
+				
+					// Check if getting TLS method failed
+					const SSL_METHOD *tlsMethod = TLS_client_method();
+					if(!tlsMethod) [[unlikely]] {
+					
+						// Display message
+						cout << "Getting TLS method failed" << endl;
+						
+						// Break
+						break;
+					}
+					
+					// Check if creating TLS context failed
+					tlsContext = unique_ptr<SSL_CTX, decltype(&SSL_CTX_free)>(SSL_CTX_new(tlsMethod), SSL_CTX_free);
+					if(!tlsContext) [[unlikely]] {
+					
+						// Display message
+						cout << "Creating TLS context failed" << endl;
+						
+						// Break
+						break;
+					}
+					
+					// Set TLS context to verify server certificate
+					SSL_CTX_set_verify(tlsContext.get(), SSL_VERIFY_PEER, nullptr);
+					
+					// Check if using Windows
+					#ifdef _WIN32
+					
+						// Check if loading root certificates from the Windows certificate store failed
+						if(!SSL_CTX_load_verify_store(tlsContext.get(), "org.openssl.winstore://")) [[unlikely]] {
+						
+							// Display message
+							cout << "Loading root certificates from the Windows certificate store failed" << endl;
+							
+							// Break
+							break;
+						}
+						
+					// Otherwise
+					#else
+					
+						// Check if setting TLS context to use the default verify paths failed
+						if(!SSL_CTX_set_default_verify_paths(tlsContext.get())) [[unlikely]] {
+						
+							// Display message
+							cout << "Setting TLS context to use the default verify paths failed" << endl;
+							
+							// Break
+							break;
+						}
+					#endif
+					
+					// Check if setting TLS context's minimum TLS version failed
+					if(!SSL_CTX_set_min_proto_version(tlsContext.get(), MINIMUM_TLS_VERSION)) [[unlikely]] {
+					
+						// Display message
+						cout << "Setting TLS context's minimum TLS version failed" << endl;
+						
+						// Break
+						break;
+					}
+					
+					// Set TLS context to allow partial writes
+					SSL_CTX_set_mode(tlsContext.get(), SSL_MODE_ENABLE_PARTIAL_WRITE);
+					
+					// Set TLS context to not retry when non-application data is read
+					SSL_CTX_clear_mode(tlsContext.get(), SSL_MODE_AUTO_RETRY);
+				}
+			#endif
 		#endif
 		
 		// Check if displaying power usage
@@ -5197,7 +5349,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// GPU trimming perform fine bucket sorting in two steps value
 					MTLSTR(TO_STRING(GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS)),
-					
+
 					// GPU number of most significant bits used for initial fine bucket sorting value
 					MTLSTR(TO_STRING(GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING)),
 					
@@ -5400,7 +5552,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					
 					// GPU trimming perform fine bucket sorting in two steps key
 					MTLSTR("GPU_TRIMMING_PERFORM_FINE_BUCKET_SORTING_IN_TWO_STEPS"),
-					
+
 					// GPU number of most significant bits used for initial fine bucket sorting key
 					MTLSTR("GPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_INITIAL_FINE_BUCKET_SORTING"),
 					
@@ -7332,11 +7484,41 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					int socketDescriptor = -1;
 				#endif
 				
+				// Check if allowing TLS
+				#if ALLOW_TLS
+				
+					// Create TLS connection
+					unique_ptr<SSL, decltype(&SSL_free)> tlsConnection(nullptr, SSL_free);
+				#endif
+				
 				// Create block
 				{
 				
 					// Display message
-					cout << "Connecting to the stratum server stratum+tcp://";
+					cout << "Connecting to the stratum server stratum+";
+					
+					// Check if allowing TLS
+					#if ALLOW_TLS
+					
+						// Check if stratum server uses TLS
+						if(stratumServerUseTls) [[unlikely]] {
+						
+							// Display message
+							cout << "ssl://";
+						}
+						
+						// Otherwise
+						else [[likely]] {
+					#endif
+					
+						// Display message
+						cout << "tcp://";
+					
+					// Check if allowing TLS
+					#if ALLOW_TLS
+					
+						}
+					#endif
 					
 					// Check if the stratum server address is an IPv6 address
 					if(inet_pton(AF_INET6, stratumServerAddress, const_cast<in6_addr *>(&static_cast<const in6_addr &>(in6_addr()))) == 1) [[unlikely]] {
@@ -7446,32 +7628,77 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if configuring the socket descriptor and connecting to the address was successful
 							if(!setsockopt(socketDescriptor, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char *>(&readTimeout), sizeof(readTimeout)) && !setsockopt(socketDescriptor, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char *>(&writeTimeout), sizeof(writeTimeout)) && !setsockopt(socketDescriptor, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char *>(&enableTcpNoDelay), sizeof(enableTcpNoDelay)) && !connect(socketDescriptor, address->ai_addr, address->ai_addrlen)) [[likely]] {
 							
-								// Break
-								break;
-							}
-							
-							// Otherwise
-							else [[unlikely]] {
-							
-								// Check if using Windows
-								#ifdef _WIN32
+								// Check if allowing TLS
+								#if ALLOW_TLS
 								
-									// Close socket descriptor
-									closesocket(socketDescriptor);
-									
-									// Reset socket descriptor
-									socketDescriptor = INVALID_SOCKET;
-									
-								// Otherwise
-								#else
+									// Check if stratum server uses TLS
+									if(stratumServerUseTls) [[unlikely]] {
 								
-									// Close socket descriptor
-									close(socketDescriptor);
+										// Check if creating TLS connection from the TLS context was successful
+										tlsConnection = unique_ptr<SSL, decltype(&SSL_free)>(SSL_new(tlsContext.get()), SSL_free);
+										if(tlsConnection) [[likely]] {
+										
+											// Check if setting the TLS connection's Server Name Indication and enabling its hostname validation was successful
+											if(SSL_set_tlsext_host_name(tlsConnection.get(), stratumServerAddress) && SSL_set1_dnsname(tlsConnection.get(), stratumServerAddress)) [[likely]] {
+											
+												// Check if performing TLS handshake with the stratum server was successful
+												if(SSL_set_fd(tlsConnection.get(), socketDescriptor) && SSL_connect(tlsConnection.get()) == 1) [[likely]] {
+												
+													// Break
+													break;
+												}
+											}
+											
+											// Free TLS connection
+											tlsConnection.reset();
+										}
+										
+										// Check if using Windows
+										#ifdef _WIN32
+										
+											// Shutdown socket descriptor receive and send
+											shutdown(socketDescriptor, SD_BOTH);
+											
+										// Otherwise
+										#else
+										
+											// Shutdown socket descriptor receive and send
+											shutdown(socketDescriptor, SHUT_RDWR);
+										#endif
+									}
 									
-									// Reset socket descriptor
-									socketDescriptor = -1;
+									// Otherwise
+									else [[likely]] {
+								#endif
+								
+									// Break
+									break;
+									
+								// Check if allowing TLS
+								#if ALLOW_TLS
+								
+									}
 								#endif
 							}
+							
+							// Check if using Windows
+							#ifdef _WIN32
+							
+								// Close socket descriptor
+								closesocket(socketDescriptor);
+								
+								// Reset socket descriptor
+								socketDescriptor = INVALID_SOCKET;
+								
+							// Otherwise
+							#else
+							
+								// Close socket descriptor
+								close(socketDescriptor);
+								
+								// Reset socket descriptor
+								socketDescriptor = -1;
+							#endif
 						}
 					}
 					
@@ -7546,6 +7773,21 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					cout << "Disconnected from the stratum server" << endl;
 				});
 				
+				// Check if allowing TLS
+				#if ALLOW_TLS
+				
+					// Automatically shutdown TLS connection when done if the TLS connection exists
+					unique_ptr<SSL, void(*)(SSL *)> tlsConnectionShutdown(tlsConnection.get(), [](SSL *tlsConnection) __attribute__((always_inline)) noexcept {
+					
+						// Check if shutting down TLS connection is ongoing
+						if(!SSL_shutdown(tlsConnection)) [[likely]] {
+						
+							// Shutdown TLS connection
+							SSL_shutdown(tlsConnection);
+						}
+					});
+				#endif
+				
 				// Create block
 				char receiveBuffer[STRATUM_SERVER_RECEIVE_BUFFER_SIZE_KILOBYTES * BYTES_IN_A_KILOBYTE];
 				size_t totalBytesReceived = 0;
@@ -7617,28 +7859,64 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					size_t totalBytesSent = 0;
 					do [[unlikely]] {
 					
-						// Check if using Windows
-						#ifdef _WIN32
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-							// Send data to the stratum server
-							const int bytesSent = send(socketDescriptor, &loginRequest[totalBytesSent], sizeof(loginRequest) - totalBytesSent, 0);
+							// Check if stratum server uses TLS
+							if(stratumServerUseTls) [[unlikely]] {
 							
-						// Otherwise
-						#else
-						
-							// Send data to the stratum server
-							const ssize_t bytesSent = send(socketDescriptor, &loginRequest[totalBytesSent], sizeof(loginRequest) - totalBytesSent, MSG_NOSIGNAL);
+								// Check if sending data to the stratum server failed
+								size_t bytesSent;
+								if(!SSL_write_ex(tlsConnection.get(), &loginRequest[totalBytesSent], sizeof(loginRequest) - totalBytesSent, &bytesSent)) [[unlikely]] {
+								
+									// Check if a fatal error occurred on the TLS connection
+									const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+									if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+									
+										// Don't automatically shutdown TLS connection when done
+										tlsConnectionShutdown.release();
+									}
+									
+									// Break
+									break;
+								}
+								
+								// Update total bytes sent
+								totalBytesSent += bytesSent;
+							}
+							
+							// Otherwise
+							else [[likely]] {
 						#endif
 						
-						// Check if sending data to the stratum server failed
-						if(bytesSent <= 0) [[unlikely]] {
+							// Check if using Windows
+							#ifdef _WIN32
+							
+								// Send data to the stratum server
+								const int bytesSent = send(socketDescriptor, &loginRequest[totalBytesSent], sizeof(loginRequest) - totalBytesSent, 0);
+								
+							// Otherwise
+							#else
+							
+								// Send data to the stratum server
+								const ssize_t bytesSent = send(socketDescriptor, &loginRequest[totalBytesSent], sizeof(loginRequest) - totalBytesSent, MSG_NOSIGNAL);
+							#endif
+							
+							// Check if sending data to the stratum server failed
+							if(bytesSent <= 0) [[unlikely]] {
+							
+								// Break
+								break;
+							}
+							
+							// Update total bytes sent
+							totalBytesSent += bytesSent;
+							
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-							// Break
-							break;
-						}
-						
-						// Update total bytes sent
-						totalBytesSent += bytesSent;
+							}
+						#endif
 						
 					} while(totalBytesSent != sizeof(loginRequest));
 					
@@ -7680,22 +7958,71 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					int numberOfUnrelatedMessagesReceived = 0;
 					for(bool fullMessageReceived = false; !fullMessageReceived && !closing;) [[unlikely]] {
 					
-						// Check if receiving data from the stratum server failed
-						const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
-						if(bytesReceived <= 0) [[unlikely]] {
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-							// Set that receiving data from the stratum server failed
-							totalBytesReceived = 0;
+							// Check if stratum server uses TLS
+							if(stratumServerUseTls) [[unlikely]] {
 							
-							// Break
-							break;
-						}
+								// Check if receiving data from the stratum server failed
+								size_t bytesReceived;
+								if(!SSL_read_ex(tlsConnection.get(), &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, &bytesReceived)) [[unlikely]] {
+								
+									// Check if a fatal error occurred on the TLS connection
+									const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+									if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+									
+										// Don't automatically shutdown TLS connection when done
+										tlsConnectionShutdown.release();
+									}
+									
+									// Otherwise check if non-application data was read
+									else if(tlsError == SSL_ERROR_WANT_READ) [[unlikely]] {
+									
+										// Continue
+										continue;
+									}
+									
+									// Set that receiving data from the stratum server failed
+									totalBytesReceived = 0;
+									
+									// Break
+									break;
+								}
+								
+								// Set full message received to if the received data contains the end of a message
+								fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+								
+								// Update total bytes received
+								totalBytesReceived += bytesReceived;
+							}
+							
+							// Otherwise
+							else [[likely]] {
+						#endif
 						
-						// Set full message received to if the received data contains the end of a message
-						fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+							// Check if receiving data from the stratum server failed
+							const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
+							if(bytesReceived <= 0) [[unlikely]] {
+							
+								// Set that receiving data from the stratum server failed
+								totalBytesReceived = 0;
+								
+								// Break
+								break;
+							}
+							
+							// Set full message received to if the received data contains the end of a message
+							fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+							
+							// Update total bytes received
+							totalBytesReceived += bytesReceived;
+							
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-						// Update total bytes received
-						totalBytesReceived += bytesReceived;
+							}
+						#endif
 						
 						// Check if full message was received
 						if(fullMessageReceived) [[likely]] {
@@ -7890,28 +8217,64 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					totalBytesSent = 0;
 					do [[unlikely]] {
 					
-						// Check if using Windows
-						#ifdef _WIN32
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-							// Send data to the stratum server
-							const int bytesSent = send(socketDescriptor, &getJobTemplateRequest[totalBytesSent], sizeof(getJobTemplateRequest) - sizeof('\0') - totalBytesSent, 0);
+							// Check if stratum server uses TLS
+							if(stratumServerUseTls) [[unlikely]] {
 							
-						// Otherwise
-						#else
-						
-							// Send data to the stratum server
-							const ssize_t bytesSent = send(socketDescriptor, &getJobTemplateRequest[totalBytesSent], sizeof(getJobTemplateRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+								// Check if sending data to the stratum server failed
+								size_t bytesSent;
+								if(!SSL_write_ex(tlsConnection.get(), &getJobTemplateRequest[totalBytesSent], sizeof(getJobTemplateRequest) - sizeof('\0') - totalBytesSent, &bytesSent)) [[unlikely]] {
+								
+									// Check if a fatal error occurred on the TLS connection
+									const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+									if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+									
+										// Don't automatically shutdown TLS connection when done
+										tlsConnectionShutdown.release();
+									}
+									
+									// Break
+									break;
+								}
+								
+								// Update total bytes sent
+								totalBytesSent += bytesSent;
+							}
+							
+							// Otherwise
+							else [[likely]] {
 						#endif
 						
-						// Check if sending data to the stratum server failed
-						if(bytesSent <= 0) [[unlikely]] {
+							// Check if using Windows
+							#ifdef _WIN32
+							
+								// Send data to the stratum server
+								const int bytesSent = send(socketDescriptor, &getJobTemplateRequest[totalBytesSent], sizeof(getJobTemplateRequest) - sizeof('\0') - totalBytesSent, 0);
+								
+							// Otherwise
+							#else
+							
+								// Send data to the stratum server
+								const ssize_t bytesSent = send(socketDescriptor, &getJobTemplateRequest[totalBytesSent], sizeof(getJobTemplateRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+							#endif
+							
+							// Check if sending data to the stratum server failed
+							if(bytesSent <= 0) [[unlikely]] {
+							
+								// Break
+								break;
+							}
+							
+							// Update total bytes sent
+							totalBytesSent += bytesSent;
+							
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-							// Break
-							break;
-						}
-						
-						// Update total bytes sent
-						totalBytesSent += bytesSent;
+							}
+						#endif
 						
 					} while(totalBytesSent != sizeof(getJobTemplateRequest) - sizeof('\0'));
 					
@@ -7960,22 +8323,71 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						numberOfUnrelatedMessagesReceived = 0;
 						for(bool fullMessageReceived = false; !fullMessageReceived && !closing;) [[unlikely]] {
 						
-							// Check if receiving data from the stratum server failed
-							const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
-							if(bytesReceived <= 0) [[unlikely]] {
+							// Check if allowing TLS
+							#if ALLOW_TLS
 							
-								// Set that receiving data from the stratum server failed
-								totalBytesReceived = 0;
+								// Check if stratum server uses TLS
+								if(stratumServerUseTls) [[unlikely]] {
 								
-								// Break
-								break;
-							}
+									// Check if receiving data from the stratum server failed
+									size_t bytesReceived;
+									if(!SSL_read_ex(tlsConnection.get(), &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, &bytesReceived)) [[unlikely]] {
+									
+										// Check if a fatal error occurred on the TLS connection
+										const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+										if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+										
+											// Don't automatically shutdown TLS connection when done
+											tlsConnectionShutdown.release();
+										}
+										
+										// Otherwise check if non-application data was read
+										else if(tlsError == SSL_ERROR_WANT_READ) [[unlikely]] {
+										
+											// Continue
+											continue;
+										}
+										
+										// Set that receiving data from the stratum server failed
+										totalBytesReceived = 0;
+										
+										// Break
+										break;
+									}
+									
+									// Set full message received to if the received data contains the end of a message
+									fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+									
+									// Update total bytes received
+									totalBytesReceived += bytesReceived;
+								}
+								
+								// Otherwise
+								else [[likely]] {
+							#endif
 							
-							// Set full message received to if the received data contains the end of a message
-							fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+								// Check if receiving data from the stratum server failed
+								const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
+								if(bytesReceived <= 0) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed
+									totalBytesReceived = 0;
+									
+									// Break
+									break;
+								}
+								
+								// Set full message received to if the received data contains the end of a message
+								fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+								
+								// Update total bytes received
+								totalBytesReceived += bytesReceived;
+								
+							// Check if allowing TLS
+							#if ALLOW_TLS
 							
-							// Update total bytes received
-							totalBytesReceived += bytesReceived;
+								}
+							#endif
 							
 							// Check if full message was received
 							if(fullMessageReceived) [[likely]] {
@@ -8176,28 +8588,64 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							totalBytesSent = 0;
 							do [[unlikely]] {
 							
-								// Check if using Windows
-								#ifdef _WIN32
+								// Check if allowing TLS
+								#if ALLOW_TLS
 								
-									// Send data to the stratum server
-									const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+									// Check if stratum server uses TLS
+									if(stratumServerUseTls) [[unlikely]] {
 									
-								// Otherwise
-								#else
-								
-									// Send data to the stratum server
-									const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+										// Check if sending data to the stratum server failed
+										size_t bytesSent;
+										if(!SSL_write_ex(tlsConnection.get(), &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, &bytesSent)) [[unlikely]] {
+										
+											// Check if a fatal error occurred on the TLS connection
+											const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+											if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+											
+												// Don't automatically shutdown TLS connection when done
+												tlsConnectionShutdown.release();
+											}
+											
+											// Break
+											break;
+										}
+										
+										// Update total bytes sent
+										totalBytesSent += bytesSent;
+									}
+									
+									// Otherwise
+									else [[likely]] {
 								#endif
 								
-								// Check if sending data to the stratum server failed
-								if(bytesSent <= 0) [[unlikely]] {
+									// Check if using Windows
+									#ifdef _WIN32
+									
+										// Send data to the stratum server
+										const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+										
+									// Otherwise
+									#else
+									
+										// Send data to the stratum server
+										const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+									#endif
+									
+									// Check if sending data to the stratum server failed
+									if(bytesSent <= 0) [[unlikely]] {
+									
+										// Break
+										break;
+									}
+									
+									// Update total bytes sent
+									totalBytesSent += bytesSent;
+									
+								// Check if allowing TLS
+								#if ALLOW_TLS
 								
-									// Break
-									break;
-								}
-								
-								// Update total bytes sent
-								totalBytesSent += bytesSent;
+									}
+								#endif
 								
 							} while(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0'));
 							
@@ -10587,28 +11035,64 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						size_t totalBytesSent = 0;
 						do [[unlikely]] {
 						
-							// Check if using Windows
-							#ifdef _WIN32
+							// Check if allowing TLS
+							#if ALLOW_TLS
 							
-								// Send data to the stratum server
-								const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+								// Check if stratum server uses TLS
+								if(stratumServerUseTls) [[unlikely]] {
 								
-							// Otherwise
-							#else
-							
-								// Send data to the stratum server
-								const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+									// Check if sending data to the stratum server failed
+									size_t bytesSent;
+									if(!SSL_write_ex(tlsConnection.get(), &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, &bytesSent)) [[unlikely]] {
+									
+										// Check if a fatal error occurred on the TLS connection
+										const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+										if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+										
+											// Don't automatically shutdown TLS connection when done
+											tlsConnectionShutdown.release();
+										}
+										
+										// Break
+										break;
+									}
+									
+									// Update total bytes sent
+									totalBytesSent += bytesSent;
+								}
+								
+								// Otherwise
+								else [[likely]] {
 							#endif
 							
-							// Check if sending data to the stratum server failed
-							if(bytesSent <= 0) [[unlikely]] {
+								// Check if using Windows
+								#ifdef _WIN32
+								
+									// Send data to the stratum server
+									const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+									
+								// Otherwise
+								#else
+								
+									// Send data to the stratum server
+									const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+								#endif
+								
+								// Check if sending data to the stratum server failed
+								if(bytesSent <= 0) [[unlikely]] {
+								
+									// Break
+									break;
+								}
+								
+								// Update total bytes sent
+								totalBytesSent += bytesSent;
+								
+							// Check if allowing TLS
+							#if ALLOW_TLS
 							
-								// Break
-								break;
-							}
-							
-							// Update total bytes sent
-							totalBytesSent += bytesSent;
+								}
+							#endif
 							
 						} while(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0'));
 						
@@ -10701,60 +11185,173 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					bool receiveBufferFull;
 					do [[unlikely]] {
 					
-						// Check if using Windows
-						#ifdef _WIN32
+						// Check if allowing TLS
+						bool fullMessageReceived = false;
+						#if ALLOW_TLS
 						
-							// Check if getting if data from the stratum server is available failed
-							pollfd pollInfo = {
-								
-								// Socket descriptor
-								.fd = socketDescriptor,
-								
-								// Events
-								.events = POLLIN
-							};
+							// Check if stratum server uses TLS
+							if(stratumServerUseTls) [[unlikely]] {
 							
-							const int dataAvailable = WSAPoll(&pollInfo, 1, 0);
-							if(dataAvailable <= 0) [[unlikely]] {
-							
-								// Set that receiving data from the stratum server failed if error isn't that no data is available
-								receiveBufferFull = dataAvailable == SOCKET_ERROR;
+								// Check if data isn't available to the TLS connection
+								if(!SSL_pending(tlsConnection.get())) [[unlikely]] {
 								
-								// Break
-								break;
+									// Create poll info
+									pollfd pollInfo = {
+										
+										// Socket descriptor
+										.fd = socketDescriptor,
+										
+										// Events
+										.events = POLLIN
+									};
+									
+									// Check if using Windows
+									#ifdef _WIN32
+									
+										// Check if getting if data from the stratum server is available failed
+										const int dataAvailable = WSAPoll(&pollInfo, 1, 0);
+										if(dataAvailable <= 0) [[unlikely]] {
+										
+											// Set that receiving data from the stratum server failed if error isn't that no data is available
+											receiveBufferFull = dataAvailable == SOCKET_ERROR;
+											
+											// Break
+											break;
+										}
+										
+									// Otherwise
+									#else
+									
+										// Check if getting if data from the stratum server is available failed
+										const int dataAvailable = poll(&pollInfo, 1, 0);
+										if(dataAvailable <= 0) [[unlikely]] {
+										
+											// Set that receiving data from the stratum server failed if error isn't that no data is available
+											receiveBufferFull = dataAvailable == -1;
+											
+											// Break
+											break;
+										}
+									#endif
+								}
+								
+								// Loop while data is available to the TLS connection and receive buffer isn't fill
+								bool errorOccurred = false;
+								do [[unlikely]] {
+								
+									// Check if receiving data from the stratum server failed
+									size_t bytesReceived;
+									if(!SSL_read_ex(tlsConnection.get(), &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, &bytesReceived)) [[unlikely]] {
+									
+										// Check if a fatal error occurred on the TLS connection
+										const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+										if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+										
+											// Don't automatically shutdown TLS connection when done
+											tlsConnectionShutdown.release();
+										}
+										
+										// Otherwise check if non-application data was read
+										else if(tlsError == SSL_ERROR_WANT_READ) [[unlikely]] {
+										
+											// Continue
+											continue;
+										}
+										
+										// Set error occurred to true
+										errorOccurred = true;
+										
+										// Break
+										break;
+									}
+									
+									// Check if a full message wasn't received
+									if(!fullMessageReceived) [[likely]] {
+									
+										// Set full message received to if the received data contains the end of a message
+										fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+									}
+									
+									// Update total bytes received
+									totalBytesReceived += bytesReceived;
+									
+								} while(SSL_pending(tlsConnection.get()) && totalBytesReceived != sizeof(receiveBuffer));
+								
+								// Check if an error occurred
+								if(errorOccurred) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed
+									receiveBufferFull = true;
+									
+									// Break
+									break;
+								}
 							}
 							
-							// Check if receiving data from the stratum server failed
-							const int bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
-							if(bytesReceived <= 0) [[unlikely]] {
-							
-								// Set that receiving data from the stratum server failed
-								receiveBufferFull = true;
-								
-								// Break
-								break;
-							}
-							
-						// Otherwise
-						#else
-						
-							// Check if receiving data from the stratum server failed
-							const ssize_t bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, MSG_DONTWAIT);
-							if(bytesReceived <= 0) [[unlikely]] {
-							
-								// Set that receiving data from the stratum server failed if error isn't that receiving would have blocked
-								receiveBufferFull = bytesReceived == 0 || (errno != EAGAIN && errno != EWOULDBLOCK);
-								
-								// Break
-								break;
-							}
+							// Otherwise
+							else [[likely]] {
 						#endif
 						
-						// Set full message received to if the received data contains the end of a message
-						const bool fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+							// Check if using Windows
+							#ifdef _WIN32
+							
+								// Check if getting if data from the stratum server is available failed
+								pollfd pollInfo = {
+									
+									// Socket descriptor
+									.fd = socketDescriptor,
+									
+									// Events
+									.events = POLLIN
+								};
+								
+								const int dataAvailable = WSAPoll(&pollInfo, 1, 0);
+								if(dataAvailable <= 0) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed if error isn't that no data is available
+									receiveBufferFull = dataAvailable == SOCKET_ERROR;
+									
+									// Break
+									break;
+								}
+								
+								// Check if receiving data from the stratum server failed
+								const int bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
+								if(bytesReceived <= 0) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed
+									receiveBufferFull = true;
+									
+									// Break
+									break;
+								}
+								
+							// Otherwise
+							#else
+							
+								// Check if receiving data from the stratum server failed
+								const ssize_t bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, MSG_DONTWAIT);
+								if(bytesReceived <= 0) [[unlikely]] {
+								
+									// Set that receiving data from the stratum server failed if error isn't that receiving would have blocked
+									receiveBufferFull = bytesReceived == 0 || (errno != EAGAIN && errno != EWOULDBLOCK);
+									
+									// Break
+									break;
+								}
+							#endif
+							
+							// Set full message received to if the received data contains the end of a message
+							fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+							
+							// Update total bytes received
+							totalBytesReceived += bytesReceived;
+							
+						// Check if allowing TLS
+						#if ALLOW_TLS
 						
-						// Update total bytes received
-						totalBytesReceived += bytesReceived;
+							}
+						#endif
 						
 						// Get if receive buffer is full
 						receiveBufferFull = totalBytesReceived == sizeof(receiveBuffer);
@@ -10937,22 +11534,71 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Loop until full message is received and not closing
 							for(bool fullMessageReceived = false; !fullMessageReceived && !closing;) [[unlikely]] {
 							
-								// Check if receiving data from the stratum server failed
-								const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
-								if(bytesReceived <= 0) [[unlikely]] {
+								// Check if allowing TLS
+								#if ALLOW_TLS
 								
-									// Set that receiving data from the stratum server failed
-									totalBytesReceived = 0;
+									// Check if stratum server uses TLS
+									if(stratumServerUseTls) [[unlikely]] {
 									
-									// Break
-									break;
-								}
+										// Check if receiving data from the stratum server failed
+										size_t bytesReceived;
+										if(!SSL_read_ex(tlsConnection.get(), &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, &bytesReceived)) [[unlikely]] {
+										
+											// Check if a fatal error occurred on the TLS connection
+											const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+											if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+											
+												// Don't automatically shutdown TLS connection when done
+												tlsConnectionShutdown.release();
+											}
+											
+											// Otherwise check if non-application data was read
+											else if(tlsError == SSL_ERROR_WANT_READ) [[unlikely]] {
+											
+												// Continue
+												continue;
+											}
+											
+											// Set that receiving data from the stratum server failed
+											totalBytesReceived = 0;
+											
+											// Break
+											break;
+										}
+										
+										// Set full message received to if the received data contains the end of a message
+										fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+										
+										// Update total bytes received
+										totalBytesReceived += bytesReceived;
+									}
+									
+									// Otherwise
+									else [[likely]] {
+								#endif
 								
-								// Set full message received to if the received data contains the end of a message
-								fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+									// Check if receiving data from the stratum server failed
+									const decltype(function(recv))::result_type bytesReceived = recv(socketDescriptor, &receiveBuffer[totalBytesReceived], sizeof(receiveBuffer) - totalBytesReceived, 0);
+									if(bytesReceived <= 0) [[unlikely]] {
+									
+										// Set that receiving data from the stratum server failed
+										totalBytesReceived = 0;
+										
+										// Break
+										break;
+									}
+									
+									// Set full message received to if the received data contains the end of a message
+									fullMessageReceived = __builtin_memchr(&receiveBuffer[totalBytesReceived], '\n', bytesReceived);
+									
+									// Update total bytes received
+									totalBytesReceived += bytesReceived;
+									
+								// Check if allowing TLS
+								#if ALLOW_TLS
 								
-								// Update total bytes received
-								totalBytesReceived += bytesReceived;
+									}
+								#endif
 								
 								// Check if full message was received
 								if(fullMessageReceived) [[likely]] {
@@ -11092,28 +11738,64 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								size_t totalBytesSent = 0;
 								do [[unlikely]] {
 								
-									// Check if using Windows
-									#ifdef _WIN32
+									// Check if allowing TLS
+									#if ALLOW_TLS
 									
-										// Send data to the stratum server
-										const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+										// Check if stratum server uses TLS
+										if(stratumServerUseTls) [[unlikely]] {
 										
-									// Otherwise
-									#else
-									
-										// Send data to the stratum server
-										const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+											// Check if sending data to the stratum server failed
+											size_t bytesSent;
+											if(!SSL_write_ex(tlsConnection.get(), &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, &bytesSent)) [[unlikely]] {
+											
+												// Check if a fatal error occurred on the TLS connection
+												const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+												if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+												
+													// Don't automatically shutdown TLS connection when done
+													tlsConnectionShutdown.release();
+												}
+												
+												// Break
+												break;
+											}
+											
+											// Update total bytes sent
+											totalBytesSent += bytesSent;
+										}
+										
+										// Otherwise
+										else [[likely]] {
 									#endif
 									
-									// Check if sending data to the stratum server failed
-									if(bytesSent <= 0) [[unlikely]] {
+										// Check if using Windows
+										#ifdef _WIN32
+										
+											// Send data to the stratum server
+											const int bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, 0);
+											
+										// Otherwise
+										#else
+										
+											// Send data to the stratum server
+											const ssize_t bytesSent = send(socketDescriptor, &keepAliveRequest[totalBytesSent], sizeof(keepAliveRequest) - sizeof('\0') - totalBytesSent, MSG_NOSIGNAL);
+										#endif
+										
+										// Check if sending data to the stratum server failed
+										if(bytesSent <= 0) [[unlikely]] {
+										
+											// Break
+											break;
+										}
+										
+										// Update total bytes sent
+										totalBytesSent += bytesSent;
+										
+									// Check if allowing TLS
+									#if ALLOW_TLS
 									
-										// Break
-										break;
-									}
-									
-									// Update total bytes sent
-									totalBytesSent += bytesSent;
+										}
+									#endif
 									
 								} while(totalBytesSent != sizeof(keepAliveRequest) - sizeof('\0'));
 								
@@ -12126,28 +12808,64 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								size_t totalBytesSent = 0;
 								do [[unlikely]] {
 								
-									// Check if using Windows
-									#ifdef _WIN32
+									// Check if allowing TLS
+									#if ALLOW_TLS
 									
-										// Send data to the stratum server
-										const int bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, 0);
+										// Check if stratum server uses TLS
+										if(stratumServerUseTls) [[unlikely]] {
 										
-									// Otherwise
-									#else
-									
-										// Send data to the stratum server
-										const ssize_t bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, MSG_NOSIGNAL);
+											// Check if sending data to the stratum server failed
+											size_t bytesSent;
+											if(!SSL_write_ex(tlsConnection.get(), &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, &bytesSent)) [[unlikely]] {
+											
+												// Check if a fatal error occurred on the TLS connection
+												const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+												if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+												
+													// Don't automatically shutdown TLS connection when done
+													tlsConnectionShutdown.release();
+												}
+												
+												// Break
+												break;
+											}
+											
+											// Update total bytes sent
+											totalBytesSent += bytesSent;
+										}
+										
+										// Otherwise
+										else [[likely]] {
 									#endif
 									
-									// Check if sending data to the stratum server failed
-									if(bytesSent <= 0) [[unlikely]] {
+										// Check if using Windows
+										#ifdef _WIN32
+										
+											// Send data to the stratum server
+											const int bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, 0);
+											
+										// Otherwise
+										#else
+										
+											// Send data to the stratum server
+											const ssize_t bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, MSG_NOSIGNAL);
+										#endif
+										
+										// Check if sending data to the stratum server failed
+										if(bytesSent <= 0) [[unlikely]] {
+										
+											// Break
+											break;
+										}
+										
+										// Update total bytes sent
+										totalBytesSent += bytesSent;
+										
+									// Check if allowing TLS
+									#if ALLOW_TLS
 									
-										// Break
-										break;
-									}
-									
-									// Update total bytes sent
-									totalBytesSent += bytesSent;
+										}
+									#endif
 									
 								} while(totalBytesSent != submitRequestSize);
 								

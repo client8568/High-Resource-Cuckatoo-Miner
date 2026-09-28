@@ -12,5 +12,7 @@ cuda_13.4.0_windows_x86_64.exe
 7zr.exe
 amdsmi.tar.gz
 therock
+openssl-4.0.2.tar.gz
+openssl-4.0.2
 v1.5.tar.gz
 ADLX-1.5

@@ -65,7 +65,7 @@ make run
 ```
 
 ### Usage
-A stratum server address, port, username, and password can be provided when running this program to set the stratum server that it will mine to. For example, the following command will connect to the stratum server with the address `127.0.0.1` at port `3416` using the username `username` and password `password`. After this program connects to a stratum server, it will start mining and submit all valid solutions that it finds to that stratum server regardless of each solution's difficulty in relation to that stratum server's minimum solution difficulty.
+A stratum server address, port, username, and password can be provided when running this program to set the stratum server that it will mine to. For example, the following command will connect to the stratum server with the address `127.0.0.1` at port `3416` using the username `username` and password `password`. After this program connects to a stratum server, it will start mining and submit all valid solutions that it finds to that stratum server regardless of each solution's difficulty in relation to that stratum server's minimum solution difficulty. The `-s` command line argument can be used to connect to stratum servers that use Transport Layer Security (TLS).
 ```
 "./High Resource Cuckatoo Miner" -a 127.0.0.1 -p 3416 -u username -w password
 ```
@@ -411,6 +411,11 @@ make STARTING_HEADER=
 * A `STOP_AFTER_NUMBER_OF_GRAPHS` setting can be used to stop this program after it processes a specified number of graphs. If this setting is `0` then this program won't ever stop. This setting is intended to be used by developers. The default value for this setting is `0`.
 ```
 make STOP_AFTER_NUMBER_OF_GRAPHS=0
+```
+
+*An `ALLOW_TLS` setting can be used to enable connecting to stratum servers using Transport Layer Security (TLS). The default value for this setting is `true`.
+```
+make ALLOW_TLS=true
 ```
 
 ### Preconfigured Settings

@@ -50,6 +50,7 @@
 	#include <mach/thread_act.h>
 	#include <netdb.h>
 	#include <netinet/tcp.h>
+	#include <poll.h>
 	#include <sys/sysctl.h>
 	
 // Otherwise
@@ -59,6 +60,7 @@
 	#include <arpa/inet.h>
 	#include <netdb.h>
 	#include <netinet/tcp.h>
+	#include <poll.h>
 	
 	// Check if displaying power usage
 	#if DISPLAY_POWER_USAGE
