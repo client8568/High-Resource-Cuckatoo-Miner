@@ -371,6 +371,9 @@ class DisableCout final {
 	
 		// Original output
 		int originalOutput;
+		
+		// Original error
+		int originalError;
 };
 
 // Check if preventing sleep
@@ -573,6 +576,9 @@ __attribute__((always_inline)) inline DisableCout::DisableCout() noexcept {
 	// Flush output
 	fflush(stdout);
 	
+	// Flush error
+	fflush(stderr);
+	
 	// Check if using Windows
 	#ifdef _WIN32
 	
@@ -584,6 +590,14 @@ __attribute__((always_inline)) inline DisableCout::DisableCout() noexcept {
 			freopen("nul", "w", stdout);
 		}
 		
+		// Check if saving error was successful
+		originalError = _dup(STDERR_FILENO);
+		if(originalError != -1) [[likely]] {
+		
+			// Disable error
+			freopen("nul", "w", stderr);
+		}
+		
 	// Otherwise
 	#else
 	
@@ -593,6 +607,14 @@ __attribute__((always_inline)) inline DisableCout::DisableCout() noexcept {
 		
 			// Disable output
 			freopen("/dev/null", "w", stdout);
+		}
+		
+		// Check if saving error was successful
+		originalError = dup(STDERR_FILENO);
+		if(originalError != -1) [[likely]] {
+		
+			// Disable error
+			freopen("/dev/null", "w", stderr);
 		}
 	#endif
 }
@@ -629,6 +651,30 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 		// Set that output wasn't saved
 		close(originalOutput);
 		originalOutput = -1;
+	}
+	
+	// Check if error was saved
+	if(originalError != -1) [[likely]] {
+	
+		// Flush error
+		fflush(stderr);
+		
+		// Check if using Windows
+		#ifdef _WIN32
+		
+			// Enable error
+			_dup2(originalError, STDERR_FILENO);
+			
+		// Otherwise
+		#else
+		
+			// Enable error
+			dup2(originalError, STDERR_FILENO);
+		#endif
+		
+		// Set that error wasn't saved
+		close(originalError);
+		originalError = -1;
 	}
 }
 
