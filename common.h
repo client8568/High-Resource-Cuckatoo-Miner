@@ -500,7 +500,7 @@ class DisableCout final {
 					
 					// AMD device
 					IADLXGPUPtr amdDevice;
-				
+					
 				// Otherwise
 				#else
 				
@@ -1457,87 +1457,72 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 					// Check if entry is a control type
 					if(entry->d_type == DT_DIR && entry->d_name[0] && __builtin_strcmp(entry->d_name, ".") && __builtin_strcmp(entry->d_name, "..")) [[likely]] {
 					
-						// Create control type enabled file path
-						char controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof("/enabled")];
-						__builtin_memcpy(controlTypeEnabledFilePath, "/sys/devices/virtual/powercap/", sizeof("/sys/devices/virtual/powercap/") - sizeof('\0'));
-						__builtin_memcpy(&controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0')], entry->d_name, __builtin_strlen(entry->d_name));
-						__builtin_memcpy(&controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)], "/enabled", sizeof("/enabled"));
+						// Check if opening the control type directory was successful
+						char controlTypeDirectoryPath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('\0')];
+						__builtin_memcpy(controlTypeDirectoryPath, "/sys/devices/virtual/powercap/", sizeof("/sys/devices/virtual/powercap/") - sizeof('\0'));
+						__builtin_memcpy(&controlTypeDirectoryPath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0')], entry->d_name, __builtin_strlen(entry->d_name) + sizeof('\0'));
 						
-						// Check if opening control type enabled file was successful and the control type is enabled
-						const unique_ptr<FILE, decltype(&fclose)> controlTypeEnabledFile(fopen(controlTypeEnabledFilePath, "rb"), fclose);
-						if(controlTypeEnabledFile && fgetc(controlTypeEnabledFile.get()) == '1') [[likely]] {
+						const unique_ptr<DIR, decltype(&closedir)> controlTypeDirectory(opendir(controlTypeDirectoryPath), closedir);
+						if(controlTypeDirectory) [[likely]] {
 						
-							// Check if opening control type directory was successful
-							controlTypeEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)] = '\0';
-							const unique_ptr<DIR, decltype(&closedir)> controlTypeDirectory(opendir(controlTypeEnabledFilePath), closedir);
-							if(controlTypeDirectory) [[likely]] {
+							// Go through all entries in the control type directory
+							dirent *controlTypeEntry;
+							while((controlTypeEntry = readdir(controlTypeDirectory.get()))) [[likely]] {
 							
-								// Go through all entries in the control type directory
-								dirent *controlTypeEntry;
-								while((controlTypeEntry = readdir(controlTypeDirectory.get()))) [[likely]] {
+								// Check if entry is a power zone
+								if(controlTypeEntry->d_type == DT_DIR && controlTypeEntry->d_name[0] && __builtin_strcmp(controlTypeEntry->d_name, ".") && __builtin_strcmp(controlTypeEntry->d_name, "..")) [[likely]] {
 								
-									// Check if entry is a power zone
-									if(controlTypeEntry->d_type == DT_DIR && controlTypeEntry->d_name[0] && __builtin_strcmp(controlTypeEntry->d_name, ".") && __builtin_strcmp(controlTypeEntry->d_name, "..")) [[likely]] {
+									// Check if opening the power zone name file was successful
+									char powerZoneNameFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name) + max(sizeof("/name"), sizeof("/energy_uj"))];
+									__builtin_memcpy(powerZoneNameFilePath, controlTypeDirectoryPath, sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name));
+									powerZoneNameFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)] = '/';
+									__builtin_memcpy(&powerZoneNameFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/')], controlTypeEntry->d_name, __builtin_strlen(controlTypeEntry->d_name));
+									__builtin_memcpy(&powerZoneNameFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/name", sizeof("/name"));
 									
-										// Create power zone enabled file path
-										char powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name) + sizeof("/energy_uj")];
-										__builtin_memcpy(powerZoneEnabledFilePath, controlTypeEnabledFilePath, sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name));
-										powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name)] = '/';
-										__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/')], controlTypeEntry->d_name, __builtin_strlen(controlTypeEntry->d_name));
-										__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/enabled", sizeof("/enabled"));
+									const unique_ptr<FILE, decltype(&fclose)> powerZoneNameFile(fopen(powerZoneNameFilePath, "rb"), fclose);
+									if(powerZoneNameFile) [[likely]] {
+									
+										// Check if going to the end of the power zone name file was successful
+										while(fgetc(powerZoneNameFile.get()) != EOF) [[likely]];
 										
-										// Check if opening power zone enabled file was successful and the power zone is enabled
-										const unique_ptr<FILE, decltype(&fclose)> powerZoneEnabledFile(fopen(powerZoneEnabledFilePath, "rb"), fclose);
-										if(powerZoneEnabledFile && fgetc(powerZoneEnabledFile.get()) == '1') [[likely]] {
+										if(!ferror(powerZoneNameFile.get())) [[likely]] {
 										
-											// Check if opening power zone name file was successful
-											__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/name", sizeof("/name"));
-											const unique_ptr<FILE, decltype(&fclose)> powerZoneNameFile(fopen(powerZoneEnabledFilePath, "rb"), fclose);
-											if(powerZoneNameFile) [[likely]] {
+											// Check if getting power zone name file's size was successful
+											const long powerZoneNameSize = ftell(powerZoneNameFile.get());
+											if(powerZoneNameSize != -1 && !fseek(powerZoneNameFile.get(), 0, SEEK_SET) && static_cast<unsigned long>(powerZoneNameSize) < SIZE_MAX) [[likely]] {
 											
-												// Check if going to the end of the power zone name file was successful
-												while(fgetc(powerZoneNameFile.get()) != EOF) [[likely]];
+												// Check if getting power zone's name was successful
+												char powerZoneName[powerZoneNameSize + sizeof('\0')];
+												if(fread(powerZoneName, sizeof(char), powerZoneNameSize, powerZoneNameFile.get()) == static_cast<size_t>(powerZoneNameSize)) [[likely]] {
 												
-												if(!ferror(powerZoneNameFile.get())) [[likely]] {
-												
-													// Check if getting power zone name file's size was successful
-													const long powerZoneNameSize = ftell(powerZoneNameFile.get());
-													if(powerZoneNameSize != -1 && !fseek(powerZoneNameFile.get(), 0, SEEK_SET) && static_cast<unsigned long>(powerZoneNameSize) < SIZE_MAX) [[likely]] {
+													// Make power zone's name a string
+													powerZoneName[powerZoneNameSize] = '\0';
 													
-														// Check if getting power zone's name was successful
-														char powerZoneName[powerZoneNameSize + sizeof('\0')];
-														if(fread(powerZoneName, sizeof(char), powerZoneNameSize, powerZoneNameFile.get()) == static_cast<size_t>(powerZoneNameSize)) [[likely]] {
+													// Check if power zone is a CPU socket
+													if(strcasestr(powerZoneName, "package")) [[unlikely]] {
+													
+														// Check if opening power zone energy file was successful
+														__builtin_memcpy(&powerZoneNameFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/energy_uj", sizeof("/energy_uj"));
+														const unique_ptr<FILE, decltype(&fclose)> powerZoneEnergyFile(fopen(powerZoneNameFilePath, "rb"), fclose);
+														if(powerZoneEnergyFile) [[likely]] {
 														
-															// Make power zone's name a string
-															powerZoneName[powerZoneNameSize] = '\0';
+															// Check if reading the power zone energy file was successful
+															char powerZoneEnergy[MAX_UINT64_STRING_SIZE + sizeof("\n")];
+															const size_t powerZoneEnergySize = fread(powerZoneEnergy, sizeof(char), sizeof(powerZoneEnergy), powerZoneEnergyFile.get());
 															
-															// Check if power zone is a CPU socket
-															if(strcasestr(powerZoneName, "package")) [[unlikely]] {
+															if(powerZoneEnergySize && powerZoneEnergySize <= MAX_UINT64_STRING_SIZE + sizeof('\n') && !__builtin_memchr(powerZoneEnergy, '\0', powerZoneEnergySize)) [[likely]] {
 															
-																// Check if opening power zone energy file was successful
-																__builtin_memcpy(&powerZoneEnabledFilePath[sizeof("/sys/devices/virtual/powercap/") - sizeof('\0') + __builtin_strlen(entry->d_name) + sizeof('/') + __builtin_strlen(controlTypeEntry->d_name)], "/energy_uj", sizeof("/energy_uj"));
-																const unique_ptr<FILE, decltype(&fclose)> powerZoneEnergyFile(fopen(powerZoneEnabledFilePath, "rb"), fclose);
-																if(powerZoneEnergyFile) [[likely]] {
+																// Make power zone energy a string
+																powerZoneEnergy[powerZoneEnergySize - (__builtin_expect(powerZoneEnergy[powerZoneEnergySize - sizeof('\n')] == '\n', true) ? sizeof('\n') : 0)] = '\0';
 																
-																	// Check if reading the power zone energy file was successful
-																	char powerZoneEnergy[MAX_UINT64_STRING_SIZE + sizeof("\n")];
-																	const size_t powerZoneEnergySize = fread(powerZoneEnergy, sizeof(char), sizeof(powerZoneEnergy), powerZoneEnergyFile.get());
-																	
-																	if(powerZoneEnergySize && powerZoneEnergySize <= MAX_UINT64_STRING_SIZE + sizeof('\n') && !__builtin_memchr(powerZoneEnergy, '\0', powerZoneEnergySize)) [[likely]] {
-																	
-																		// Make power zone energy a string
-																		powerZoneEnergy[powerZoneEnergySize - (__builtin_expect(powerZoneEnergy[powerZoneEnergySize - sizeof('\n')] == '\n', true) ? sizeof('\n') : 0)] = '\0';
-																		
-																		// Check if getting power zone energy as a number was successful
-																		char *end;
-																		errno = 0;
-																		const unsigned long long powerZoneEnergyAsNumber = strtoull(powerZoneEnergy, &end, DECIMAL_NUMBER_BASE);
-																		if(end != powerZoneEnergy && !*end && isdigit(powerZoneEnergy[0]) && (powerZoneEnergy[0] != '0' || !isdigit(powerZoneEnergy[sizeof('0')])) && !errno) [[likely]] {
-																		
-																			// Add power zone energy as a number in correct units to the CPU total energy consumption
-																			cpuTotalEnergyConsumption += powerZoneEnergyAsNumber * NANOJOULES_IN_A_MICROJOULE;
-																		}
-																	}
+																// Check if getting power zone energy as a number was successful
+																char *end;
+																errno = 0;
+																const unsigned long long powerZoneEnergyAsNumber = strtoull(powerZoneEnergy, &end, DECIMAL_NUMBER_BASE);
+																if(end != powerZoneEnergy && !*end && isdigit(powerZoneEnergy[0]) && (powerZoneEnergy[0] != '0' || !isdigit(powerZoneEnergy[sizeof('0')])) && !errno) [[likely]] {
+																
+																	// Add power zone energy as a number in correct units to the CPU total energy consumption
+																	cpuTotalEnergyConsumption += powerZoneEnergyAsNumber * NANOJOULES_IN_A_MICROJOULE;
 																}
 															}
 														}
