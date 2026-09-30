@@ -6634,7 +6634,79 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 																
 																// Get GPU's PCI bus info if it exists
 																cl_device_pci_bus_info_khr pciBusInfo;
-																const bool pciBusInfoExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_PCI_BUS_INFO_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pciBusInfo), &pciBusInfo, nullptr) == CL_SUCCESS;
+																bool pciBusInfoExists = extensionsSize && __builtin_strstr(extensions, CL_KHR_PCI_BUS_INFO_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_PCI_BUS_INFO_KHR, sizeof(pciBusInfo), &pciBusInfo, nullptr) == CL_SUCCESS;
+																
+																// Check if GPU's PCI bus info doesn't exist
+																if(!pciBusInfoExists) [[unlikely]] {
+																
+																	// OpenCL device PCI bus ID NVIDIA
+																	#define CL_DEVICE_PCI_BUS_ID_NV 0x4008
+																	
+																	// OpenCL device PCI slot ID NVIDIA
+																	#define CL_DEVICE_PCI_SLOT_ID_NV 0x4009
+																	
+																	// Check if getting GPU's NVIDIA PCI bus info was successful
+																	cl_uint nvidiaPciBus = 0;
+																	cl_uint nvidiaPciSlot = 0;
+																	if(extensionsSize && __builtin_strstr(extensions, CL_NV_DEVICE_ATTRIBUTE_QUERY_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_PCI_BUS_ID_NV, sizeof(nvidiaPciBus), &nvidiaPciBus, nullptr) == CL_SUCCESS && clGetDeviceInfo(gpu, CL_DEVICE_PCI_SLOT_ID_NV, sizeof(nvidiaPciSlot), &nvidiaPciSlot, nullptr) == CL_SUCCESS) [[unlikely]] {
+																	
+																		// Set that PCI bus info exists
+																		pciBusInfoExists = true;
+																		
+																		// OpenCL device PCI domain ID NVIDIA
+																		#define CL_DEVICE_PCI_DOMAIN_ID_NV 0x400A
+																		
+																		// Set PCI bus info to the NVIDIA PCI bus info
+																		cl_uint nvidiaPciDomain = 0;
+																		pciBusInfo.pci_domain = (clGetDeviceInfo(gpu, CL_DEVICE_PCI_DOMAIN_ID_NV, sizeof(nvidiaPciDomain), &nvidiaPciDomain, nullptr) == CL_SUCCESS) ? nvidiaPciDomain : 0;
+																		pciBusInfo.pci_bus = nvidiaPciBus;
+																		pciBusInfo.pci_device = nvidiaPciSlot >> 3;
+																		pciBusInfo.pci_function = nvidiaPciSlot & 0x7;
+																	}
+																	
+																	// Otherwise
+																	else [[likely]] {
+																	
+																		// Check if getting GPU's AMD PCI bus info was successful
+																		struct {
+																		
+																			// Type
+																			cl_uint type;
+																			
+																			// Unused
+																			cl_uchar unused[17];
+																			
+																			// Bus
+																			cl_uchar bus;
+																			
+																			// Device
+																			cl_uchar device;
+																			
+																			// Function
+																			cl_uchar function;
+																			
+																		} amdPciBusInfo = {};
+																		
+																		if(extensionsSize && __builtin_strstr(extensions, CL_AMD_DEVICE_ATTRIBUTE_QUERY_EXTENSION_NAME) && clGetDeviceInfo(gpu, CL_DEVICE_TOPOLOGY_AMD, sizeof(amdPciBusInfo), &amdPciBusInfo, nullptr) == CL_SUCCESS) [[unlikely]] {
+																		
+																			// OpenCL device topology type PCI AMD
+																			#define CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD 1
+																			
+																			// Check if AMD PCI bus info is for a PCI device
+																			if(amdPciBusInfo.type == CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD) [[likely]] {
+																			
+																				// Set that PCI bus info exists
+																				pciBusInfoExists = true;
+																				
+																				// Set PCI bus info to the AMD PCI bus info
+																				pciBusInfo.pci_domain = 0;
+																				pciBusInfo.pci_bus = amdPciBusInfo.bus;
+																				pciBusInfo.pci_device = amdPciBusInfo.device;
+																				pciBusInfo.pci_function = amdPciBusInfo.function;
+																			}
+																		}
+																	}
+																}
 																
 																// Check if GPU's UUID or PCI bus info exist
 																if(uuidExists || pciBusInfoExists) [[likely]] {
