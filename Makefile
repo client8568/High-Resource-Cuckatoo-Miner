@@ -242,7 +242,7 @@ ifeq ($(OS),Windows_NT)
 		ifeq ($(DISPLAY_POWER_USAGE),true)
 		
 			# Set flags and link libraries
-			CFLAGS += -I"./nvml/include" -I"./adlx/include" "./adlx/include/ADLXHelper/Windows/Cpp/ADLXHelper.cpp" "./adlx/include/Platform/Windows/WinAPIs.cpp"
+			CFLAGS += -I"./nvml/include" -I"./adl/include" -I"./adlx/include" "./adlx/include/ADLXHelper/Windows/Cpp/ADLXHelper.cpp" "./adlx/include/Platform/Windows/WinAPIs.cpp"
 			LIBS += -Wl,-Bstatic -L"./nvml/dist/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)/lib" -lnvml -Wl,-Bdynamic -Wl,--delayload=nvml.dll
 		endif
 		
@@ -270,7 +270,7 @@ ifeq ($(OS),Windows_NT)
 		ifeq ($(DISPLAY_POWER_USAGE),true)
 		
 			# Set flags and link libraries
-			CFLAGS += -I"./nvml/include" -I"./adlx/include" "./adlx/include/ADLXHelper/Windows/Cpp/ADLXHelper.cpp" "./adlx/include/Platform/Windows/WinAPIs.cpp"
+			CFLAGS += -I"./nvml/include" -I"./adl/include" -I"./adlx/include" "./adlx/include/ADLXHelper/Windows/Cpp/ADLXHelper.cpp" "./adlx/include/Platform/Windows/WinAPIs.cpp"
 			LIBS += -Wl,-Bstatic -L"./nvml/dist/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)/lib" -lnvml -Wl,-Bdynamic -Wl,--delayload=nvml.dll
 		endif
 		
@@ -375,7 +375,7 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./v2.0.tar.gz" "./ADLX-2.0" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.0.2.tar.gz" "./openssl-4.0.2" "./18.0.tar.gz" "./display-library-18.0" "./v2.0.tar.gz" "./ADLX-2.0" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
@@ -530,6 +530,18 @@ windowsDependencies:
 	mkdir "./nvml\dist\windows\ARM64\lib"
 	move "./cuda/cuda_nvml_dev_cross_arm64/nvml_dev_cross/lib/arm64\nvml.lib" "./nvml/dist/windows/ARM64/lib"
 	rd /q /s "./cuda"
+	
+	rem AMD Display Library (https://github.com/GPUOpen-LibrariesAndSDKs/display-library)
+	del /q "./18.0.tar.gz" > "nul" 2>&1
+	if exist "./display-library-18.0" rd /q /s "./display-library-18.0" > "nul"
+	if exist "./adl" rd /q /s "./adl" > "nul"
+	curl -LO "https://github.com/GPUOpen-LibrariesAndSDKs/display-library/archive/refs/tags/18.0.tar.gz"
+	tar -xf "./18.0.tar.gz"
+	del "./18.0.tar.gz"
+	mkdir "./adl"
+	move "./display-library-18.0/Public-Documents\ADL SDK EULA.pdf" "./adl/LICENSE"
+	move "./display-library-18.0\include" "./adl"
+	rd /q /s "./display-library-18.0"
 	
 	rem AMD Device Library eXtra (https://github.com/GPUOpen-LibrariesAndSDKs/ADLX)
 	del /q "./v2.0.tar.gz" > "nul" 2>&1

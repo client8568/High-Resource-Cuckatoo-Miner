@@ -27,6 +27,7 @@
 	
 		// Header files
 		#include <nvml.h>
+		#include "adl_sdk.h"
 		#include "ADLXHelper/Windows/Cpp/ADLXHelper.h"
 		#include "Include/IPerformanceMonitoring.h"
 	#endif
@@ -504,6 +505,12 @@ class DisableCout final {
 					// AMD device
 					IADLXGPUPtr amdDevice;
 					
+					// ADL library
+					unique_ptr<remove_pointer_t<HMODULE>, decltype(&FreeLibrary)> adlLibrary;
+					
+					// ADL context
+					ADL_CONTEXT_HANDLE adlContext;
+					
 				// Otherwise
 				#else
 				
@@ -901,8 +908,17 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 			// Set NVIDIA initialize to false
 			nvidiaInitialized(false),
 			
-			// Check if not using Windows
-			#ifndef _WIN32
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Set ADL library to nothing
+				adlLibrary(nullptr, FreeLibrary),
+				
+				// Set ADL context to nothing
+				adlContext(nullptr),
+				
+			// Otherwise
+			#else
 			
 				// Set AMD initialized to false
 				amdInitialized(false),
@@ -927,8 +943,18 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 				nvmlShutdown();
 			}
 			
-			// Check if not using Windows
-			#ifndef _WIN32
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Check if ADL context exists
+				if(adlContext) [[likely]] {
+				
+					// Destroy ADL context
+					reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE)>(GetProcAddress(adlLibrary.get(), "ADL2_Main_Control_Destroy"))(adlContext);
+				}
+				
+			// Otherwise
+			#else
 			
 				// Check if AMD is initialized
 				if(amdInitialized) [[likely]] {
@@ -1002,12 +1028,9 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 										// Return how to get the GPU's power used
 										return [this]() __attribute__((always_inline)) noexcept -> double {
 										
-											// Get the GPU's power used
-											unsigned int powerUsed = 0;
-											nvmlDeviceGetPowerUsage(nvidiaDevice, &powerUsed);
-											
-											// Return power used in correct units
-											return static_cast<double>(powerUsed) / MILLIWATTS_IN_A_WATT;
+											// Return GPU's power used in correct units if getting it was successful
+											unsigned int powerUsed;
+											return (nvmlDeviceGetPowerUsage(nvidiaDevice, &powerUsed) == NVML_SUCCESS) ? static_cast<double>(powerUsed) / MILLIWATTS_IN_A_WATT : 0;
 										};
 									}
 									
@@ -1103,24 +1126,12 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 																// Return how to get the GPU's power used
 																return [this]() __attribute__((always_inline)) noexcept -> double {
 																
-																	// Create power used
-																	adlx_double powerUsed = 0;
-																	
-																	// Check if getting all metrics was successful
+																	// Return GPU's power used if getting it was successful
 																	IADLXAllMetricsPtr allMetrics;
-																	if(ADLX_SUCCEEDED(amdPerformanceMonitoringServices->GetCurrentAllMetrics(&allMetrics))) [[likely]] {
+																	IADLXGPUMetricsPtr gpuMetrics;
+																	adlx_double powerUsed;
+																	return (ADLX_SUCCEEDED(amdPerformanceMonitoringServices->GetCurrentAllMetrics(&allMetrics)) && ADLX_SUCCEEDED(allMetrics->GetGPUMetrics(amdDevice, &gpuMetrics)) && ADLX_SUCCEEDED(gpuMetrics->GPUPower(&powerUsed))) ? powerUsed : 0;
 																	
-																		// Check if getting the GPU's metrics was successful
-																		IADLXGPUMetricsPtr gpuMetrics;
-																		if(ADLX_SUCCEEDED(allMetrics->GetGPUMetrics(amdDevice, &gpuMetrics))) [[likely]] {
-																		
-																			// Get the GPU's power used
-																			gpuMetrics->GPUPower(&powerUsed);
-																		}
-																	}
-																	
-																	// Return power used
-																	return powerUsed;
 																};
 															}
 															
@@ -1147,6 +1158,118 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 				
 				// Terminate AMD library
 				amdLibrary.Terminate();
+				
+				// Check if loading ADL library was successful
+				adlLibrary = unique_ptr<remove_pointer_t<HMODULE>, decltype(&FreeLibrary)>(LoadLibrary(TEXT("atiadlxx.dll")), FreeLibrary);
+				if(adlLibrary) [[likely]] {
+				
+					// Check if getting ADL library functions was successful
+					int (*ADL2_Main_Control_Create)(ADL_MAIN_MALLOC_CALLBACK, int, ADL_CONTEXT_HANDLE *) = reinterpret_cast<int (*)(ADL_MAIN_MALLOC_CALLBACK, int, ADL_CONTEXT_HANDLE *)>(GetProcAddress(adlLibrary.get(), "ADL2_Main_Control_Create"));
+					int (*ADL2_Main_Control_Destroy)(ADL_CONTEXT_HANDLE) = reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE)>(GetProcAddress(adlLibrary.get(), "ADL2_Main_Control_Destroy"));
+					int (*ADL2_Adapter_NumberOfAdapters_Get)(ADL_CONTEXT_HANDLE, int *) = reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE, int *)>(GetProcAddress(adlLibrary.get(), "ADL2_Adapter_NumberOfAdapters_Get"));
+					int (*ADL2_Adapter_AdapterInfoX3_Get)(ADL_CONTEXT_HANDLE, int, int *, AdapterInfo **) = reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE, int, int *, AdapterInfo **)>(GetProcAddress(adlLibrary.get(), "ADL2_Adapter_AdapterInfoX3_Get"));
+					int (*ADL2_Overdrive6_CurrentPower_Get)(ADL_CONTEXT_HANDLE, int, int, int *) = reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE, int, int, int *)>(GetProcAddress(adlLibrary.get(), "ADL2_Overdrive6_CurrentPower_Get"));
+					
+					if(ADL2_Main_Control_Create && ADL2_Main_Control_Destroy && ADL2_Adapter_NumberOfAdapters_Get && ADL2_Adapter_AdapterInfoX3_Get && ADL2_Overdrive6_CurrentPower_Get) [[likely]] {
+					
+						// Check if creating ADL context was successful
+						if(ADL2_Main_Control_Create([](int size) __stdcall __attribute__((always_inline)) noexcept -> void * {
+						
+							// Return allocating memory
+							return malloc(size);
+							
+						}, 1, &adlContext) == ADL_OK) [[likely]] {
+						
+							// Check if getting number of AMD GPUs was successful
+							int numberOfGpus;
+							if(ADL2_Adapter_NumberOfAdapters_Get(adlContext, &numberOfGpus) == ADL_OK) [[likely]] {
+							
+								// Go through all AMD GPUs
+								for(int i = 0; i < numberOfGpus; ++i) [[likely]] {
+								
+									// Check if getting AMD GPU's info was successful
+									AdapterInfo *gpuInfo;
+									if(ADL2_Adapter_AdapterInfoX3_Get(adlContext, i, nullptr, &gpuInfo) == ADL_OK) [[likely]] {
+									
+										// Automatically free GPU info when done
+										const unique_ptr<AdapterInfo, decltype(&free)> gpuInfoUniquePointer(gpuInfo, free);
+										
+										// Check if getting the device information set for devices with the GPU's plug and play string was successful
+										const HDEVINFO deviceInformationSet = SetupDiGetClassDevsA(nullptr, gpuInfo->strPNPString, nullptr, DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+										if(deviceInformationSet != INVALID_HANDLE_VALUE) [[likely]] {
+										
+											// Automatically free device information set when done
+											const unique_ptr<remove_pointer_t<HDEVINFO>, decltype(&SetupDiDestroyDeviceInfoList)> deviceInformationSetUniquePointer(deviceInformationSet, SetupDiDestroyDeviceInfoList);
+											
+											// Go through all devices in the information set
+											SP_DEVINFO_DATA device = {
+											
+												// Size
+												.cbSize = sizeof(SP_DEVINFO_DATA)
+											};
+											
+											for(DWORD j = 0; SetupDiEnumDeviceInfo(deviceInformationSet, j, &device); ++j) [[likely]] {
+											
+												// Check if getting the device's location info size was successful
+												DEVPROPTYPE locationInfoType;
+												DWORD locationInfoSize;
+												if(!SetupDiGetDevicePropertyW(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, nullptr, 0, &locationInfoSize, 0) && GetLastError() == ERROR_INSUFFICIENT_BUFFER && locationInfoType == DEVPROP_TYPE_STRING && locationInfoSize) [[likely]] {
+												
+													// Check if getting the device's location info was successful
+													alignas(WCHAR *) uint8_t locationInfo[locationInfoSize];
+													if(SetupDiGetDevicePropertyW(deviceInformationSet, &device, &DEVPKEY_Device_LocationInfo, &locationInfoType, locationInfo, locationInfoSize, nullptr, 0) && locationInfoType == DEVPROP_TYPE_STRING) [[likely]] {
+													
+														// Check if the AMD GPU has the specified PCI bus info
+														uint32_t amdPciDomain = 0;
+														uint32_t amdPciBus;
+														uint32_t amdPciDevice;
+														uint32_t amdPciFunction;
+														if((swscanf(reinterpret_cast<const WCHAR *>(locationInfo), L"PCI bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32, &amdPciBus, &amdPciDevice, &amdPciFunction) == 3 || swscanf(reinterpret_cast<const WCHAR *>(locationInfo), L"PCI segment %" SCNu32 " bus %" SCNu32 ", device %" SCNu32 ", function %" SCNu32, &amdPciDomain, &amdPciBus, &amdPciDevice, &amdPciFunction) == 4) && gpuPciInfoExists && amdPciDomain == gpuPciDomain && amdPciBus == gpuPciBus && amdPciDevice == gpuPciDevice && amdPciFunction == gpuPciFunction) [[unlikely]] {
+														
+															// Check if the GPU supports getting its power usage
+															if(ADL2_Overdrive6_CurrentPower_Get(adlContext, i, 0, const_cast<int *>(&static_cast<const int &>(static_cast<int>(0)))) == ADL_OK) [[likely]] {
+															
+																// Return how to get the GPU's power used
+																return [this, i]() __attribute__((always_inline)) noexcept -> double {
+																
+																	// Return GPU's power used in correct units if getting it was successful
+																	int powerUsed;
+																	return (reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE, int, int, int *)>(GetProcAddress(adlLibrary.get(), "ADL2_Overdrive6_CurrentPower_Get"))(adlContext, i, 0, &powerUsed) == ADL_OK) ? static_cast<double>(powerUsed) / 256 : 0;
+																};
+															}
+															
+															// Otherwise
+															else [[unlikely]] {
+															
+																// Destroy ADL context
+																ADL2_Main_Control_Destroy(adlContext);
+																
+																// Set that ADL context doesn't exist
+																adlContext = nullptr;
+																
+																// Return nothing
+																return nullptr;
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							
+							// Destroy ADL context
+							ADL2_Main_Control_Destroy(adlContext);
+							
+							// Set that ADL context doesn't exist
+							adlContext = nullptr;
+						}
+					}
+					
+					// Free ADL library
+					adlLibrary.reset();
+				}
 				
 			// Otherwise
 			#else
@@ -1183,7 +1306,7 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 											
 												// Check if the AMD GPU has the specified UUID or PCI bus info
 												char amdUuid[AMDSMI_GPU_UUID_SIZE];
-												unsigned int amdUuidSize = sizeof(AMDSMI_GPU_UUID_SIZE);
+												unsigned int amdUuidSize = AMDSMI_GPU_UUID_SIZE;
 												uint64_t amdPciInfo;
 												if((gpuUuidExists && amdsmi_get_gpu_device_uuid(amdGpus[j], &amdUuidSize, amdUuid) == AMDSMI_STATUS_SUCCESS && amdUuidSize && !__builtin_strcasecmp(uuid, amdUuid)) || (gpuPciInfoExists && amdsmi_get_gpu_bdf_id(amdGpus[j], &amdPciInfo) == AMDSMI_STATUS_SUCCESS && (amdPciInfo >> (sizeof(uint32_t) * BITS_IN_A_BYTE)) == gpuPciDomain && ((amdPciInfo >> 8) & 0xFF) == gpuPciBus && ((amdPciInfo >> 3) & 0x1F) == gpuPciDevice && (amdPciInfo & 0x7) == gpuPciFunction)) [[unlikely]] {
 												
@@ -1203,12 +1326,9 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 														// Return how to get the GPU's power used
 														return [this]() __attribute__((always_inline)) noexcept -> double {
 														
-															// Get the GPU's power info
-															amdsmi_power_info_t powerInfo = {};
-															amdsmi_get_power_info(amdDevice, &powerInfo);
-															
-															// Return power used
-															return powerInfo.socket_power;
+															// Return GPU's power used if getting it was successful
+															amdsmi_power_info_t powerInfo;
+															return (amdsmi_get_power_info(amdDevice, &powerInfo) == AMDSMI_STATUS_SUCCESS && powerInfo.socket_power != UINT64_MAX) ? powerInfo.socket_power : 0;
 														};
 													}
 													
