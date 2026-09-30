@@ -6658,7 +6658,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 																		
 																		// Set PCI bus info to the NVIDIA PCI bus info
 																		cl_uint nvidiaPciDomain = 0;
-																		pciBusInfo.pci_domain = (clGetDeviceInfo(gpu, CL_DEVICE_PCI_DOMAIN_ID_NV, sizeof(nvidiaPciDomain), &nvidiaPciDomain, nullptr) == CL_SUCCESS) ? nvidiaPciDomain : 0;
+																		pciBusInfo.pci_domain = __builtin_expect(clGetDeviceInfo(gpu, CL_DEVICE_PCI_DOMAIN_ID_NV, sizeof(nvidiaPciDomain), &nvidiaPciDomain, nullptr) == CL_SUCCESS, true) ? nvidiaPciDomain : 0;
 																		pciBusInfo.pci_bus = nvidiaPciBus;
 																		pciBusInfo.pci_device = nvidiaPciSlot >> 3;
 																		pciBusInfo.pci_function = nvidiaPciSlot & 0x7;

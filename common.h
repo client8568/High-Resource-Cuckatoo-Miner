@@ -1030,7 +1030,7 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 										
 											// Return GPU's power used in correct units if getting it was successful
 											unsigned int powerUsed;
-											return (nvmlDeviceGetPowerUsage(nvidiaDevice, &powerUsed) == NVML_SUCCESS) ? static_cast<double>(powerUsed) / MILLIWATTS_IN_A_WATT : 0;
+											return __builtin_expect(nvmlDeviceGetPowerUsage(nvidiaDevice, &powerUsed) == NVML_SUCCESS, true) ? static_cast<double>(powerUsed) / MILLIWATTS_IN_A_WATT : 0;
 										};
 									}
 									
@@ -1130,7 +1130,7 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 																	IADLXAllMetricsPtr allMetrics;
 																	IADLXGPUMetricsPtr gpuMetrics;
 																	adlx_double powerUsed;
-																	return (ADLX_SUCCEEDED(amdPerformanceMonitoringServices->GetCurrentAllMetrics(&allMetrics)) && ADLX_SUCCEEDED(allMetrics->GetGPUMetrics(amdDevice, &gpuMetrics)) && ADLX_SUCCEEDED(gpuMetrics->GPUPower(&powerUsed))) ? powerUsed : 0;
+																	return __builtin_expect(ADLX_SUCCEEDED(amdPerformanceMonitoringServices->GetCurrentAllMetrics(&allMetrics)) && ADLX_SUCCEEDED(allMetrics->GetGPUMetrics(amdDevice, &gpuMetrics)) && ADLX_SUCCEEDED(gpuMetrics->GPUPower(&powerUsed)), true) ? powerUsed : 0;
 																	
 																};
 															}
@@ -1234,7 +1234,7 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 																
 																	// Return GPU's power used in correct units if getting it was successful
 																	int powerUsed;
-																	return (reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE, int, int, int *)>(GetProcAddress(adlLibrary.get(), "ADL2_Overdrive6_CurrentPower_Get"))(adlContext, i, 0, &powerUsed) == ADL_OK) ? static_cast<double>(powerUsed) / 256 : 0;
+																	return __builtin_expect(reinterpret_cast<int (*)(ADL_CONTEXT_HANDLE, int, int, int *)>(GetProcAddress(adlLibrary.get(), "ADL2_Overdrive6_CurrentPower_Get"))(adlContext, i, 0, &powerUsed) == ADL_OK, true) ? static_cast<double>(powerUsed) / 256 : 0;
 																};
 															}
 															
@@ -1328,7 +1328,7 @@ __attribute__((always_inline)) inline void DisableCout::enable() noexcept {
 														
 															// Return GPU's power used if getting it was successful
 															amdsmi_power_info_t powerInfo;
-															return (amdsmi_get_power_info(amdDevice, &powerInfo) == AMDSMI_STATUS_SUCCESS && powerInfo.socket_power != UINT64_MAX) ? powerInfo.socket_power : 0;
+															return __builtin_expect(amdsmi_get_power_info(amdDevice, &powerInfo) == AMDSMI_STATUS_SUCCESS && powerInfo.socket_power != UINT64_MAX, true) ? powerInfo.socket_power : 0;
 														};
 													}
 													
