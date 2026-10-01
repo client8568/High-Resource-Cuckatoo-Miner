@@ -621,6 +621,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	// Create GPU index
 	uint64_t gpuIndex = 0;
 	
+	// Create max number of CPU cores
+	unsigned int maxNumberOfCpuCores = UINT_MAX;
+	
 	// Create block
 	{
 	
@@ -659,6 +662,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// GPU
 			{"gpu", required_argument, nullptr, 'g'},
 			
+			// Max number of CPU cores
+			{"max_number_of_cpu_cores", required_argument, nullptr, 'm'},
+			
 			// Help
 			{"help", no_argument, nullptr, 'h'},
 			
@@ -678,20 +684,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#if ALLOW_TLS
 			
 				// Go through all options while not displaying help
-				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:sdg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:sdg:m:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 				
 			// Otherwise
 			#else
 			
 				// Go through all options while not displaying help
-				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:m:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 			#endif
 			
 		// Otherwise
 		#else
 		
 			// Go through all options while not displaying help
-			while(argv && (option = getopt_long(argc, argv, "vdg:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			while(argv && (option = getopt_long(argc, argv, "vdg:m:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 		#endif
 		
 			// Check option
@@ -1211,6 +1217,32 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 				
+				// Max number of CPU cores
+				case 'm': {
+				
+					// Set exit after options to false
+					exitAfterOptions = false;
+					
+					// Check if option is invalid
+					char *end;
+					errno = 0;
+					const unsigned long optionAsNumber = __builtin_expect(optarg != nullptr, true) ? strtoul(optarg, &end, DECIMAL_NUMBER_BASE) : 0;
+					if(!optarg || end == optarg || *end || !isdigit(optarg[0]) || (optarg[0] == '0' && isdigit(optarg[1])) || errno || !optionAsNumber || optionAsNumber >= UINT_MAX) [[unlikely]] {
+					
+						// Display message
+						cout << '"' << argv[0] << "\": invalid max number of CPU cores -- '" << (__builtin_expect(optarg != nullptr, true) ? optarg : "") << '\'' << endl;
+						
+						// Set display help to true
+						displayHelp = true;
+					}
+					
+					// Set max number of CPU cores to the option as number
+					maxNumberOfCpuCores = optionAsNumber;
+					
+					// Break
+					break;
+				}
+				
 				// Help
 				case 'h':
 				
@@ -1262,6 +1294,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// Display message
 			cout << "\t-d, --display_gpus\t\t\tDisplay all GPUs and their indices" << endl;
 			cout << "\t-g, --gpu\t\t\t\tThe optional index of the GPU to use" << endl;
+			cout << "\t-m, --max_number_of_cpu_cores\t\tThe max number of CPU cores to use" << endl;
 			cout << "\t-h, --help\t\t\t\tDisplay help information" << endl;
 			
 			// Return success if help was requested otherwise return failure
@@ -1287,8 +1320,15 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		#endif
 	}
 	
-	// Get number of high performance CPU cores
-	const unsigned int numberOfHighPerformanceCpuCores = min(getNumberOfHighPerformanceCpuCores(), static_cast<unsigned int>(MAX_NUMBER_OF_CPU_CORES_USED));
+	// Check if max number of CPU cores was specified
+	if(maxNumberOfCpuCores != UINT_MAX) [[unlikely]] {
+	
+		// Display message
+		cout << "Using at most " << maxNumberOfCpuCores << " CPU cores" << endl;
+	}
+	
+	// Get number of high performance CPU cores being at most the max number of CPU cores
+	const unsigned int numberOfHighPerformanceCpuCores = min(getNumberOfHighPerformanceCpuCores(), maxNumberOfCpuCores);
 	
 	// Set number of CPU trimming threads
 	const unsigned int numberOfCpuTrimmingThreads = min(numberOfHighPerformanceCpuCores, static_cast<unsigned int>(CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION));
