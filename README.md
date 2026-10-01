@@ -80,6 +80,11 @@ This program will attempt to use the first applicable GPU that it finds. However
 "./High Resource Cuckatoo Miner" -g 1
 ```
 
+This program will attempt to use all high performance CPU cores by default. This can be changed by running it with the `-m` command line argument with the max number of CPU cores to use. For example, the following command will use at most `2` CPU cores.
+```
+"./High Resource Cuckatoo Miner" -m 2
+```
+
 ### Tuning
 All of this programs tuning related settings are provided at build time and they are hard coded into the program. The values for all the settings are verified at build time, so this program will fail to build if you attempt to use a setting that is invalid or outside of its expected range. Here are all the settings available:
 
