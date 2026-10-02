@@ -427,9 +427,6 @@ static_assert(GPU_TRIM_FINAL_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >=
 // Throw error if GPU trim final edges and transfer edges kernel number of work items per work group is invalid
 static_assert(GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP >= CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION && GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP <= UINT_MAX && has_single_bit(static_cast<unsigned int>(GPU_TRIM_FINAL_EDGES_AND_TRANSFER_EDGES_KERNEL_NUMBER_OF_WORK_ITEMS_PER_WORK_GROUP)), "GPU trim final edges and transfer edges kernel number of work items per work group is invalid");
 
-// Throw error if max number of CPU cores used is invalid
-static_assert(MAX_NUMBER_OF_CPU_CORES_USED >= 1 && MAX_NUMBER_OF_CPU_CORES_USED <= UINT_MAX, "Max number of CPU cores used is invalid");
-
 // Throw error if CPU number of most significant bits used for fine bucket sorting is invalid
 static_assert(CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING > 0 && CPU_NUMBER_OF_MOST_SIGNIFICANT_BITS_USED_FOR_FINE_BUCKET_SORTING < EDGE_BITS / 2, "CPU number of most significant bits used for fine bucket sorting is invalid");
 
@@ -624,6 +621,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	// Create max number of CPU cores
 	unsigned int maxNumberOfCpuCores = UINT_MAX;
 	
+	// First CPU core
+	unsigned int firstCpuCore = 0;
+	
+	// Get number of high performance CPU cores
+	const unsigned int numberOfHighPerformanceCpuCores = getNumberOfHighPerformanceCpuCores();
+	
 	// Create block
 	{
 	
@@ -665,6 +668,12 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// Max number of CPU cores
 			{"max_number_of_cpu_cores", required_argument, nullptr, 'm'},
 			
+			// Display number of CPU cores
+			{"display_number_of_cpu_cores", no_argument, nullptr, 'n'},
+			
+			// First CPU core
+			{"first_cpu_core", required_argument, nullptr, 'c'},
+			
 			// Help
 			{"help", no_argument, nullptr, 'h'},
 			
@@ -684,20 +693,20 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#if ALLOW_TLS
 			
 				// Go through all options while not displaying help
-				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:sdg:m:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:sdg:m:nc:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 				
 			// Otherwise
 			#else
 			
 				// Go through all options while not displaying help
-				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:m:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+				while(argv && (option = getopt_long(argc, argv, "va:p:u:w:dg:m:nc:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 			#endif
 			
 		// Otherwise
 		#else
 		
 			// Go through all options while not displaying help
-			while(argv && (option = getopt_long(argc, argv, "vdg:m:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
+			while(argv && (option = getopt_long(argc, argv, "vdg:m:nc:h", options, nullptr)) != -1 && !displayHelp) [[likely]] {
 		#endif
 		
 			// Check option
@@ -1243,6 +1252,41 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					break;
 				}
 				
+				// Display number of CPU cores
+				case 'n':
+				
+					// Display message
+					cout << "Number of CPU cores: " << numberOfHighPerformanceCpuCores << endl;
+					
+					// Break
+					break;
+					
+				// First CPU core
+				case 'c': {
+				
+					// Set exit after options to false
+					exitAfterOptions = false;
+					
+					// Check if option is invalid
+					char *end;
+					errno = 0;
+					const unsigned long optionAsNumber = __builtin_expect(optarg != nullptr, true) ? strtoul(optarg, &end, DECIMAL_NUMBER_BASE) : 0;
+					if(!optarg || end == optarg || *end || !isdigit(optarg[0]) || (optarg[0] == '0' && isdigit(optarg[1])) || errno || !optionAsNumber || optionAsNumber > numberOfHighPerformanceCpuCores) [[unlikely]] {
+					
+						// Display message
+						cout << '"' << argv[0] << "\": invalid first CPU core index -- '" << (__builtin_expect(optarg != nullptr, true) ? optarg : "") << '\'' << endl;
+						
+						// Set display help to true
+						displayHelp = true;
+					}
+					
+					// Set first CPU core to the option as number
+					firstCpuCore = optionAsNumber;
+					
+					// Break
+					break;
+				}
+				
 				// Help
 				case 'h':
 				
@@ -1295,6 +1339,8 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			cout << "\t-d, --display_gpus\t\t\tDisplay all GPUs and their indices" << endl;
 			cout << "\t-g, --gpu\t\t\t\tThe optional index of the GPU to use" << endl;
 			cout << "\t-m, --max_number_of_cpu_cores\t\tThe max number of CPU cores to use" << endl;
+			cout << "\t-n, --display_number_of_cpu_cores\tDisplay the total number of available CPU cores" << endl;
+			cout << "\t-c, --first_cpu_core\t\t\tThe index of the first CPU core to use" << endl;
 			cout << "\t-h, --help\t\t\t\tDisplay help information" << endl;
 			
 			// Return success if help was requested otherwise return failure
@@ -1327,17 +1373,27 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		cout << "Using at most " << maxNumberOfCpuCores << " CPU cores" << endl;
 	}
 	
-	// Get number of high performance CPU cores being at most the max number of CPU cores
-	const unsigned int numberOfHighPerformanceCpuCores = min(getNumberOfHighPerformanceCpuCores(), maxNumberOfCpuCores);
+	// Check if first CPU core was specified
+	if(firstCpuCore) [[unlikely]] {
+	
+		// Display message
+		cout << "Starting at the CPU core with index " << firstCpuCore << endl;
+		
+		// Max first CPU core starting at index zero
+		--firstCpuCore;
+	}
+	
+	// Get number of usable CPU cores being at most the max number of CPU cores
+	const unsigned int numberOfUsableCpuCores = min(numberOfHighPerformanceCpuCores - firstCpuCore, maxNumberOfCpuCores);
 	
 	// Set number of CPU trimming threads
-	const unsigned int numberOfCpuTrimmingThreads = min(numberOfHighPerformanceCpuCores, static_cast<unsigned int>(CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION));
+	const unsigned int numberOfCpuTrimmingThreads = min(numberOfUsableCpuCores, static_cast<unsigned int>(CPU_NUMBER_OF_COARSE_BUCKETS_PER_DIMENSION));
 	
 	// Set number of CPU searching threads
-	const unsigned int numberOfCpuSearchingThreads = min(max(numberOfHighPerformanceCpuCores - 1, static_cast<unsigned int>(1)), static_cast<unsigned int>(MAX_NUMBER_OF_CPU_SEARCHING_THREADS));
+	const unsigned int numberOfCpuSearchingThreads = min(max(numberOfUsableCpuCores - 1, static_cast<unsigned int>(1)), static_cast<unsigned int>(MAX_NUMBER_OF_CPU_SEARCHING_THREADS));
 	
 	// Set number of CPU recovering threads
-	const unsigned int numberOfCpuRecoveringThreads = min(numberOfHighPerformanceCpuCores, static_cast<unsigned int>(CPU_NUMBER_OF_RECOVERING_EDGES / CPU_RECOVERING_VECTOR_SCALE_FACTOR));
+	const unsigned int numberOfCpuRecoveringThreads = min(numberOfUsableCpuCores, static_cast<unsigned int>(CPU_NUMBER_OF_RECOVERING_EDGES / CPU_RECOVERING_VECTOR_SCALE_FACTOR));
 	
 	// Display message
 	cout << "Creating " << numberOfCpuTrimmingThreads << " CPU threads for edge trimming" << endl << "Creating " << numberOfCpuSearchingThreads << " CPU threads for edge searching" << endl << "Creating " << numberOfCpuRecoveringThreads << " CPU threads for edge recovering" << endl;
@@ -1443,7 +1499,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	for(unsigned int i = 0; i < numberOfCpuTrimmingThreads; ++i) [[likely]] {
 	
 		// Create CPU trimming thread
-		cpuTrimmingThreads[i] = thread([numberOfCpuTrimmingThreads, &cpuThreadsInitializedSuccessfully, &closeCpuThreads, &cpuTrimmingThreadsCoarseBucketsOne, &cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne, remainingEdges = remainingEdges.get(), &numberOfRemainingEdges, &cpuTrimmingThreadsMutex, &startCpuTrimmingThreadsTriggerToggle, &startCpuTrimmingThreadsConditionalVariable, &cpuTrimmingThreadsFinished, &cpuTrimmingThreadsFinishedConditionalVariable, cpuTrimmingThreadsCoarseBucketsTwo = cpuTrimmingThreadsCoarseBucketsTwo.get(), cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo.get(), cpuTrimmingThreadsCompressedLookupTableFirstPartition = cpuTrimmingThreadsCompressedLookupTableFirstPartition.get(), cpuTrimmingThreadsCompressedLookupTableSecondPartition = cpuTrimmingThreadsCompressedLookupTableSecondPartition.get(), &numberOfCpuTrimmingThreadsFinished, &cpuTrimmingThreadsBarrier, cpuTrimmingThreadIndex = i]() __attribute__((always_inline)) noexcept {
+		cpuTrimmingThreads[i] = thread([firstCpuCore, numberOfCpuTrimmingThreads, &cpuThreadsInitializedSuccessfully, &closeCpuThreads, &cpuTrimmingThreadsCoarseBucketsOne, &cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketOne, remainingEdges = remainingEdges.get(), &numberOfRemainingEdges, &cpuTrimmingThreadsMutex, &startCpuTrimmingThreadsTriggerToggle, &startCpuTrimmingThreadsConditionalVariable, &cpuTrimmingThreadsFinished, &cpuTrimmingThreadsFinishedConditionalVariable, cpuTrimmingThreadsCoarseBucketsTwo = cpuTrimmingThreadsCoarseBucketsTwo.get(), cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo = cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo.get(), cpuTrimmingThreadsCompressedLookupTableFirstPartition = cpuTrimmingThreadsCompressedLookupTableFirstPartition.get(), cpuTrimmingThreadsCompressedLookupTableSecondPartition = cpuTrimmingThreadsCompressedLookupTableSecondPartition.get(), &numberOfCpuTrimmingThreadsFinished, &cpuTrimmingThreadsBarrier, cpuTrimmingThreadIndex = i]() __attribute__((always_inline)) noexcept {
 		
 			// Lock CPU trimming threads lock
 			unique_lock cpuTrimmingThreadsLock(cpuTrimmingThreadsMutex);
@@ -1473,7 +1529,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			{
 			
 				// Set CPU trimming thread initializing failed to if setting this CPU trimming thread's priority and affinity failed or if allocating memory failed
-				const bool cpuTrimmingThreadInitializingFailed = !setThreadPriorityAndAffinity(cpuTrimmingThreadIndex) || !remainingEdges || !cpuTrimmingThreadsCoarseBucketsTwo || !cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo || !cpuTrimmingThreadsCompressedLookupTableFirstPartition || !cpuTrimmingThreadsCompressedLookupTableSecondPartition || !fineBuckets || !numberOfEdgesPerFineBucket || !bitmap;
+				const bool cpuTrimmingThreadInitializingFailed = !setThreadPriorityAndAffinity(cpuTrimmingThreadIndex + firstCpuCore) || !remainingEdges || !cpuTrimmingThreadsCoarseBucketsTwo || !cpuTrimmingThreadsNumberOfEdgesPerCoarseBucketTwo || !cpuTrimmingThreadsCompressedLookupTableFirstPartition || !cpuTrimmingThreadsCompressedLookupTableSecondPartition || !fineBuckets || !numberOfEdgesPerFineBucket || !bitmap;
 				
 				// Check if initializing this CPU trimming thread failed
 				if(cpuTrimmingThreadInitializingFailed) [[unlikely]] {
@@ -4396,7 +4452,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	for(unsigned int i = 0; i < numberOfCpuSearchingThreads; ++i) [[likely]] {
 	
 		// Create CPU searching thread
-		cpuSearchingThreads[i] = thread([numberOfCpuSearchingThreads, &cpuThreadsInitializedSuccessfully, &closeCpuThreads, remainingEdges = remainingEdges.get(), &numberOfRemainingEdges, &recoverEdgesParameters, &cpuSearchingThreadsMutex, &startCpuSearchingThreadsTriggerToggle, &startCpuSearchingThreadsConditionalVariable, &cpuSearchingThreadsFinished, &cpuSearchingThreadsFinishedConditionalVariable, &numberOfCpuSearchingThreadsFinished, cpuSearchingThreadIndex = i]() __attribute__((always_inline)) noexcept {
+		cpuSearchingThreads[i] = thread([firstCpuCore, numberOfCpuSearchingThreads, &cpuThreadsInitializedSuccessfully, &closeCpuThreads, remainingEdges = remainingEdges.get(), &numberOfRemainingEdges, &recoverEdgesParameters, &cpuSearchingThreadsMutex, &startCpuSearchingThreadsTriggerToggle, &startCpuSearchingThreadsConditionalVariable, &cpuSearchingThreadsFinished, &cpuSearchingThreadsFinishedConditionalVariable, &numberOfCpuSearchingThreadsFinished, cpuSearchingThreadIndex = i]() __attribute__((always_inline)) noexcept {
 		
 			// Lock CPU searching threads lock
 			unique_lock cpuSearchingThreadsLock(cpuSearchingThreadsMutex);
@@ -4420,7 +4476,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			{
 			
 				// Set CPU searching thread initializing failed to if setting this CPU searching thread's priority and affinity failed or if allocating memory failed
-				const bool cpuSearchingThreadInitializingFailed = !setThreadPriorityAndAffinity(cpuSearchingThreadIndex) || !remainingEdges || !nodeConnections || !newestNodeConnectionsFirstPartition || !newestNodeConnectionsSecondPartition || !visitedNodePairsFirstPartition || !visitedNodePairsSecondPartition;
+				const bool cpuSearchingThreadInitializingFailed = !setThreadPriorityAndAffinity(cpuSearchingThreadIndex + firstCpuCore) || !remainingEdges || !nodeConnections || !newestNodeConnectionsFirstPartition || !newestNodeConnectionsSecondPartition || !visitedNodePairsFirstPartition || !visitedNodePairsSecondPartition;
 				
 				// Check if initializing this CPU searching thread failed
 				if(cpuSearchingThreadInitializingFailed) [[unlikely]] {
@@ -4596,7 +4652,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 	for(unsigned int i = 0; i < numberOfCpuRecoveringThreads; ++i) [[likely]] {
 	
 		// Create CPU recovering thread
-		cpuRecoveringThreads[i] = thread([numberOfCpuRecoveringThreads, &cpuThreadsInitializedSuccessfully, &closeCpuThreads, &recoverEdgesParameters, &cpuRecoveringThreadsBitmap, &solutionEdges, &cpuRecoveringThreadsMutex, &startCpuRecoveringThreadsTriggerToggle, &startCpuRecoveringThreadsConditionalVariable, &cpuRecoveringThreadsFinished, &cpuRecoveringThreadsFinishedConditionalVariable, &numberOfCpuRecoveringThreadsFinished, cpuRecoveringThreadIndex = i]() __attribute__((always_inline)) noexcept {
+		cpuRecoveringThreads[i] = thread([firstCpuCore, numberOfCpuRecoveringThreads, &cpuThreadsInitializedSuccessfully, &closeCpuThreads, &recoverEdgesParameters, &cpuRecoveringThreadsBitmap, &solutionEdges, &cpuRecoveringThreadsMutex, &startCpuRecoveringThreadsTriggerToggle, &startCpuRecoveringThreadsConditionalVariable, &cpuRecoveringThreadsFinished, &cpuRecoveringThreadsFinishedConditionalVariable, &numberOfCpuRecoveringThreadsFinished, cpuRecoveringThreadIndex = i]() __attribute__((always_inline)) noexcept {
 		
 			// Lock CPU recovering threads lock
 			unique_lock cpuRecoveringThreadsLock(cpuRecoveringThreadsMutex);
@@ -4605,7 +4661,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			{
 			
 				// Set CPU recovering thread initializing failed to if setting this CPU recovering thread's priority and affinity failed or if allocating memory failed
-				const bool cpuRecoveringThreadInitializingFailed = !setThreadPriorityAndAffinity(cpuRecoveringThreadIndex) || !cpuRecoveringThreadsBitmap;
+				const bool cpuRecoveringThreadInitializingFailed = !setThreadPriorityAndAffinity(cpuRecoveringThreadIndex + firstCpuCore) || !cpuRecoveringThreadsBitmap;
 				
 				// Check if initializing this CPU recovering thread failed
 				if(cpuRecoveringThreadInitializingFailed) [[unlikely]] {
@@ -7546,7 +7602,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		#endif
 		
 		// Check if setting this CPU thread's priority and affinity failed
-		if(!setThreadPriorityAndAffinity(numberOfHighPerformanceCpuCores - 1)) [[unlikely]] {
+		if(!setThreadPriorityAndAffinity(min(numberOfCpuSearchingThreads, numberOfHighPerformanceCpuCores - 1) + firstCpuCore)) [[unlikely]] {
 		
 			// Display message
 			cout << "Setting thread's priority and affinity failed" << endl;

@@ -85,6 +85,16 @@ This program will attempt to use all high performance CPU cores by default. This
 "./High Resource Cuckatoo Miner" -m 2
 ```
 
+You can display the total number of high performance CPU cores that this program detects that you have with the `-n` command line argument.
+```
+"./High Resource Cuckatoo Miner" -n
+```
+
+This program will assign threads to CPU cores starting with the first CPU core by default. This can be changed by running it with the `-c` command line argument with the first CPU core to use. For example, the following command will assign threads starting with the CPU core at index `3`.
+```
+"./High Resource Cuckatoo Miner" -c 3
+```
+
 ### Tuning
 All of this programs tuning related settings are provided at build time and they are hard coded into the program. The values for all the settings are verified at build time, so this program will fail to build if you attempt to use a setting that is invalid or outside of its expected range. Here are all the settings available:
 
