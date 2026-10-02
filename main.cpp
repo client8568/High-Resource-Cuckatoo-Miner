@@ -7582,6 +7582,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Display message
 					cout << "Setting interrupt signal handler failed" << endl;
 					
+					// Set closing to true
+					closing = true;
+					
+					// Check if displaying power usage
+					#if DISPLAY_POWER_USAGE
+					
+						// Join power usage thread
+						powerUsageThread.join();
+					#endif
+					
 					// Break
 					break;
 				}
@@ -7595,6 +7605,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 					// Display message
 					cout << "Setting interrupt signal handler failed" << endl;
 					
+					// Set closing to true
+					closing = true;
+					
+					// Check if displaying power usage
+					#if DISPLAY_POWER_USAGE
+					
+						// Join power usage thread
+						powerUsageThread.join();
+					#endif
+					
 					// Break
 					break;
 				}
@@ -7606,6 +7626,16 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		
 			// Display message
 			cout << "Setting thread's priority and affinity failed" << endl;
+			
+			// Set closing to true
+			closing = true;
+			
+			// Check if displaying power usage
+			#if DISPLAY_POWER_USAGE
+			
+				// Join power usage thread
+				powerUsageThread.join();
+			#endif
 			
 			// Break
 			break;
