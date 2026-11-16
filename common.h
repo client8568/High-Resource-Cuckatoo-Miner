@@ -126,6 +126,21 @@ using namespace std;
 // Max edge bits
 #define MAX_EDGE_BITS 32
 
+// Check if stratum server uses more than one mining algorithm
+#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+
+	// This is Epic Cash specific
+	
+	// Packed solution edges size
+	#define PACKED_SOLUTION_EDGES_SIZE (sizeof(uint8_t) + (SOLUTION_SIZE * static_cast<size_t>(EDGE_BITS) + BITS_IN_A_BYTE - 1) / BITS_IN_A_BYTE)
+	
+// Otherwise
+#else
+
+	// Packed solution edges size
+	#define PACKED_SOLUTION_EDGES_SIZE ((SOLUTION_SIZE * static_cast<size_t>(EDGE_BITS) + BITS_IN_A_BYTE - 1) / BITS_IN_A_BYTE)
+#endif
+
 // Minimum additional space tolerance percent
 #define MINIMUM_ADDITIONAL_SPACE_TOLERANCE_PERCENT 0.02275
 

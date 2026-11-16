@@ -581,7 +581,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept;
 #if MINE_TO_A_STRATUM_SERVER
 
 	// Read job message
-	__attribute__((always_inline)) static inline bool readJobMessage(const char *__restrict__ message, uint8_t jobHeader[HEADER_SIZE_EXCLUDING_NONCE], uint64_t &__restrict__ jobHeight, uint64_t &__restrict__ jobId) noexcept;
+	__attribute__((always_inline)) static inline bool readJobMessage(const char *__restrict__ message, uint8_t jobHeader[HEADER_SIZE_EXCLUDING_NONCE], uint64_t &__restrict__ jobDifficulty, uint64_t &__restrict__ jobHeight, uint64_t &__restrict__ jobId) noexcept;
 #endif
 
 
@@ -7666,6 +7666,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			#if MINE_TO_A_STRATUM_SERVER
 			
 				// Create job values
+				uint64_t jobDifficulty[2];
 				uint64_t jobHeight[2];
 				uint64_t jobId[2];
 				
@@ -8719,7 +8720,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								else [[likely]] {
 								
 									// Check if reading the job message failed
-									if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[0], jobId[0])) [[unlikely]] {
+									if(!readJobMessage(currentMessageStart, jobHeader, jobDifficulty[0], jobHeight[0], jobId[0])) [[unlikely]] {
 									
 										// Set got job to false
 										gotJob = false;
@@ -8758,8 +8759,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 										// Create random job nonce
 										jobNonce[0] = randomNumberGenerator();
 										
-										// Set next job nonce, job height, and job ID
+										// Set next job nonce, job difficulty, job height, and job ID
 										jobNonce[1] = jobNonce[0] + 1;
+										jobDifficulty[1] = jobDifficulty[0];
 										jobHeight[1] = jobHeight[0];
 										jobId[1] = jobId[0];
 									}
@@ -8916,7 +8918,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			
 			// Get SipHash keys from current job header and job nonce
 			uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) sipHashKeys[2];
-			blake2b(sipHashKeys[0], jobHeader, jobNonce[0]);
+			blake2bHeader(sipHashKeys[0], jobHeader, jobNonce[0]);
 			
 			// Check if using an Apple device
 			#ifdef __APPLE__
@@ -9946,7 +9948,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			uint64_t graphsProcessed = 0;
 			
 			// Get SipHash keys from current job header and job nonce
-			blake2b(sipHashKeys[currentJobIndex], jobHeader, jobNonce[currentJobIndex]);
+			blake2bHeader(sipHashKeys[currentJobIndex], jobHeader, jobNonce[currentJobIndex]);
 			
 			// Check if using an Apple device
 			#ifdef __APPLE__
@@ -11373,8 +11375,10 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 						lastKeepAliveTime = chrono::steady_clock::now();
 					}
 					
-					// Update next job height and job ID
+					// Update next job difficulty, job height, and job ID
+					const uint64_t previousJobDifficulty = jobDifficulty[1 - currentJobIndex];
 					const uint64_t previousJobHeight = jobHeight[1 - currentJobIndex];
+					jobDifficulty[1 - currentJobIndex] = jobDifficulty[currentJobIndex];
 					jobHeight[1 - currentJobIndex] = jobHeight[currentJobIndex];
 					jobId[1 - currentJobIndex] = jobId[currentJobIndex];
 					
@@ -11589,7 +11593,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								if(__builtin_strstr(currentMessageStart, "\"method\":\"job\"") || __builtin_strstr(currentMessageStart, "\"method\": \"job\"")) [[likely]] {
 								
 									// Check if reading the job message failed
-									if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[1 - currentJobIndex], jobId[1 - currentJobIndex])) [[unlikely]] {
+									if(!readJobMessage(currentMessageStart, jobHeader, jobDifficulty[1 - currentJobIndex], jobHeight[1 - currentJobIndex], jobId[1 - currentJobIndex])) [[unlikely]] {
 									
 										// Check if performing CPU searching during GPU trimming
 										#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
@@ -11873,7 +11877,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 								if(__builtin_strstr(currentMessageStart, "\"method\":\"job\"") || __builtin_strstr(currentMessageStart, "\"method\": \"job\"")) [[likely]] {
 								
 									// Check if reading the job message failed
-									if(!readJobMessage(currentMessageStart, jobHeader, jobHeight[1 - currentJobIndex], jobId[1 - currentJobIndex])) [[unlikely]] {
+									if(!readJobMessage(currentMessageStart, jobHeader, jobDifficulty[1 - currentJobIndex], jobHeight[1 - currentJobIndex], jobId[1 - currentJobIndex])) [[unlikely]] {
 									
 										// Check if performing CPU searching during GPU trimming
 										#if CPU_PERFORM_SEARCHING_DURING_GPU_TRIMMING
@@ -12121,7 +12125,7 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 				++graphsProcessed;
 				
 				// Get SipHash keys from current job header and job nonce
-				blake2b(sipHashKeys[currentJobIndex], jobHeader, jobNonce[currentJobIndex]);
+				blake2bHeader(sipHashKeys[currentJobIndex], jobHeader, jobNonce[currentJobIndex]);
 				
 				// Check if using an Apple device
 				#ifdef __APPLE__
@@ -12960,132 +12964,347 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 							// Check if mining to a stratum server
 							#if MINE_TO_A_STRATUM_SERVER
 							
-								// Check if stratum server uses more than one mining algorithm
-								#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+								// Check if solution size is forty-two
+								#if SOLUTION_SIZE == 42
 								
-									// Append first solution edge to submit request
-									appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
+									// Pack solution edges
+									const struct __attribute__((packed)) {
 									
-								// Otherwise
-								#else
-								
-									// Append first solution edge to submit request
-									appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
-								#endif
-								
-								// Go through all remaining solution edges
-								for(int i = 1; i < SOLUTION_SIZE; ++i) [[likely]] {
-								
-									// Append comma to submit request
-									*appendResult.ptr = ',';
-									
-									// Append solution edge to submit request
-									appendResult = to_chars(appendResult.ptr + sizeof(','), appendResult.ptr + sizeof(',') + MAX_UINT32_STRING_SIZE, solutionEdges[i]);
-								}
-								
-								// Check if stratum server uses more than one mining algorithm
-								#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
-								
-									// Append ending to submit request
-									__builtin_memcpy(appendResult.ptr, "]]}}}\n", sizeof("]]}}}\n") - sizeof('\0'));
-									
-									// Get submit request's size
-									const size_t submitRequestSize = appendResult.ptr + sizeof("]]}}}\n") - sizeof('\0') - submitRequest;
-								
-								// Otherwise
-								#else
-								
-									// Append ending to submit request
-									__builtin_memcpy(appendResult.ptr, "]}}\n", sizeof("]}}\n") - sizeof('\0'));
-									
-									// Get submit request's size
-									const size_t submitRequestSize = appendResult.ptr + sizeof("]}}\n") - sizeof('\0') - submitRequest;
-								#endif
-								
-								// Loop until full message is sent
-								size_t totalBytesSent = 0;
-								do [[unlikely]] {
-								
-									// Check if allowing TLS
-									#if ALLOW_TLS
-									
-										// Check if stratum server uses TLS
-										if(stratumServerUseTls) [[unlikely]] {
+										// Check if stratum server uses more than one mining algorithm
+										#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
 										
-											// Check if sending data to the stratum server failed
-											size_t bytesSent;
-											if(!SSL_write_ex(tlsConnection.get(), &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, &bytesSent)) [[unlikely]] {
+											// This is Epic Cash specific
 											
-												// Check if a fatal error occurred on the TLS connection
-												const int tlsError = SSL_get_error(tlsConnection.get(), 0);
-												if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+											// Algorithm
+											uint8_t algorithm: BITS_IN_A_BYTE;
+										#endif
+										
+										// Packed solution edges
+										uint32_t packedSolutionEdge0: EDGE_BITS;
+										uint32_t packedSolutionEdge1: EDGE_BITS;
+										uint32_t packedSolutionEdge2: EDGE_BITS;
+										uint32_t packedSolutionEdge3: EDGE_BITS;
+										uint32_t packedSolutionEdge4: EDGE_BITS;
+										uint32_t packedSolutionEdge5: EDGE_BITS;
+										uint32_t packedSolutionEdge6: EDGE_BITS;
+										uint32_t packedSolutionEdge7: EDGE_BITS;
+										uint32_t packedSolutionEdge8: EDGE_BITS;
+										uint32_t packedSolutionEdge9: EDGE_BITS;
+										uint32_t packedSolutionEdge10: EDGE_BITS;
+										uint32_t packedSolutionEdge11: EDGE_BITS;
+										uint32_t packedSolutionEdge12: EDGE_BITS;
+										uint32_t packedSolutionEdge13: EDGE_BITS;
+										uint32_t packedSolutionEdge14: EDGE_BITS;
+										uint32_t packedSolutionEdge15: EDGE_BITS;
+										uint32_t packedSolutionEdge16: EDGE_BITS;
+										uint32_t packedSolutionEdge17: EDGE_BITS;
+										uint32_t packedSolutionEdge18: EDGE_BITS;
+										uint32_t packedSolutionEdge19: EDGE_BITS;
+										uint32_t packedSolutionEdge20: EDGE_BITS;
+										uint32_t packedSolutionEdge21: EDGE_BITS;
+										uint32_t packedSolutionEdge22: EDGE_BITS;
+										uint32_t packedSolutionEdge23: EDGE_BITS;
+										uint32_t packedSolutionEdge24: EDGE_BITS;
+										uint32_t packedSolutionEdge25: EDGE_BITS;
+										uint32_t packedSolutionEdge26: EDGE_BITS;
+										uint32_t packedSolutionEdge27: EDGE_BITS;
+										uint32_t packedSolutionEdge28: EDGE_BITS;
+										uint32_t packedSolutionEdge29: EDGE_BITS;
+										uint32_t packedSolutionEdge30: EDGE_BITS;
+										uint32_t packedSolutionEdge31: EDGE_BITS;
+										uint32_t packedSolutionEdge32: EDGE_BITS;
+										uint32_t packedSolutionEdge33: EDGE_BITS;
+										uint32_t packedSolutionEdge34: EDGE_BITS;
+										uint32_t packedSolutionEdge35: EDGE_BITS;
+										uint32_t packedSolutionEdge36: EDGE_BITS;
+										uint32_t packedSolutionEdge37: EDGE_BITS;
+										uint32_t packedSolutionEdge38: EDGE_BITS;
+										uint32_t packedSolutionEdge39: EDGE_BITS;
+										uint32_t packedSolutionEdge40: EDGE_BITS;
+										uint32_t packedSolutionEdge41: EDGE_BITS;
+										
+										// Padding
+										uint8_t padding: BITS_IN_A_BYTE;
+										
+									} packedSolutionEdges = {
+									
+										// Check if stratum server uses more than one mining algorithm
+										#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+										
+											// This is Epic Cash specific
+											
+											// Algorithm
+											.algorithm = 0,
+										#endif
+										
+										// Packed solution edges
+										.packedSolutionEdge0 = solutionEdges[0],
+										.packedSolutionEdge1 = solutionEdges[1],
+										.packedSolutionEdge2 = solutionEdges[2],
+										.packedSolutionEdge3 = solutionEdges[3],
+										.packedSolutionEdge4 = solutionEdges[4],
+										.packedSolutionEdge5 = solutionEdges[5],
+										.packedSolutionEdge6 = solutionEdges[6],
+										.packedSolutionEdge7 = solutionEdges[7],
+										.packedSolutionEdge8 = solutionEdges[8],
+										.packedSolutionEdge9 = solutionEdges[9],
+										.packedSolutionEdge10 = solutionEdges[10],
+										.packedSolutionEdge11 = solutionEdges[11],
+										.packedSolutionEdge12 = solutionEdges[12],
+										.packedSolutionEdge13 = solutionEdges[13],
+										.packedSolutionEdge14 = solutionEdges[14],
+										.packedSolutionEdge15 = solutionEdges[15],
+										.packedSolutionEdge16 = solutionEdges[16],
+										.packedSolutionEdge17 = solutionEdges[17],
+										.packedSolutionEdge18 = solutionEdges[18],
+										.packedSolutionEdge19 = solutionEdges[19],
+										.packedSolutionEdge20 = solutionEdges[20],
+										.packedSolutionEdge21 = solutionEdges[21],
+										.packedSolutionEdge22 = solutionEdges[22],
+										.packedSolutionEdge23 = solutionEdges[23],
+										.packedSolutionEdge24 = solutionEdges[24],
+										.packedSolutionEdge25 = solutionEdges[25],
+										.packedSolutionEdge26 = solutionEdges[26],
+										.packedSolutionEdge27 = solutionEdges[27],
+										.packedSolutionEdge28 = solutionEdges[28],
+										.packedSolutionEdge29 = solutionEdges[29],
+										.packedSolutionEdge30 = solutionEdges[30],
+										.packedSolutionEdge31 = solutionEdges[31],
+										.packedSolutionEdge32 = solutionEdges[32],
+										.packedSolutionEdge33 = solutionEdges[33],
+										.packedSolutionEdge34 = solutionEdges[34],
+										.packedSolutionEdge35 = solutionEdges[35],
+										.packedSolutionEdge36 = solutionEdges[36],
+										.packedSolutionEdge37 = solutionEdges[37],
+										.packedSolutionEdge38 = solutionEdges[38],
+										.packedSolutionEdge39 = solutionEdges[39],
+										.packedSolutionEdge40 = solutionEdges[40],
+										.packedSolutionEdge41 = solutionEdges[41],
+										
+										// Padding
+										.padding = 0
+									};
+									
+									// Throw error if packed solution edges's size is invalid
+									static_assert(sizeof(packedSolutionEdges) >= PACKED_SOLUTION_EDGES_SIZE, "Packed solution edges's size is invalid");
+									
+								// Otherwise
+								#else
+								
+									// Create packed solution edges
+									uint8_t packedSolutionEdges[PACKED_SOLUTION_EDGES_SIZE] = {};
+									
+									// Check if stratum server uses more than one mining algorithm
+									#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+									
+										// This is Epic Cash specific
+										
+										// Set algorithm
+										packedSolutionEdges[0] = 0;
+									#endif
+									
+									// Go through all solution edges
+									for(int i = 0; i < SOLUTION_SIZE; ++i) [[likely]] {
+									
+										// Go through all bits in the solution edge
+										for(int j = 0; j < EDGE_BITS; ++j) [[likely]] {
+										
+											// Check if bit is set in the solution edge
+											if(solutionEdges[i] & (static_cast<uint32_t>(1) << j)) [[likely]] {
+											
+												// Check if stratum server uses more than one mining algorithm
+												#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
 												
-													// Don't automatically shutdown TLS connection when done
-													tlsConnectionShutdown.release();
+													// This is Epic Cash specific
+													
+													// Set bit in the packed solution edges
+													packedSolutionEdges[sizeof(uint8_t) + (i * static_cast<size_t>(EDGE_BITS) + j) / BITS_IN_A_BYTE] |= 1 << ((i * static_cast<size_t>(EDGE_BITS) + j) % BITS_IN_A_BYTE);
+													
+												// Otherwise
+												#else
+												
+													// Set bit in the packed solution edges
+													packedSolutionEdges[(i * static_cast<size_t>(EDGE_BITS) + j) / BITS_IN_A_BYTE] |= 1 << ((i * static_cast<size_t>(EDGE_BITS) + j) % BITS_IN_A_BYTE);
+												#endif
+											}
+										}
+									}
+								#endif
+								
+								// Check if stratum server uses more than one mining algorithm
+								#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+								
+									// This is Epic Cash specific
+									
+									// Check if edges bits is thirty-one
+									#if EDGE_BITS == 31
+									
+										// Set scale to the minimum secondary scaling
+										const uint64_t scale = 13;
+										
+									// Otherwise
+									#else
+									
+										// Get expiry height
+										const uint64_t expiryHeight = (__builtin_expect(EDGE_BITS == 32, false) ? 2 : 1) * 524160 * (__builtin_expect(previousJobHeight > 880000, true) ? 100 : 1);
+										
+										// Get expiry edge bits
+										const uint64_t expiryEdgeBits = __builtin_expect(previousJobHeight >= expiryHeight, true) ? (__builtin_expect(EDGE_BITS > 1 + (previousJobHeight - expiryHeight) / 10080, true) ? EDGE_BITS - (1 + (previousJobHeight - expiryHeight) / 10080) : 0) : EDGE_BITS;
+										
+										// Check if edge bits is greater than twenty-four
+										#if EDGE_BITS > 24
+										
+											// Set scale to graph weight
+											const uint64_t scale = (2 << (EDGE_BITS - 24)) * expiryEdgeBits;
+											
+										// Otherwise
+										#else
+										
+											// Set scale to graph weight
+											const uint64_t scale = (2 << (24 - EDGE_BITS)) * expiryEdgeBits;
+										#endif
+									#endif
+									
+								// Otherwise
+								#else
+								
+									// Set scale to be unscaled
+									const uint64_t scale = 1;
+								#endif
+								
+								// Get difficulty from the packed solution edges and scale
+								const uint64_t solutionDifficulty = max(static_cast<uint64_t>(min((static_cast<unsigned __int128>(scale) << 64) / max(static_cast<uint64_t>(1), blake2bPackedSolutionEdges(reinterpret_cast<const uint8_t *>(&packedSolutionEdges))), static_cast<unsigned __int128>(UINT64_MAX))), static_cast<uint64_t>(1));
+								
+								// Check if solution's difficulty is greater than or equal to the job's difficulty
+								if(solutionDifficulty >= previousJobDifficulty) [[likely]] {
+								
+									// Check if stratum server uses more than one mining algorithm
+									#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+									
+										// Append first solution edge to submit request
+										appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":{\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\":[" TO_STRING(EDGE_BITS) ",[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
+										
+									// Otherwise
+									#else
+									
+										// Append first solution edge to submit request
+										appendResult = to_chars(appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0'), appendResult.ptr + sizeof(",\"pow\":[") - sizeof('\0') + MAX_UINT32_STRING_SIZE, solutionEdges[0]);
+									#endif
+									
+									// Go through all remaining solution edges
+									for(int i = 1; i < SOLUTION_SIZE; ++i) [[likely]] {
+									
+										// Append comma to submit request
+										*appendResult.ptr = ',';
+										
+										// Append solution edge to submit request
+										appendResult = to_chars(appendResult.ptr + sizeof(','), appendResult.ptr + sizeof(',') + MAX_UINT32_STRING_SIZE, solutionEdges[i]);
+									}
+									
+									// Check if stratum server uses more than one mining algorithm
+									#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+									
+										// Append ending to submit request
+										__builtin_memcpy(appendResult.ptr, "]]}}}\n", sizeof("]]}}}\n") - sizeof('\0'));
+										
+										// Get submit request's size
+										const size_t submitRequestSize = appendResult.ptr + sizeof("]]}}}\n") - sizeof('\0') - submitRequest;
+									
+									// Otherwise
+									#else
+									
+										// Append ending to submit request
+										__builtin_memcpy(appendResult.ptr, "]}}\n", sizeof("]}}\n") - sizeof('\0'));
+										
+										// Get submit request's size
+										const size_t submitRequestSize = appendResult.ptr + sizeof("]}}\n") - sizeof('\0') - submitRequest;
+									#endif
+									
+									// Loop until full message is sent
+									size_t totalBytesSent = 0;
+									do [[unlikely]] {
+									
+										// Check if allowing TLS
+										#if ALLOW_TLS
+										
+											// Check if stratum server uses TLS
+											if(stratumServerUseTls) [[unlikely]] {
+											
+												// Check if sending data to the stratum server failed
+												size_t bytesSent;
+												if(!SSL_write_ex(tlsConnection.get(), &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, &bytesSent)) [[unlikely]] {
+												
+													// Check if a fatal error occurred on the TLS connection
+													const int tlsError = SSL_get_error(tlsConnection.get(), 0);
+													if(tlsError == SSL_ERROR_SYSCALL || tlsError == SSL_ERROR_SSL) [[unlikely]] {
+													
+														// Don't automatically shutdown TLS connection when done
+														tlsConnectionShutdown.release();
+													}
+													
+													// Break
+													break;
 												}
 												
+												// Update total bytes sent
+												totalBytesSent += bytesSent;
+											}
+											
+											// Otherwise
+											else [[likely]] {
+										#endif
+										
+											// Check if using Windows
+											#ifdef _WIN32
+											
+												// Send data to the stratum server
+												const int bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, 0);
+												
+											// Otherwise
+											#else
+											
+												// Send data to the stratum server
+												const ssize_t bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, MSG_NOSIGNAL);
+											#endif
+											
+											// Check if sending data to the stratum server failed
+											if(bytesSent <= 0) [[unlikely]] {
+											
 												// Break
 												break;
 											}
 											
 											// Update total bytes sent
 											totalBytesSent += bytesSent;
-										}
-										
-										// Otherwise
-										else [[likely]] {
-									#endif
-									
-										// Check if using Windows
-										#ifdef _WIN32
-										
-											// Send data to the stratum server
-											const int bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, 0);
 											
-										// Otherwise
-										#else
+										// Check if allowing TLS
+										#if ALLOW_TLS
 										
-											// Send data to the stratum server
-											const ssize_t bytesSent = send(socketDescriptor, &submitRequest[totalBytesSent], submitRequestSize - totalBytesSent, MSG_NOSIGNAL);
+											}
 										#endif
 										
-										// Check if sending data to the stratum server failed
-										if(bytesSent <= 0) [[unlikely]] {
-										
-											// Break
-											break;
-										}
-										
-										// Update total bytes sent
-										totalBytesSent += bytesSent;
-										
-									// Check if allowing TLS
-									#if ALLOW_TLS
+									} while(totalBytesSent != submitRequestSize);
 									
-										}
+									// Check if sending data to the stratum server failed
+									if(totalBytesSent != submitRequestSize) [[unlikely]] {
+									
+										// Display message
+										cout << "Sending data to the stratum server failed" << endl;
+										
+										// Break
+										break;
+									}
+									
+									// Check if displaying stratum server messages
+									#if DISPLAY_STRATUM_SERVER_MESSAGES
+									
+										// Display message
+										cout << "Sent: " << string_view(submitRequest, submitRequestSize);
 									#endif
 									
-								} while(totalBytesSent != submitRequestSize);
-								
-								// Check if sending data to the stratum server failed
-								if(totalBytesSent != submitRequestSize) [[unlikely]] {
-								
-									// Display message
-									cout << "Sending data to the stratum server failed" << endl;
-									
-									// Break
-									break;
+									// Update last keep alive time
+									lastKeepAliveTime = chrono::steady_clock::now();
 								}
-								
-								// Check if displaying stratum server messages
-								#if DISPLAY_STRATUM_SERVER_MESSAGES
-								
-									// Display message
-									cout << "Sent: " << string_view(submitRequest, submitRequestSize);
-								#endif
-								
-								// Update last keep alive time
-								lastKeepAliveTime = chrono::steady_clock::now();
 							#endif
 						}
 					}
@@ -13237,8 +13456,59 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 #if MINE_TO_A_STRATUM_SERVER
 
 	// Read job message
-	__attribute__((always_inline)) static inline bool readJobMessage(const char *__restrict__ message, uint8_t jobHeader[HEADER_SIZE_EXCLUDING_NONCE], uint64_t &__restrict__ jobHeight, uint64_t &__restrict__ jobId) noexcept {
+	__attribute__((always_inline)) static inline bool readJobMessage(const char *__restrict__ message, uint8_t jobHeader[HEADER_SIZE_EXCLUDING_NONCE], uint64_t &__restrict__ jobDifficulty, uint64_t &__restrict__ jobHeight, uint64_t &__restrict__ jobId) noexcept {
 	
+		// Check if message doesn't contain a difficulty
+		const char *difficultyOffset = __builtin_strstr(message, "\"difficulty\":");
+		if(!difficultyOffset) [[unlikely]] {
+		
+			// Return false
+			return false;
+		}
+		
+		// Check if stratum server uses more than one mining algorithm
+		#if STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM
+		
+			// Check if using Windows
+			#ifdef _WIN32
+			
+				// Get if the message contains a difficulty for the applicable algorithm
+				difficultyOffset = StrStrIA(&difficultyOffset[sizeof("\"difficulty\":") - sizeof('\0')], "\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\",");
+				
+			// Otherwise
+			#else
+			
+				// Get if the message contains a difficulty for the applicable algorithm
+				difficultyOffset = strcasestr(&difficultyOffset[sizeof("\"difficulty\":") - sizeof('\0')], "\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\",");
+			#endif
+			
+			// Check if message doesn't contain a difficulty for the applicable algorithm
+			if(!difficultyOffset) [[unlikely]] {
+			
+				// Return false
+				return false;
+			}
+			
+			// Get location of the message's difficulty value for the applicable algorithm
+			const char *difficultyValue = &difficultyOffset[sizeof("\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\",") - sizeof('\0') + (difficultyOffset[sizeof("\"" TO_STRING(STRATUM_SERVER_MINING_ALGORITHM_NAME) "\",") - sizeof('\0')] == ' ')];
+			
+		// Otherwise
+		#else
+		
+			// Get location of the message's difficulty value for the applicable algorithm
+			const char *difficultyValue = &difficultyOffset[sizeof("\"difficulty\":") - sizeof('\0') + (difficultyOffset[sizeof("\"difficulty\":") - sizeof('\0')] == ' ')];
+		#endif
+		
+		// Check if message's difficulty isn't valid
+		char *end;
+		errno = 0;
+		const unsigned long long difficulty = strtoull(difficultyValue, &end, DECIMAL_NUMBER_BASE);
+		if(end == difficultyValue || !isdigit(difficultyValue[0]) || (difficultyValue[0] == '0' && isdigit(difficultyValue[sizeof('0')])) || errno || !difficulty || difficulty > UINT64_MAX) [[unlikely]] {
+		
+			// Return false
+			return false;
+		}
+		
 		// Check if message doesn't contain a height
 		const char *heightOffset = __builtin_strstr(message, "\"height\":");
 		if(!heightOffset) [[unlikely]] {
@@ -13249,7 +13519,6 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 		
 		// Check if message's height isn't valid
 		const char *heightValue = &heightOffset[sizeof("\"height\":") - sizeof('\0') + (heightOffset[sizeof("\"height\":") - sizeof('\0')] == ' ')];
-		char *end;
 		errno = 0;
 		const unsigned long long height = strtoull(heightValue, &end, DECIMAL_NUMBER_BASE);
 		if(end == heightValue || !isdigit(heightValue[0]) || (heightValue[0] == '0' && isdigit(heightValue[sizeof('0')])) || errno || !height || height > UINT64_MAX) [[unlikely]] {
@@ -13291,6 +13560,9 @@ __attribute__((always_inline)) int main(const int argc, char *argv[]) noexcept {
 			// Return false
 			return false;
 		}
+		
+		// Set job difficulty to the message's difficulty
+		jobDifficulty = difficulty;
 		
 		// Set job height to the message's height
 		jobHeight = height;

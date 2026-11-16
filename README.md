@@ -65,7 +65,7 @@ make run
 ```
 
 ### Usage
-A stratum server address, port, username, and password can be provided when running this program to set the stratum server that it will mine to. For example, the following command will connect to the stratum server with the address `127.0.0.1` at port `3416` using the username `username` and password `password`. After this program connects to a stratum server, it will start mining and submit all valid solutions that it finds to that stratum server regardless of each solution's difficulty in relation to that stratum server's minimum solution difficulty. The `-s` command line argument can be used to connect to stratum servers that use Transport Layer Security (TLS).
+A stratum server address, port, username, and password can be provided when running this program to set the stratum server that it will mine to. For example, the following command will connect to the stratum server with the address `127.0.0.1` at port `3416` using the username `username` and password `password`. After this program connects to a stratum server, it will start mining and submit all valid solutions that it finds to that stratum server. The `-s` command line argument can be used to connect to stratum servers that use Transport Layer Security (TLS).
 ```
 "./High Resource Cuckatoo Miner" -a 127.0.0.1 -p 3416 -u username -w password
 ```

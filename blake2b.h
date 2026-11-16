@@ -47,8 +47,11 @@ static constexpr const int BLAKE2B_SIGMA[][16] = {
 
 // Function prototypes
 
-// BLAKE2b
-__attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], NonceType nonce) noexcept;
+// BLAKE2b header
+__attribute__((always_inline)) static inline void blake2bHeader(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], NonceType nonce) noexcept;
+
+// BLAKE2b packed solution edges
+__attribute__((always_inline)) static inline uint64_t blake2bPackedSolutionEdges(const uint8_t packedSolutionEdges[PACKED_SOLUTION_EDGES_SIZE]) noexcept;
 
 // BLAKE2b step
 __attribute__((always_inline)) static inline void blake2bStep(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ a, uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ b, uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ c, uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ d, const uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ x, const uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &__restrict__ y) noexcept;
@@ -56,8 +59,8 @@ __attribute__((always_inline)) static inline void blake2bStep(uint64_t __attribu
 
 // Supporting function implementation
 
-// BLAKE2b
-__attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], NonceType nonce) noexcept {
+// BLAKE2b header
+__attribute__((always_inline)) static inline void blake2bHeader(uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) &result, const uint8_t header[HEADER_SIZE_EXCLUDING_NONCE], NonceType nonce) noexcept {
 
 	// Set buffer to beginning of header
 	uint64_t buffer[BLAKE2B_BUFFER_SIZE / sizeof(uint64_t)];
@@ -338,6 +341,146 @@ __attribute__((always_inline)) static inline void blake2b(uint64_t __attribute__
 		// Get result
 		result ^= a ^ c;
 	#endif
+}
+
+// BLAKE2b packed solution edges
+__attribute__((always_inline)) static inline uint64_t blake2bPackedSolutionEdges(const uint8_t packedSolutionEdges[PACKED_SOLUTION_EDGES_SIZE]) noexcept {
+
+	// Create buffer
+	uint64_t buffer[BLAKE2B_BUFFER_SIZE / sizeof(uint64_t)];
+	
+	// Set initial states
+	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) a = BLAKE2B_INITIAL_STATE[0];
+	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) b = BLAKE2B_INITIAL_STATE[1];
+	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) c = BLAKE2B_INITIAL_STATE[2];
+	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) d = BLAKE2B_INITIAL_STATE[3];
+	
+	// Go through all BLAKE2b buffers to fit the packed solution edges except the last one
+	size_t i;
+	#pragma clang loop unroll(full)
+	for(i = 0; i < (PACKED_SOLUTION_EDGES_SIZE - 1) / sizeof(buffer); ++i) [[likely]] {
+	
+		// Set buffer to the next part of the packed solution edges
+		__builtin_memcpy_inline(buffer, &packedSolutionEdges[i * sizeof(buffer)], sizeof(buffer));
+		
+		// Save states
+		const uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) aBefore = a;
+		const uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) bBefore = b;
+		
+		// Go through all rounds
+		uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) x;
+		uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) y;
+		
+		#pragma clang loop unroll(full)
+		for(int j = 0; j < BLAKE2B_NUMBER_OF_ROUNDS; ++j) [[likely]] {
+		
+			// Set x and y for column step
+			x = {buffer[BLAKE2B_SIGMA[j][0]], buffer[BLAKE2B_SIGMA[j][2]], buffer[BLAKE2B_SIGMA[j][4]], buffer[BLAKE2B_SIGMA[j][6]]};
+			y = {buffer[BLAKE2B_SIGMA[j][1]], buffer[BLAKE2B_SIGMA[j][3]], buffer[BLAKE2B_SIGMA[j][5]], buffer[BLAKE2B_SIGMA[j][7]]};
+			
+			// Perform column step
+			blake2bStep(a, b, c, d, x, y);
+			
+			// Update b, c, and d for diagonal step
+			b = __builtin_shufflevector(b, b, 1, 2, 3, 0);
+			c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+			d = __builtin_shufflevector(d, d, 3, 0, 1, 2);
+			
+			// Set x, and y for diagonal step
+			x = {buffer[BLAKE2B_SIGMA[j][8]], buffer[BLAKE2B_SIGMA[j][10]], buffer[BLAKE2B_SIGMA[j][12]], buffer[BLAKE2B_SIGMA[j][14]]};
+			y = {buffer[BLAKE2B_SIGMA[j][9]], buffer[BLAKE2B_SIGMA[j][11]], buffer[BLAKE2B_SIGMA[j][13]], buffer[BLAKE2B_SIGMA[j][15]]};
+			
+			// Perform diagonal step
+			blake2bStep(a, b, c, d, x, y);
+			
+			// Update b, c, and d for column step
+			b = __builtin_shufflevector(b, b, 3, 0, 1, 2);
+			c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+			d = __builtin_shufflevector(d, d, 1, 2, 3, 0);
+		}
+		
+		// Updates states
+		a ^= aBefore ^ c;
+		b ^= bBefore ^ d;
+		c = BLAKE2B_INITIAL_STATE[2];
+		d = {BLAKE2B_INITIAL_STATE[3][0] ^ (sizeof(buffer) ^ (sizeof(buffer) * (i + 2))), BLAKE2B_INITIAL_STATE[3][1], BLAKE2B_INITIAL_STATE[3][2], BLAKE2B_INITIAL_STATE[3][3]};
+	}
+	
+	// Set buffer to the last part of the packed solution edges
+	__builtin_memcpy(buffer, &packedSolutionEdges[i * sizeof(buffer)], PACKED_SOLUTION_EDGES_SIZE - i * sizeof(buffer));
+	
+	// Pad remainder of buffer with zeros
+	__builtin_memset(&reinterpret_cast<uint8_t *>(buffer)[PACKED_SOLUTION_EDGES_SIZE - i * sizeof(buffer)], 0, sizeof(buffer) - (PACKED_SOLUTION_EDGES_SIZE - i * sizeof(buffer)));
+	
+	// Save states
+	const uint64_t aBefore = a[0];
+	
+	// Updates states
+	d[0] = BLAKE2B_INITIAL_STATE[3][0] ^ (sizeof(buffer) ^ PACKED_SOLUTION_EDGES_SIZE);
+	d[2] ^= UINT64_MAX;
+	
+	// Go through all but the last round
+	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) x;
+	uint64_t __attribute__((vector_size(sizeof(uint64_t) * NUMBER_OF_SIPHASH_KEYS))) y;
+	
+	#pragma clang loop unroll(full)
+	for(int j = 0; j < BLAKE2B_NUMBER_OF_ROUNDS - 1; ++j) [[likely]] {
+	
+		// Set x and y for column step
+		x = {buffer[BLAKE2B_SIGMA[j][0]], buffer[BLAKE2B_SIGMA[j][2]], buffer[BLAKE2B_SIGMA[j][4]], buffer[BLAKE2B_SIGMA[j][6]]};
+		y = {buffer[BLAKE2B_SIGMA[j][1]], buffer[BLAKE2B_SIGMA[j][3]], buffer[BLAKE2B_SIGMA[j][5]], buffer[BLAKE2B_SIGMA[j][7]]};
+		
+		// Perform column step
+		blake2bStep(a, b, c, d, x, y);
+		
+		// Update b, c, and d for diagonal step
+		b = __builtin_shufflevector(b, b, 1, 2, 3, 0);
+		c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+		d = __builtin_shufflevector(d, d, 3, 0, 1, 2);
+		
+		// Set x, and y for diagonal step
+		x = {buffer[BLAKE2B_SIGMA[j][8]], buffer[BLAKE2B_SIGMA[j][10]], buffer[BLAKE2B_SIGMA[j][12]], buffer[BLAKE2B_SIGMA[j][14]]};
+		y = {buffer[BLAKE2B_SIGMA[j][9]], buffer[BLAKE2B_SIGMA[j][11]], buffer[BLAKE2B_SIGMA[j][13]], buffer[BLAKE2B_SIGMA[j][15]]};
+		
+		// Perform diagonal step
+		blake2bStep(a, b, c, d, x, y);
+		
+		// Update b, c, and d for column step
+		b = __builtin_shufflevector(b, b, 3, 0, 1, 2);
+		c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+		d = __builtin_shufflevector(d, d, 1, 2, 3, 0);
+	}
+	
+	// Set x and y for column step
+	x = {buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][0]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][2]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][4]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][6]]};
+	y = {buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][1]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][3]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][5]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][7]]};
+	
+	// Perform column step
+	blake2bStep(a, b, c, d, x, y);
+	
+	// Update b, c, and d for diagonal step
+	b = __builtin_shufflevector(b, b, 1, 2, 3, 0);
+	c = __builtin_shufflevector(c, c, 2, 3, 0, 1);
+	d = __builtin_shufflevector(d, d, 3, 0, 1, 2);
+	
+	// Set x, and y for diagonal step
+	x = {buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][8]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][10]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][12]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][14]]};
+	y = {buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][9]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][11]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][13]], buffer[BLAKE2B_SIGMA[BLAKE2B_NUMBER_OF_ROUNDS - 1][15]]};
+	
+	// Perform diagonal step
+	a += b + x;
+	d ^= a;
+	d = (d >> 32) | (d << ((sizeof(uint64_t) * BITS_IN_A_BYTE) - 32));
+	c += d;
+	b ^= c;
+	b = (b >> 24) | (b << ((sizeof(uint64_t) * BITS_IN_A_BYTE) - 24));
+	a += b + y;
+	d[2] ^= a[2];
+	d[2] = __builtin_rotateright64(d[2], 16);
+	c[2] += d[2];
+	
+	// Return result
+	return __builtin_bswap64(a[0] ^ aBefore ^ c[2]);
 }
 
 // BLAKE2b step
