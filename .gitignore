@@ -3,8 +3,8 @@ High Resource Cuckatoo Miner.exe
 v2026.05.29.tar.gz
 OpenCL-Headers-2026.05.29
 OpenCL-ICD-Loader-2026.05.29
-metal-cpp_macOS27_iOS27.zip
-metal-cpp-release-metal-cpp_macOS27_iOS27
+metal-cpp_macOS27.0.1_iOS27.0.1.zip
+metal-cpp-release-metal-cpp_macOS27.0.1_iOS27.0.1
 cuda-nvml-dev-13-4_13.4.46-1_amd64.deb
 cuda-nvml-dev-13-4_13.4.46-1_arm64.deb
 cuda
@@ -12,8 +12,8 @@ cuda_13.4.0_windows_x86_64.exe
 7zr.exe
 amdsmi.tar.gz
 therock
-openssl-4.0.3.tar.gz
-openssl-4.0.3
+openssl-4.1.0.tar.gz
+openssl-4.1.0
 18.0.tar.gz
 display-library-18.0
 v2.0.tar.gz
