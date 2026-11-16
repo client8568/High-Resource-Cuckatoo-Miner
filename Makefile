@@ -248,7 +248,7 @@ ifeq ($(OS),Windows_NT)
 		
 			# Set flags and link libraries
 			CFLAGS += -I"./openssl/include/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)"
-			LIBS += -Wl,-Bstatic -L"./openssl/dist/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)/lib" -lssl -lcrypto -Wl,-Bdynamic -lcrypt32
+			LIBS += -Wl,-Bstatic -L"./openssl/dist/windows/$(shell echo $$PROCESSOR_ARCHITECTURE)/lib" -lssl -lcrypto -Wl,-Bdynamic -lcrypt32 -lbcrypt
 		endif
 		
 		# Delete command
@@ -276,7 +276,7 @@ ifeq ($(OS),Windows_NT)
 		
 			# Set flags and link libraries
 			CFLAGS += -I"./openssl/include/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)"
-			LIBS += -Wl,-Bstatic -L"./openssl/dist/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)/lib" -lssl -lcrypto -Wl,-Bdynamic -lcrypt32
+			LIBS += -Wl,-Bstatic -L"./openssl/dist/windows/$(shell echo %PROCESSOR_ARCHITECTURE%)/lib" -lssl -lcrypto -Wl,-Bdynamic -lcrypt32 -lbcrypt
 		endif
 		
 		# Delete command
@@ -372,7 +372,7 @@ run:
 	
 # Clean
 clean:
-	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.0.3.tar.gz" "./openssl-4.0.3" "./18.0.tar.gz" "./display-library-18.0" "./v2.0.tar.gz" "./ADLX-2.0" > $(NULL_LOCATION) 2>&1
+	$(DELETE_COMMAND) "./$(NAME)" "./$(NAME).exe" "./v2026.05.29.tar.gz" "./OpenCL-Headers-2026.05.29" "./OpenCL-ICD-Loader-2026.05.29" "./metal-cpp_macOS27.0.1_iOS27.0.1.zip" "./metal-cpp-release-metal-cpp_macOS27.0.1_iOS27.0.1" "./cuda-nvml-dev-13-4_13.4.46-1_amd64.deb" "./cuda-nvml-dev-13-4_13.4.46-1_arm64.deb" "./cuda" "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe" "./amdsmi.tar.gz" "./therock" "./openssl-4.1.0.tar.gz" "./openssl-4.1.0" "./18.0.tar.gz" "./display-library-18.0" "./v2.0.tar.gz" "./ADLX-2.0" > $(NULL_LOCATION) 2>&1
 	
 # Make Linux dependencies (This command works when using Linux: make linuxDependencies)
 linuxDependencies:
@@ -443,57 +443,57 @@ linuxDependencies:
 	sudo apt install -y libc++-dev libdbus-1-dev libnl-3-dev libnl-genl-3-dev libmnl-dev libdrm-dev libdrm-amdgpu1
 	
 	# OpenSSL (https://github.com/openssl/openssl)
-	rm -rf "./openssl-4.0.3.tar.gz" "./openssl-4.0.3" "./openssl"
-	wget "https://github.com/openssl/openssl/releases/download/openssl-4.0.3/openssl-4.0.3.tar.gz"
-	tar -xf "./openssl-4.0.3.tar.gz"
-	cd "./openssl-4.0.3" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=x86_64-linux-gnu" "./Configure" linux-x86_64 --prefix="$(CURDIR)/openssl-4.0.3/dist/linux/x86_64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	rm -rf "./openssl-4.1.0.tar.gz" "./openssl-4.1.0" "./openssl"
+	wget "https://github.com/openssl/openssl/releases/download/openssl-4.1.0/openssl-4.1.0.tar.gz"
+	tar -xf "./openssl-4.1.0.tar.gz"
+	cd "./openssl-4.1.0" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=x86_64-linux-gnu" "./Configure" linux-x86_64 --prefix="$(CURDIR)/openssl-4.1.0/dist/linux/x86_64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
 	mkdir -p "./openssl/include/linux/x86_64"
-	mv "./openssl-4.0.3/dist/linux/x86_64/include/openssl" "./openssl/include/linux/x86_64"
-	mv "./openssl-4.0.3/LICENSE.txt" "./openssl/LICENSE"
+	mv "./openssl-4.1.0/dist/linux/x86_64/include/openssl" "./openssl/include/linux/x86_64"
+	mv "./openssl-4.1.0/LICENSE.txt" "./openssl/LICENSE"
 	mkdir -p "./openssl/dist/linux/x86_64/lib"
-	mv "./openssl-4.0.3/dist/linux/x86_64/lib/libcrypto.a" "./openssl-4.0.3/dist/linux/x86_64/lib/libssl.a" "./openssl/dist/linux/x86_64/lib"
-	rm -rf "./openssl-4.0.3"
-	tar -xf "./openssl-4.0.3.tar.gz"
-	rm "./openssl-4.0.3.tar.gz"
-	cd "./openssl-4.0.3" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=aarch64-linux-gnu" "./Configure" linux-aarch64 --prefix="$(CURDIR)/openssl-4.0.3/dist/linux/aarch64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	mv "./openssl-4.1.0/dist/linux/x86_64/lib/libcrypto.a" "./openssl-4.1.0/dist/linux/x86_64/lib/libssl.a" "./openssl/dist/linux/x86_64/lib"
+	rm -rf "./openssl-4.1.0"
+	tar -xf "./openssl-4.1.0.tar.gz"
+	rm "./openssl-4.1.0.tar.gz"
+	cd "./openssl-4.1.0" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=aarch64-linux-gnu" "./Configure" linux-aarch64 --prefix="$(CURDIR)/openssl-4.1.0/dist/linux/aarch64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
 	mkdir -p "./openssl/include/linux/aarch64"
-	mv "./openssl-4.0.3/dist/linux/aarch64/include/openssl" "./openssl/include/linux/aarch64"
+	mv "./openssl-4.1.0/dist/linux/aarch64/include/openssl" "./openssl/include/linux/aarch64"
 	mkdir -p "./openssl/dist/linux/aarch64/lib"
-	mv "./openssl-4.0.3/dist/linux/aarch64/lib/libcrypto.a" "./openssl-4.0.3/dist/linux/aarch64/lib/libssl.a" "./openssl/dist/linux/aarch64/lib"
-	rm -rf "./openssl-4.0.3"
+	mv "./openssl-4.1.0/dist/linux/aarch64/lib/libcrypto.a" "./openssl-4.1.0/dist/linux/aarch64/lib/libssl.a" "./openssl/dist/linux/aarch64/lib"
+	rm -rf "./openssl-4.1.0"
 	
 # Make Apple dependencies (This command works when using macOS: make appleDependencies)
 appleDependencies:
 	
 	# Metal-cpp (https://github.com/apple/metal-cpp)
-	rm -rf "./metal-cpp_macOS27_iOS27.zip" "./metal-cpp-release-metal-cpp_macOS27_iOS27" "./metal"
-	curl -LO "https://github.com/apple/metal-cpp/archive/refs/tags/release/metal-cpp_macOS27_iOS27.zip"
-	unzip "./metal-cpp_macOS27_iOS27.zip"
-	rm "./metal-cpp_macOS27_iOS27.zip"
+	rm -rf "./metal-cpp_macOS27.0.1_iOS27.0.1.zip" "./metal-cpp-release-metal-cpp_macOS27.0.1_iOS27.0.1" "./metal"
+	curl -LO "https://github.com/apple/metal-cpp/archive/refs/tags/release/metal-cpp_macOS27.0.1_iOS27.0.1.zip"
+	unzip "./metal-cpp_macOS27.0.1_iOS27.0.1.zip"
+	rm "./metal-cpp_macOS27.0.1_iOS27.0.1.zip"
 	mkdir -p "./metal/include"
-	cd "./metal-cpp-release-metal-cpp_macOS27_iOS27" && "./SingleHeader/MakeSingleHeader.py" -o "../metal/include/metal.h" "./Metal/Metal.hpp"
-	mv "./metal-cpp-release-metal-cpp_macOS27_iOS27/LICENSE.txt" "./metal/LICENSE"
-	rm -r "./metal-cpp-release-metal-cpp_macOS27_iOS27"
+	cd "./metal-cpp-release-metal-cpp_macOS27.0.1_iOS27.0.1" && "./SingleHeader/MakeSingleHeader.py" -o "../metal/include/metal.h" "./Metal/Metal.hpp"
+	mv "./metal-cpp-release-metal-cpp_macOS27.0.1_iOS27.0.1/LICENSE.txt" "./metal/LICENSE"
+	rm -r "./metal-cpp-release-metal-cpp_macOS27.0.1_iOS27.0.1"
 	
 	# OpenSSL (https://github.com/openssl/openssl)
-	rm -rf "./openssl-4.0.3.tar.gz" "./openssl-4.0.3" "./openssl"
-	curl -LO "https://github.com/openssl/openssl/releases/download/openssl-4.0.3/openssl-4.0.3.tar.gz"
-	tar -xf "./openssl-4.0.3.tar.gz"
-	cd "./openssl-4.0.3" && CC="$(shell echo $(subst ++,,$(CC)))" "./Configure" darwin64-x86_64 --prefix="$(CURDIR)/openssl-4.0.3/dist/macos/x86_64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	rm -rf "./openssl-4.1.0.tar.gz" "./openssl-4.1.0" "./openssl"
+	curl -LO "https://github.com/openssl/openssl/releases/download/openssl-4.1.0/openssl-4.1.0.tar.gz"
+	tar -xf "./openssl-4.1.0.tar.gz"
+	cd "./openssl-4.1.0" && CC="$(shell echo $(subst ++,,$(CC)))" "./Configure" darwin64-x86_64 --prefix="$(CURDIR)/openssl-4.1.0/dist/macos/x86_64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
 	mkdir -p "./openssl/include/macos/x86_64"
-	mv "./openssl-4.0.3/dist/macos/x86_64/include/openssl" "./openssl/include/macos/x86_64"
-	mv "./openssl-4.0.3/LICENSE.txt" "./openssl/LICENSE"
+	mv "./openssl-4.1.0/dist/macos/x86_64/include/openssl" "./openssl/include/macos/x86_64"
+	mv "./openssl-4.1.0/LICENSE.txt" "./openssl/LICENSE"
 	mkdir -p "./openssl/dist/macos/x86_64/lib"
-	mv "./openssl-4.0.3/dist/macos/x86_64/lib/libcrypto.a" "./openssl-4.0.3/dist/macos/x86_64/lib/libssl.a" "./openssl/dist/macos/x86_64/lib"
-	rm -rf "./openssl-4.0.3"
-	tar -xf "./openssl-4.0.3.tar.gz"
-	rm "./openssl-4.0.3.tar.gz"
-	cd "./openssl-4.0.3" && CC="$(shell echo $(subst ++,,$(CC)))" "./Configure" darwin64-arm64 --prefix="$(CURDIR)/openssl-4.0.3/dist/macos/arm64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
+	mv "./openssl-4.1.0/dist/macos/x86_64/lib/libcrypto.a" "./openssl-4.1.0/dist/macos/x86_64/lib/libssl.a" "./openssl/dist/macos/x86_64/lib"
+	rm -rf "./openssl-4.1.0"
+	tar -xf "./openssl-4.1.0.tar.gz"
+	rm "./openssl-4.1.0.tar.gz"
+	cd "./openssl-4.1.0" && CC="$(shell echo $(subst ++,,$(CC)))" "./Configure" darwin64-arm64 --prefix="$(CURDIR)/openssl-4.1.0/dist/macos/arm64" --openssldir=$(shell openssl version -d | awk '{print $$2}') --libdir=lib --release no-shared no-apps no-module no-asm && make MODULESDIR="./ossl-modules" && make install || true
 	mkdir -p "./openssl/include/macos/arm64"
-	mv "./openssl-4.0.3/dist/macos/arm64/include/openssl" "./openssl/include/macos/arm64"
+	mv "./openssl-4.1.0/dist/macos/arm64/include/openssl" "./openssl/include/macos/arm64"
 	mkdir -p "./openssl/dist/macos/arm64/lib"
-	mv "./openssl-4.0.3/dist/macos/arm64/lib/libcrypto.a" "./openssl-4.0.3/dist/macos/arm64/lib/libssl.a" "./openssl/dist/macos/arm64/lib"
-	rm -rf "./openssl-4.0.3"
+	mv "./openssl-4.1.0/dist/macos/arm64/lib/libcrypto.a" "./openssl-4.1.0/dist/macos/arm64/lib/libssl.a" "./openssl/dist/macos/arm64/lib"
+	rm -rf "./openssl-4.1.0"
 	
 # Make Windows dependencies (This command works when using a command prompt on Windows: mingw32-make windowsDependencies)
 windowsDependencies:
@@ -516,7 +516,7 @@ windowsDependencies:
 	if exist "./cuda" rd /q /s "./cuda" > "nul"
 	if exist "./nvml" rd /q /s "./nvml" > "nul"
 	curl -LO "https://packages.nvidia.com/prerelease/cuda/13.4.0/local_installers/cuda_13.4.0_windows_x86_64.exe"
-	curl -LO "https://github.com/ip7z/7zip/releases/download/26.04/7zr.exe"
+	curl -LO "https://github.com/ip7z/7zip/releases/download/26.06/7zr.exe"
 	"./7zr.exe" x "./cuda_13.4.0_windows_x86_64.exe" -o"./cuda"
 	del /q "./cuda_13.4.0_windows_x86_64.exe" "./7zr.exe"
 	mkdir "./nvml\include"
@@ -556,23 +556,23 @@ windowsDependencies:
 windowsDependenciesOpenssl:
 	
 	# OpenSSL (https://github.com/openssl/openssl)
-	rm -rf "./openssl-4.0.3.tar.gz" "./openssl-4.0.3" "./openssl"
-	curl -LO "https://github.com/openssl/openssl/releases/download/openssl-4.0.3/openssl-4.0.3.tar.gz"
-	tar -xf "./openssl-4.0.3.tar.gz"
-	cd "./openssl-4.0.3" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=x86_64-windows-gnu" "./Configure" mingw64 --prefix="$(CURDIR)/openssl-4.0.3/dist/windows/AMD64" --libdir=lib --release no-shared no-apps no-module no-asm && mingw32-make MODULESDIR="./ossl-modules" OPENSSLDIR="./ssl" && mingw32-make install || true
+	rm -rf "./openssl-4.1.0.tar.gz" "./openssl-4.1.0" "./openssl"
+	curl -LO "https://github.com/openssl/openssl/releases/download/openssl-4.1.0/openssl-4.1.0.tar.gz"
+	tar -xf "./openssl-4.1.0.tar.gz"
+	cd "./openssl-4.1.0" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=x86_64-windows-gnu" "./Configure" mingw64 --prefix="$(CURDIR)/openssl-4.1.0/dist/windows/AMD64" --libdir=lib --release no-shared no-apps no-module no-asm && mingw32-make MODULESDIR="./ossl-modules" OPENSSLDIR="./ssl" && mingw32-make install || true
 	mkdir -p "./openssl/include/windows/AMD64"
-	mv "./openssl-4.0.3/dist/windows/AMD64/include/openssl" "./openssl/include/windows/AMD64"
-	mv "./openssl-4.0.3/LICENSE.txt" "./openssl/LICENSE"
+	mv "./openssl-4.1.0/dist/windows/AMD64/include/openssl" "./openssl/include/windows/AMD64"
+	mv "./openssl-4.1.0/LICENSE.txt" "./openssl/LICENSE"
 	mkdir -p "./openssl/dist/windows/AMD64/lib"
-	mv "./openssl-4.0.3/dist/windows/AMD64/lib/libcrypto.a" "./openssl/dist/windows/AMD64/lib/crypto.lib"
-	mv "./openssl-4.0.3/dist/windows/AMD64/lib/libssl.a" "./openssl/dist/windows/AMD64/lib/ssl.lib"
-	rm -rf "./openssl-4.0.3"
-	tar -xf "./openssl-4.0.3.tar.gz"
-	rm "./openssl-4.0.3.tar.gz"
-	cd "./openssl-4.0.3" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=aarch64-windows-gnu" "./Configure" mingwarm64 --prefix="$(CURDIR)/openssl-4.0.3/dist/windows/ARM64" --libdir=lib --release no-shared no-apps no-module no-asm && mingw32-make MODULESDIR="./ossl-modules" OPENSSLDIR="./ssl" && mingw32-make install || true
+	mv "./openssl-4.1.0/dist/windows/AMD64/lib/libcrypto.a" "./openssl/dist/windows/AMD64/lib/crypto.lib"
+	mv "./openssl-4.1.0/dist/windows/AMD64/lib/libssl.a" "./openssl/dist/windows/AMD64/lib/ssl.lib"
+	rm -rf "./openssl-4.1.0"
+	tar -xf "./openssl-4.1.0.tar.gz"
+	rm "./openssl-4.1.0.tar.gz"
+	cd "./openssl-4.1.0" && CC="$(shell echo $(subst ++,,$(CC)))" CFLAGS="--target=aarch64-windows-gnu" "./Configure" mingwarm64 --prefix="$(CURDIR)/openssl-4.1.0/dist/windows/ARM64" --libdir=lib --release no-shared no-apps no-module no-asm && mingw32-make MODULESDIR="./ossl-modules" OPENSSLDIR="./ssl" && mingw32-make install || true
 	mkdir -p "./openssl/include/windows/ARM64"
-	mv "./openssl-4.0.3/dist/windows/ARM64/include/openssl" "./openssl/include/windows/ARM64"
+	mv "./openssl-4.1.0/dist/windows/ARM64/include/openssl" "./openssl/include/windows/ARM64"
 	mkdir -p "./openssl/dist/windows/ARM64/lib"
-	mv "./openssl-4.0.3/dist/windows/ARM64/lib/libcrypto.a" "./openssl/dist/windows/ARM64/lib/crypto.lib"
-	mv "./openssl-4.0.3/dist/windows/ARM64/lib/libssl.a" "./openssl/dist/windows/ARM64/lib/ssl.lib"
-	rm -rf "./openssl-4.0.3"
+	mv "./openssl-4.1.0/dist/windows/ARM64/lib/libcrypto.a" "./openssl/dist/windows/ARM64/lib/crypto.lib"
+	mv "./openssl-4.1.0/dist/windows/ARM64/lib/libssl.a" "./openssl/dist/windows/ARM64/lib/ssl.lib"
+	rm -rf "./openssl-4.1.0"
