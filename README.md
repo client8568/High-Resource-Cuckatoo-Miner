@@ -431,7 +431,7 @@ make ALLOW_TLS=true
 ### Preconfigured Settings
 * These are the bare minimum settings that must be used when using this program to mine Epic Cash (EPIC). With these settings, this program can mine to an [Epic Cash node](https://github.com/EpicCash/epic), the [Epicmine mining pool](https://epicmine.io), or the [IniAku Epic Pool mining pool](https://epic.iniaku.my.id).
 ```
-make EDGE_BITS=31 STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=true HEADER_SIZE_EXCLUDING_NONCE=274 STRATUM_SERVER_AGENT_PREFIX=epic-miner/
+make EDGE_BITS=19 STRATUM_SERVER_USES_MORE_THAN_ONE_MINING_ALGORITHM=true HEADER_SIZE_EXCLUDING_NONCE=274 STRATUM_SERVER_AGENT_PREFIX=epic-miner/
 ```
 
 * These are the bare minimum settings that must be used when using this program to mine Grin (GRIN). With these settings, this program can mine to a [Grin node](https://github.com/mimblewimble/grin), the [2Miners GRIN Pool mining pool](https://grin.2miners.com), the [Easygrin Pool mining pool](https://pool.easygrin.org), the [GAEA Pool mining pool](https://gaeapool.com), the [GRIN Solo Mining mining pool](https://solo.grin.money), the [GRINIUM mining pool](https://grinium.com), the [Grinmint mining pool](https://grinmint.com), the [Le Pool Grin pool mining pool](https://grin.lepool.lol), or the [VIP Mining Pool mining pool](https://pool.always.vip).
